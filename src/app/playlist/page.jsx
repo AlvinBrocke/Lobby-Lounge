@@ -1,5 +1,26 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
+
+// Mock user hook for development
+const useUser = () => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate API call
+    const timer = setTimeout(() => {
+      setUser({
+        name: "Alvin",
+        email: "alvin@lobbylounge.com",
+        plan: "premium_trial",
+      });
+      setLoading(false);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return { data: user, loading };
+};
 
 function MainComponent() {
   const { data: user, loading } = useUser();
@@ -418,7 +439,7 @@ function MainComponent() {
                         <div className="hidden lg:flex items-center space-x-3 text-sm text-gray-500">
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${getEnergyColor(
-                              track.energy
+                              track.energy,
                             )}`}
                           >
                             {getEnergyLabel(track.energy)}
@@ -454,7 +475,7 @@ function MainComponent() {
                           <button
                             onClick={() =>
                               setSelectedTrack(
-                                selectedTrack === track.id ? null : track.id
+                                selectedTrack === track.id ? null : track.id,
                               )
                             }
                             className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
@@ -491,7 +512,7 @@ function MainComponent() {
                             </span>
                             <span
                               className={`ml-2 px-2 py-0.5 rounded-full text-xs font-medium ${getEnergyColor(
-                                track.energy
+                                track.energy,
                               )}`}
                             >
                               {getEnergyLabel(track.energy)}

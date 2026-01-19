@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 
 function MainComponent() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -126,7 +126,7 @@ function MainComponent() {
     if (currentGenres.includes(genre)) {
       updateFormData(
         "genres",
-        currentGenres.filter((g) => g !== genre)
+        currentGenres.filter((g) => g !== genre),
       );
     } else {
       updateFormData("genres", [...currentGenres, genre]);
@@ -543,7 +543,7 @@ function MainComponent() {
           cursor: pointer;
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
-        
+
         .slider::-moz-range-thumb {
           height: 20px;
           width: 20px;
