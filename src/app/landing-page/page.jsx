@@ -1,37 +1,9 @@
 "use client";
-import React from "react";
 
-function MainComponent() {
-  const { data: user, loading } = useUser();
+import React, { useState } from "react";
+
+export default function LandingPage() {
   const [showFeatures, setShowFeatures] = useState(false);
-
-  // If user is authenticated, redirect to dashboard
-  useEffect(() => {
-    if (!loading && user) {
-      window.location.href = "/dashboard";
-    }
-  }, [user, loading]);
-
-  if (loading) {
-    return (
-      <div
-        className="flex min-h-screen items-center justify-center"
-        style={{
-          backgroundImage:
-            "url(https://ucarecdn.com/8541a0b4-a838-444c-ba88-56cac2d45c07/-/format/auto/)",
-          backgroundSize: "contain",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          backgroundColor: "#093637",
-        }}
-      >
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-white">Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div
@@ -195,5 +167,3 @@ function MainComponent() {
     </div>
   );
 }
-
-export default MainComponent;

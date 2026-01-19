@@ -1,3 +1,5 @@
+import supabase from "../../utils/db.js";
+
 async function handler({
   businessName,
   email,
@@ -21,31 +23,40 @@ async function handler({
   try {
     const userId = session.user.id;
 
-    // For now, we'll simulate database operations
-    // In a real implementation, you would use your database connection
-
-    const profileData = {
-      id: Math.floor(Math.random() * 1000),
-      userId: userId,
-      businessName: businessName,
-      email: email,
-      country: country,
-      businessType: businessType,
-      subscriptionPlan: subscriptionPlan,
-      trialEndDate: new Date(
-        Date.now() + 14 * 24 * 60 * 60 * 1000
-      ).toISOString(),
-      createdAt: new Date().toISOString(),
-      musicPreferences: {
-        genres: genres,
-        mood: mood,
-        energyLevel: energyLevel,
-      },
+    const trialEndDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+    const createdAt = new Date();
+    const musicPreferences = {
+      genres: genres,
+      mood: mood,
+      energyLevel: energyLevel,
     };
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .insert([
+        {
+          user_id: userId,
+          business_name: businessName,
+          email: email,
+          country: country,
+          business_type: businessType,
+          subscription_plan: subscriptionPlan,
+          trial_end_date: trialEndDate.toISOString(),
+          created_at: createdAt.toISOString(),
+          music_preferences: musicPreferences,
+        },
+      ])
+      .select();
+
+    if (error) {
+      throw error;
+    }
+
+    const profile = data[0];
 
     return {
       success: true,
-      profile: profileData,
+      profile: profile,
       message: "Profile created successfully",
     };
   } catch (error) {
