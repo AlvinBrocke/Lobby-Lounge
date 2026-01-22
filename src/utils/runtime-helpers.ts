@@ -1,9 +1,6 @@
-import React from 'react';
+import React from "react";
 
-function useHandleStreamResponse({
-  onChunk,
-  onFinish
-}) {
+function useHandleStreamResponse({ onChunk, onFinish }) {
   const handleStreamResponse = React.useCallback(
     async (response) => {
       if (response.body) {
@@ -24,13 +21,16 @@ function useHandleStreamResponse({
         }
       }
     },
-    [onChunk, onFinish]
+    [onChunk, onFinish],
   );
   const handleStreamResponseRef = React.useRef(handleStreamResponse);
   React.useEffect(() => {
     handleStreamResponseRef.current = handleStreamResponse;
   }, [handleStreamResponse]);
-  return React.useCallback((response) => handleStreamResponseRef.current(response), []); 
+  return React.useCallback(
+    (response) => handleStreamResponseRef.current(response),
+    [],
+  );
 }
 
 function useUpload() {
@@ -39,57 +39,72 @@ function useUpload() {
     try {
       setLoading(true);
       let response;
-      if ('reactNativeAsset' in input && input.reactNativeAsset) {
+      if ("reactNativeAsset" in input && input.reactNativeAsset) {
         if (input.reactNativeAsset.file) {
           const formData = new FormData();
           formData.append("file", input.reactNativeAsset.file);
           response = await fetch("/_create/api/upload/", {
             method: "POST",
-            body: formData
+            body: formData,
           });
         } else {
           const response = await fetch("/_create/api/upload/presign/", {
-            method: 'POST',
-          })
-          const { secureSignature, secureExpire } = await response.json();
-          const result = await client.uploadFile(input.reactNativeAsset, {
-            fileName: input.reactNativeAsset.name ?? input.reactNativeAsset.uri.split("/").pop(),
-            contentType: input.reactNativeAsset.mimeType,
-            secureSignature,
-            secureExpire
+            method: "POST",
           });
-          return { url: `${process.env.EXPO_PUBLIC_BASE_CREATE_USER_CONTENT_URL}/${result.uuid}/`, mimeType: result.mimeType || null };
+          const { secureSignature, secureExpire } = await response.json();
+          // @ts-ignore - 'client' might be available globally in some environments (e.g. Create.xyz)
+          // but we guard against it here to prevent crashes.
+          const anyClient = (globalThis as any).client;
+          if (anyClient && anyClient.uploadFile) {
+            const result = await anyClient.uploadFile(input.reactNativeAsset, {
+              fileName:
+                input.reactNativeAsset.name ??
+                input.reactNativeAsset.uri.split("/").pop(),
+              contentType: input.reactNativeAsset.mimeType,
+              secureSignature,
+              secureExpire,
+            });
+            return {
+              url: `${process.env.EXPO_PUBLIC_BASE_CREATE_USER_CONTENT_URL}/${result.uuid}/`,
+              mimeType: result.mimeType || null,
+            };
+          } else {
+            console.error(
+              "'client' is not defined. File upload failed for reactNativeAsset.",
+            );
+            return { error: "Upload failed: client configuration missing" };
+          }
         }
       } else if ("file" in input && input.file) {
         const formData = new FormData();
         formData.append("file", input.file);
         response = await fetch("/_create/api/upload/", {
           method: "POST",
-          body: formData
+          body: formData,
         });
       } else if ("url" in input) {
         response = await fetch("/_create/api/upload/", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify({ url: input.url })
+          body: JSON.stringify({ url: input.url }),
         });
       } else if ("base64" in input) {
         response = await fetch("/_create/api/upload/", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify({ base64: input.base64 })
+          body: JSON.stringify({ base64: input.base64 }),
         });
       } else {
         response = await fetch("/_create/api/upload/", {
           method: "POST",
           headers: {
-            "Content-Type": "application/octet-stream"
+            "Content-Type": "application/octet-stream",
           },
-          body: input.buffer
+          body: input.buffer,
         });
       }
       if (!response.ok) {
@@ -116,7 +131,4 @@ function useUpload() {
   return [upload, { loading }];
 }
 
-export {
-  useHandleStreamResponse,
-  useUpload,
-}
+export { useHandleStreamResponse, useUpload };
