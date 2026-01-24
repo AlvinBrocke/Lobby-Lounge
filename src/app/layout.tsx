@@ -17,6 +17,12 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   title: "Lobby & Lounge",
   description: "Music for Business",
+  icons: {
+    icon: [
+      { url: "/favicon-16-white.png", sizes: "16x16" },
+      { url: "/favicon-32-white.png", sizes: "32x32" },
+    ],
+  },
 };
 
 export default function RootLayout({

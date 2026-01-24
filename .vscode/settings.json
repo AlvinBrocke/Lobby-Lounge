@@ -1,0 +1,9 @@
+{
+    "chat.mcp.serverSampling": {
+        "Lobby Lounge/.vscode/mcp.json: com.supabase/mcp": {
+            "allowedModels": [
+                "copilot/auto"
+            ]
+        }
+    }
+}

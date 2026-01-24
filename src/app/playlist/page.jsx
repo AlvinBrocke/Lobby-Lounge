@@ -33,7 +33,7 @@ function MainComponent() {
   // Redirect to sign in if not authenticated
   useEffect(() => {
     if (!loading && !user) {
-      window.location.href = "/account/signin";
+      window.location.href = "/signin";
     }
   }, [user, loading]);
 

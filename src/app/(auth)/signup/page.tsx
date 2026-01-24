@@ -3,22 +3,15 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  Music,
-  Loader2,
-  Mail,
-  Lock,
-  Building2,
-  ChevronDown,
-} from "lucide-react";
-import { authClient } from "@/lib/auth-client";
+import { Music, Loader2, Mail, Lock } from "lucide-react";
+import { createClient } from "@/utils/supabase/client";
+import { Navigation } from "@/components/landing/Navigation";
+import { AuthBackground } from "@/components/auth/AuthBackground";
 
 export default function SignupPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [businessName, setBusinessName] = useState("");
-  const [businessType, setBusinessType] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,50 +20,43 @@ export default function SignupPage() {
     setLoading(true);
     setError(null);
 
-    const { data, error: authError } = await authClient.signUp.email({
-      email,
-      password,
-      name: businessName, // Using business name as the user name for Better Auth
-      callbackURL: "/onboarding",
-    });
+    // Mock signup for development
+    setTimeout(() => {
+      router.push("/onboarding?step=3");
+    }, 1000);
 
-    if (authError) {
-      setError(authError.message || "Failed to sign up. Please try again.");
-      setLoading(false);
-    } else {
-      router.push("/onboarding");
-    }
+    // const supabase = createClient();
+    // const { error: authError } = await supabase.auth.signUp({
+    //   email,
+    //   password,
+    // });
+
+    // if (authError) {
+    //   setError(authError.message || "Failed to sign up. Please try again.");
+    //   setLoading(false);
+    // } else {
+    //   router.push("/onboarding?step=3");
+    // }
   };
 
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
       {/* Background Graphic Elements (Mocking the image's aesthetic) */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] bg-[#0891B2]/20 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-[#0D9488]/10 rounded-full blur-[120px]" />
-
-        {/* Mock background text shown in the image */}
-        <div className="absolute bottom-[10%] left-[5%] opacity-10 select-none">
-          <h2 className="text-[12vw] font-bold leading-none text-white whitespace-nowrap">
-            Sound Meets
-          </h2>
-        </div>
-      </div>
+      <AuthBackground />
 
       <div className="relative z-10 w-full max-w-[480px]">
-        {/* Header/Logo */}
-        <div className="flex items-center space-x-2 mb-8 justify-center lg:justify-start">
-          <div className="w-10 h-10 bg-[#00388D] rounded flex items-center justify-center">
-            <Music className="text-white w-6 h-6" />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-[#00388D]">
-            Lobby & Lounge
-          </span>
-        </div>
-
         {/* Card */}
         <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12">
           <div className="text-center mb-10">
+            <div className="flex items-center mb-8 justify-center ">
+              <Link href="/">
+                <img
+                  src="/images/L&L Main Logo.png"
+                  alt="Lobby & Lounge Logo"
+                  className="h-10 w-auto"
+                />
+              </Link>
+            </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Create Your Account
             </h1>
@@ -78,22 +64,6 @@ export default function SignupPage() {
           </div>
 
           <form onSubmit={handleSignup} className="space-y-6">
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-700">
-                Business Name *
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  required
-                  placeholder="Enter your business name"
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                  className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#00388D]/20 focus:border-[#00388D] transition-all placeholder:text-gray-400"
-                />
-              </div>
-            </div>
-
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-gray-700">
                 Email Address *
@@ -122,31 +92,6 @@ export default function SignupPage() {
               />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-700">
-                Business Type
-              </label>
-              <div className="relative">
-                <select
-                  value={businessType}
-                  onChange={(e) => setBusinessType(e.target.value)}
-                  className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 appearance-none focus:outline-none focus:ring-2 focus:ring-[#00388D]/20 focus:border-[#00388D] transition-all"
-                >
-                  <option value="" disabled>
-                    Select your business type
-                  </option>
-                  <option value="hotel">Hotel / Hospitality</option>
-                  <option value="restaurant">Restaurant / Bar</option>
-                  <option value="retail">Retail Store</option>
-                  <option value="office">Office Space</option>
-                  <option value="fitness">Fitness Studio</option>
-                </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <ChevronDown className="w-5 h-5 text-gray-400" />
-                </div>
-              </div>
-            </div>
-
             {error && (
               <p className="text-red-500 text-sm text-center font-medium">
                 {error}
@@ -171,7 +116,13 @@ export default function SignupPage() {
               <button
                 type="button"
                 className="flex w-full items-center justify-center space-x-3 rounded-xl border border-gray-300 px-4 py-3 bg-white hover:bg-gray-50 transition-colors"
-                onClick={() => authClient.signIn.social({ provider: "google" })}
+                onClick={async () => {
+                  const supabase = createClient();
+                  await supabase.auth.signInWithOAuth({
+                    provider: "google",
+                    options: { redirectTo: "/onboarding?step=3" },
+                  });
+                }}
               >
                 <img
                   src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
@@ -212,7 +163,7 @@ export default function SignupPage() {
 
             <div className="text-center text-sm font-medium">
               <span className="text-gray-400">Already have an account? </span>
-              <Link href="/login" className="text-[#00388D] hover:underline">
+              <Link href="/signin" className="text-[#00388D] hover:underline">
                 Sign In
               </Link>
             </div>
