@@ -25,26 +25,8 @@ import {
   PiMicrophoneStageFill,
   PiPianoKeysFill,
   PiSaxophoneFill,
-} from "lucide-react"; // Wait, standard lucide doesn't have Pi/Fill prefixes usually.
-// Let's stick to standard Lucide icons that are definitely available.
-// Rock: Guitar
-// Pop: Star
-// Jazz: Ticket? Wind? Let's use simple Music or Wind if available.
-// Classical: Music
-// Hip-Hop: Mic2
-// Electronic: Zap
-// Country: Sunset? (No CowboyHat). Maybe MapPin? Let's use Guitar or Music.
-// R&B: Heart
-// Indie: Disc
-// Folk: Leaf
-// Reggae: Music (or something rhythmical)
-// Blues: Guitar
-
-// Step 2 Moods:
-// Energetic: Zap
-// Relaxed: Coffee (Sofa not in lucide?) -> Use Coffee or Sunset
-// Romantic: Heart
-// Focused: Target
+} from "lucide-react";
+import { AuthBackground } from "@/components/auth/AuthBackground";
 
 const GUEST_MODE_GRADIENT =
   "bg-gradient-to-br from-secondary-500 to-primary-900"; // Teal (Secondary) to Deep Indigo (Primary)
@@ -109,6 +91,7 @@ function MainComponent() {
     <div
       className={`min-h-screen relative overflow-hidden font-sans text-white ${GUEST_MODE_GRADIENT} selection:bg-teal-400 selection:text-blue-900`}
     >
+      <AuthBackground />
       {/* Background Floating Music Notes (Decorations) */}
       <Music className="absolute top-10 left-10 w-12 h-12 text-white/5 animate-pulse" />
       <Music

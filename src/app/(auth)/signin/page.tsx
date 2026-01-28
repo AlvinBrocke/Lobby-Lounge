@@ -3,10 +3,19 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Music, Loader2, Mail, Lock } from "lucide-react";
+import { Loader2, Mail, Lock, ChevronRight } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
-import { Navigation } from "@/components/landing/Navigation";
 import { AuthBackground } from "@/components/auth/AuthBackground";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardFooter,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -24,121 +33,113 @@ export default function LoginPage() {
     setTimeout(() => {
       router.push("/dashboard");
     }, 1000);
-
-    // const supabase = createClient();
-    // const { error: authError } = await supabase.auth.signInWithPassword({
-    //   email,
-    //   password,
-    // });
-
-    // if (authError) {
-    //   setError(
-    //     authError.message ||
-    //       "Failed to sign in. Please check your credentials.",
-    //   );
-    //   setLoading(false);
-    // } else {
-    //   router.push("/dashboard");
-    // }
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4 bg-background">
       <AuthBackground />
 
-      <div className="relative z-10 w-full max-w-[480px]">
-        {/* Card */}
-        <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12">
-          <div className="text-center mb-10">
-            <Link href="/">
-              <div className="flex items-center mb-8 justify-center ">
+      <div className="relative z-10 w-full max-w-[440px] animate-in fade-in zoom-in-95 duration-500">
+        <Card className="border-none shadow-2xl bg-black/40 backdrop-blur-xl text-white">
+          <CardHeader className="text-center pb-8">
+            <div className="flex justify-center mb-6">
+              <Link href="/">
                 <img
                   src="/images/L&L Main Logo.png"
                   alt="Lobby & Lounge Logo"
-                  className="h-10 w-auto"
+                  className="h-10 w-auto brightness-0 invert"
                 />
-              </div>
-            </Link>
-
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Welcome Back
-            </h1>
-            <p className="text-gray-500 font-medium">Sign in to your account</p>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-700">
-                Email Address
-              </label>
-              <input
-                type="email"
-                required
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#00388D]/20 focus:border-[#00388D] transition-all placeholder:text-gray-400"
-              />
+              </Link>
             </div>
+            <CardTitle className="text-3xl font-bold tracking-tight">
+              Welcome back
+            </CardTitle>
+            <CardDescription className="text-gray-400 font-medium pt-1">
+              Sign in to manage your venue's atmosphere
+            </CardDescription>
+          </CardHeader>
 
-            <div className="space-y-1.5">
-              <div className="flex justify-between items-center">
-                <label className="text-sm font-semibold text-gray-700">
-                  Password
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-300 ml-1">
+                  Email Address
                 </label>
-                <Link
-                  href="#"
-                  className="text-xs text-[#00388D] font-semibold hover:underline"
-                >
-                  Forgot password?
-                </Link>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                  <Input
+                    type="email"
+                    required
+                    placeholder="name@company.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus-visible:ring-primary-500 h-12 rounded-xl"
+                  />
+                </div>
               </div>
-              <input
-                type="password"
-                required
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#00388D]/20 focus:border-[#00388D] transition-all placeholder:text-gray-400"
-              />
-            </div>
 
-            {error && (
-              <p className="text-red-500 text-sm text-center font-medium">
-                {error}
-              </p>
-            )}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center px-1">
+                  <label className="text-sm font-semibold text-gray-300">
+                    Password
+                  </label>
+                  <Link
+                    href="#"
+                    className="text-xs text-white/60 hover:text-white transition-colors"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                  <Input
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus-visible:ring-primary-500 h-12 rounded-xl"
+                  />
+                </div>
+              </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[#00388D] hover:bg-[#002B6D] text-white font-bold py-4 rounded-xl shadow-lg shadow-[#00388D]/20 transition-all flex items-center justify-center"
-            >
-              {loading ? (
-                <Loader2 className="w-6 h-6 animate-spin" />
-              ) : (
-                "Sign In"
+              {error && (
+                <p className="text-red-400 text-sm text-center font-medium animate-pulse">
+                  {error}
+                </p>
               )}
-            </button>
 
-            <div className="relative pt-2">
-              <div
-                className="absolute inset-0 flex items-center"
-                aria-hidden="true"
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full h-12 bg-white text-black hover:bg-gray-200 font-bold rounded-xl transition-all shadow-xl shadow-white/5 mt-4"
               >
-                <div className="w-full border-t border-gray-200"></div>
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    Sign In
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </>
+                )}
+              </Button>
+            </form>
+
+            <div className="relative my-8">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-white/10"></div>
               </div>
-              <div className="relative flex justify-center text-sm font-medium">
-                <span className="bg-white px-4 text-gray-400">
+              <div className="relative flex justify-center text-xs uppercase tracking-widest font-bold">
+                <span className="bg-[#1a1a1a] px-3 text-gray-500">
                   Or sign in with
                 </span>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3">
-              <button
-                type="button"
-                className="flex w-full items-center justify-center space-x-3 rounded-xl border border-gray-300 px-4 py-3 bg-white hover:bg-gray-50 transition-colors"
+            <div className="grid grid-cols-1 gap-4">
+              <Button
+                variant="outline"
+                className="bg-white/5 border-white/10 hover:bg-white/10 h-12 rounded-xl w-full flex items-center justify-center gap-3"
                 onClick={async () => {
                   const supabase = createClient();
                   await supabase.auth.signInWithOAuth({
@@ -152,20 +153,25 @@ export default function LoginPage() {
                   alt="Google"
                   className="w-5 h-5"
                 />
-                <span className="font-semibold text-gray-700">
+                <span className="font-bold text-white/80">
                   Continue with Google
                 </span>
-              </button>
+              </Button>
             </div>
+          </CardContent>
 
-            <div className="text-center text-sm font-medium">
-              <span className="text-gray-400">Don't have an account? </span>
-              <Link href="/signup" className="text-[#00388D] hover:underline">
+          <CardFooter className="flex justify-center pt-2">
+            <p className="text-sm text-gray-400">
+              Don't have an account?{" "}
+              <Link
+                href="/signup"
+                className="text-white hover:underline font-bold"
+              >
                 Register
               </Link>
-            </div>
-          </form>
-        </div>
+            </p>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );

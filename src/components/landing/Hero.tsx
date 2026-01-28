@@ -27,8 +27,8 @@ export const Hero = () => {
             <h1 className="font-display text-6xl lg:text-8xl font-bold tracking-tight mb-8 leading-[0.9] text-white">
               Music <br />
               for your <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-tunify-blue">
-                business
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary-500 to-primary-500">
+                Business
               </span>
             </h1>
 
@@ -40,7 +40,7 @@ export const Hero = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <a
                 href="/signup"
-                className="inline-flex items-center justify-center px-10 py-5 text-lg font-bold text-tunify-dark bg-primary rounded-full hover:bg-white transition-all transform hover:scale-105 shadow-xl shadow-primary/20"
+                className="inline-flex items-center justify-center px-10 py-5 text-lg font-bold text-tunify-dark bg-secondary rounded-full hover:bg-white transition-all transform hover:scale-105 shadow-xl shadow-primary/20"
               >
                 Try it free
                 <ArrowRight className="ml-2 h-5 w-5" />

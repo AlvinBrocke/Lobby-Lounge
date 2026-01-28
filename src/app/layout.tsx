@@ -1,4 +1,4 @@
-import { Outfit, DM_Sans } from "next/font/google";
+import { Outfit, DM_Sans, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Metadata } from "next";
 
@@ -14,6 +14,12 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-jakarta",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Lobby & Lounge",
   description: "Music for Business",
@@ -25,17 +31,19 @@ export const metadata: Metadata = {
   },
 };
 
+import { ThemeProvider } from "@/components/theme-provider";
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${outfit.variable} ${dmSans.variable} font-sans bg-background text-white`}
+        className={`${outfit.variable} ${dmSans.variable} ${jakarta.variable} font-jakarta bg-background text-foreground`}
       >
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

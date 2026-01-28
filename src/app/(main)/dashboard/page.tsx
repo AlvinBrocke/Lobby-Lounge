@@ -1,154 +1,190 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import ChannelGrid from "@/components/dashboard/ChannelGrid";
-import usePlayerStore from "@/store/usePlayerStore";
-import { User, Channel, Track } from "@/types";
 
-// Mock user hook for development (keep for now until auth is real)
-const useUser = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+import React, { useState, useEffect } from "react";
+import { Play, Music2, Users, Radio, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+import {
+  Card as UICard,
+  CardContent as UICardContent,
+} from "@/components/ui/card";
+import usePlayerStore from "@/store/usePlayerStore";
+
+export default function Dashboard() {
+  const [greeting, setGreeting] = useState("Good day");
+  const { setCurrentTrack } = usePlayerStore();
 
   useEffect(() => {
-    // Simulate API call
-    const timer = setTimeout(() => {
-      setUser({
-        name: "My Venue",
-        email: "venue@lobbylounge.com",
-        plan: "premium_trial",
-      });
-      setLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting("Good morning");
+    else if (hour < 18) setGreeting("Good afternoon");
+    else setGreeting("Good evening");
   }, []);
 
-  return { data: user, loading };
-};
-
-function MainComponent() {
-  const { data: user, loading } = useUser();
-  const { setCurrentTrack, currentTrack } = usePlayerStore();
-
-  if (loading) {
-    return (
-      <div className="flex bg-background h-full items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const quickStartChannels: Channel[] = [
-    {
-      id: "focus",
-      name: "Focus & Productivity",
-      image:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
-      audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", // Mock Audio
-    },
-    {
-      id: "retail",
-      name: "Retail Energy",
-      image:
-        "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop",
-      audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-    },
-    {
-      id: "lounge",
-      name: "Lounge & Chill",
-      image:
-        "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop",
-      audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
-    },
-    {
-      id: "upbeat",
-      name: "Upbeat & Modern",
-      image:
-        "https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=400&h=300&fit=crop",
-      audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
-    },
-    {
-      id: "ambient",
-      name: "Ambient & Calm",
-      image:
-        "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop",
-      audioUrl:
-        "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3",
-    },
+  const quickStart = [
+    { id: "1", title: "Lounge Signature", color: "bg-indigo-900/40" },
+    { id: "2", title: "Deep Focus", color: "bg-emerald-900/40" },
+    { id: "3", title: "Retail Energy", color: "bg-rose-900/40" },
+    { id: "4", title: "Jazz for Business", color: "bg-amber-900/40" },
+    { id: "5", title: "Global Beats", color: "bg-blue-900/40" },
+    { id: "6", title: "Classical Morning", color: "bg-teal-900/40" },
   ];
 
-  const moodChannels: Channel[] = [
+  const categories = [
     {
-      id: "morning",
-      name: "Morning Boost",
-      image:
-        "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop",
-      audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3",
-    },
-    {
-      id: "afternoon",
-      name: "Afternoon Flow",
-      image:
-        "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop",
-      audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3",
-    },
-    {
-      id: "evening",
-      name: "Evening Wind Down",
-      image:
-        "https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=400&h=300&fit=crop",
-      audioUrl:
-        "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3",
+      title: "Recommended for your venue",
+      items: [
+        {
+          id: "r1",
+          name: "Smooth Jazz",
+          desc: "Perfect for morning vibes",
+          img: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=400&h=400&fit=crop",
+        },
+        {
+          id: "r2",
+          name: "Upbeat Pop",
+          desc: "Energy for peak hours",
+          img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop",
+        },
+        {
+          id: "r3",
+          name: "Ambient Chill",
+          desc: "Reduce noise, increase focus",
+          img: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&h=400&fit=crop",
+        },
+        {
+          id: "r4",
+          name: "Modern Indie",
+          desc: "Trendsetting background music",
+          img: "https://images.unsplash.com/photo-1459749411177-042180ce673c?w=400&h=400&fit=crop",
+        },
+      ],
     },
   ];
 
   return (
-    <div className="p-8 pb-32">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-        <p className="text-gray-400">Welcome back, {user?.name}</p>
-      </div>
-
-      {currentTrack && (
-        <div className="mb-12 bg-surface p-6 rounded-2xl border border-gray-800 flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-white mb-2">
-              Now Playing
-            </h2>
-            <div className="text-3xl font-bold text-primary">
-              {currentTrack.name}
+    <div className="space-y-8 pb-12">
+      {/* Greeting & Quick Access */}
+      <section>
+        <h1 className="text-3xl font-bold mb-6 tracking-tight">{greeting}</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {quickStart.map((item) => (
+            <div
+              key={item.id}
+              className={`group relative flex items-center ${item.color} rounded-xl overflow-hidden hover:bg-white/15 transition-all duration-300 cursor-pointer pr-4 border border-white/5 hover:border-white/10 hover:translate-x-1`}
+            >
+              <div className="w-20 h-20 bg-black/20 flex items-center justify-center shadow-2xl">
+                <Music2 className="text-white w-8 h-8 group-hover:scale-110 transition-transform duration-500" />
+              </div>
+              <span className="flex-1 px-4 font-bold truncate text-lg">
+                {item.title}
+              </span>
+              <Button
+                size="icon"
+                className="opacity-0 group-hover:opacity-100 bg-[#27e0c5] hover:bg-[#27e0c5] text-black rounded-full shadow-2xl transition-all duration-300 scale-90 group-hover:scale-100 hover:scale-110"
+              >
+                <Play className="fill-current w-5 h-5 ml-1" />
+              </Button>
             </div>
-            <div className="text-gray-400 mt-1">
-              Lobby & Lounge Signature Mix
-            </div>
-          </div>
-          <div className="h-32 w-32 rounded-xl overflow-hidden relative">
-            <img
-              src={currentTrack.image}
-              className="w-full h-full object-cover"
-              alt={currentTrack.name}
-            />
-            <div className="absolute inset-0 bg-black/20" />
-          </div>
+          ))}
         </div>
-      )}
+      </section>
 
-      <ChannelGrid
-        title="Quick start"
-        channels={quickStartChannels}
-        onChannelSelect={setCurrentTrack}
-      />
+      {/* Metrics Section (B2B Focus) */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <UICard className="bg-[#181818]/60 backdrop-blur-sm border border-white/5 rounded-2xl hover:bg-[#181818]/80 transition-colors shadow-xl">
+          <UICardContent className="p-6 flex items-center space-x-4">
+            <div className="p-4 bg-indigo-500/10 rounded-2xl">
+              <Users className="w-6 h-6 text-indigo-400" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
+                Total Players
+              </p>
+              <p className="text-2xl font-bold text-white">12 Active</p>
+            </div>
+          </UICardContent>
+        </UICard>
+        <UICard className="bg-[#181818]/60 backdrop-blur-sm border border-white/5 rounded-2xl hover:bg-[#181818]/80 transition-colors shadow-xl">
+          <UICardContent className="p-6 flex items-center space-x-4">
+            <div className="p-4 bg-emerald-500/10 rounded-2xl">
+              <Radio className="w-6 h-6 text-emerald-400" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
+                Current Stream
+              </p>
+              <p className="text-2xl font-bold text-white">HQ 320kbps</p>
+            </div>
+          </UICardContent>
+        </UICard>
+        <UICard className="bg-[#181818]/60 backdrop-blur-sm border border-white/5 rounded-2xl hover:bg-[#181818]/80 transition-colors shadow-xl">
+          <UICardContent className="p-6 flex items-center space-x-4">
+            <div className="p-4 bg-amber-500/10 rounded-2xl">
+              <Clock className="w-6 h-6 text-amber-400" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
+                Next Update
+              </p>
+              <p className="text-2xl font-bold text-white">18:00 (Dinner)</p>
+            </div>
+          </UICardContent>
+        </UICard>
+      </section>
 
-      <ChannelGrid
-        title="Create mood"
-        channels={moodChannels}
-        onChannelSelect={setCurrentTrack}
-      />
+      {/* Recommended Grids */}
+      {categories.map((cat) => (
+        <section key={cat.title}>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold hover:underline cursor-pointer tracking-tight">
+              {cat.title}
+            </h2>
+            <button className="text-sm font-bold text-gray-400 hover:text-white transition-colors">
+              Show all
+            </button>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            {cat.items.map((item) => (
+              <div
+                key={item.id}
+                className="bg-[#181818]/40 hover:bg-[#282828] p-4 rounded-xl transition-all duration-300 cursor-pointer group border border-transparent hover:border-white/5 shadow-lg hover:shadow-2xl"
+              >
+                <div className="relative mb-4 aspect-square rounded-lg overflow-hidden shadow-lg border border-white/5">
+                  <img
+                    src={item.img}
+                    alt={item.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 translate-y-4 transition-all duration-300">
+                    <Button
+                      size="icon"
+                      className="bg-[#27e0c5] hover:bg-[#27e0c5] hover:scale-110 text-black rounded-full shadow-2xl w-12 h-12"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentTrack({
+                          id: item.id,
+                          name: item.name,
+                          image: item.img,
+                          audioUrl: "",
+                        });
+                      }}
+                    >
+                      <Play className="fill-current w-6 h-6 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+                <h3 className="font-bold mb-1 truncate text-white">
+                  {item.name}
+                </h3>
+                <p className="text-sm text-[#b3b3b3] line-clamp-2">
+                  {item.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }
-
-export default MainComponent;

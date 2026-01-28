@@ -1,15 +1,12 @@
+"use client";
+
 import React from "react";
-import PlayerBar from "@/components/layout/PlayerBar";
+import { AppLayout } from "@/components/layout/app-layout";
 
 export default function MainLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="flex min-h-screen">
-      <main className="flex-1 mb-20">{children}</main>
-      <PlayerBar />
-    </div>
-  );
+  return <AppLayout>{children}</AppLayout>;
 }

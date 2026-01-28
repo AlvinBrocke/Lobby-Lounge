@@ -1,101 +1,103 @@
 "use client";
+
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Music,
-  CalendarDays,
+  Home,
   Search,
-  ListMusic,
+  Library,
+  Calendar,
   Settings,
-  LogOut,
-  HelpCircle,
-  Mail,
-  User,
-  LucideIcon,
+  PlusSquare,
+  Heart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
-interface NavItem {
-  name: string;
-  href: string;
-  icon: LucideIcon;
-}
+const navItems = [
+  { name: "Home", href: "/dashboard", icon: Home },
+  { name: "Search", href: "/music", icon: Search },
+  { name: "Your Library", href: "/library", icon: Library },
+];
 
-export default function Sidebar() {
+const b2bItems = [
+  { name: "Schedule", href: "/schedule", icon: Calendar },
+  { name: "Settings", href: "/settings", icon: Settings },
+];
+
+export function Sidebar() {
   const pathname = usePathname();
 
-  const navItems: NavItem[] = [
-    { name: "Channels", href: "/dashboard", icon: Music },
-    { name: "Schedules", href: "/schedule", icon: CalendarDays },
-    { name: "Search", href: "/music", icon: Search },
-    { name: "My Playlists", href: "/account", icon: ListMusic },
-    { name: "Settings", href: "/account", icon: Settings },
-  ];
-
   return (
-    <div className="w-64 bg-surface border-r border-gray-800 flex flex-col h-screen fixed left-0 top-0 z-20">
-      {/* Logo */}
-      <div className="p-6 border-b border-gray-800">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
-            <Music className="text-white w-5 h-5" />
-          </div>
-          <span className="text-xl font-bold text-white">Lobby & Lounge</span>
-        </div>
+    <div className="flex flex-col h-full bg-card/40 backdrop-blur-md text-muted-foreground p-2 space-y-2 w-full">
+      {/* Brand */}
+      <div className="px-4 py-6">
+        <Link href="/" className="flex items-center border border-primary-800">
+          <img
+            src="/images/L&L Main Logo.png"
+            alt="Lobby & Lounge Logo"
+            className="h-10 w-auto"
+          />
+        </Link>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-4">
-        <div className="space-y-2">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href;
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={cn(
-                  "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors",
-                  isActive
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-gray-400 hover:text-white hover:bg-gray-800",
-                )}
-              >
-                <Icon className="w-5 h-5" />
-                <span>{item.name}</span>
-              </Link>
-            );
-          })}
+      {/* Main Nav */}
+      <nav className="flex-1 px-2 space-y-1">
+        {navItems.map((item) => (
+          <Link
+            key={item.name}
+            href={item.href}
+            className={cn(
+              "flex items-center space-x-4 px-4 py-3 rounded-md transition-colors font-semibold",
+              pathname === item.href
+                ? "bg-accent text-accent-foreground shadow-sm"
+                : "hover:bg-accent/50 hover:text-foreground",
+            )}
+          >
+            <item.icon className="w-6 h-6" />
+            <span>{item.name}</span>
+          </Link>
+        ))}
+
+        <div className="pt-6 pb-2 px-4 uppercase text-[11px] font-bold tracking-widest text-[#b3b3b3] opacity-60">
+          Business Tools
         </div>
+
+        {b2bItems.map((item) => (
+          <Link
+            key={item.name}
+            href={item.href}
+            className={cn(
+              "flex items-center space-x-4 px-4 py-3 rounded-md transition-colors font-semibold",
+              pathname === item.href
+                ? "bg-accent text-accent-foreground shadow-sm"
+                : "hover:bg-accent/50 hover:text-foreground",
+            )}
+          >
+            <item.icon className="w-6 h-6" />
+            <span>{item.name}</span>
+          </Link>
+        ))}
       </nav>
 
-      {/* User Info */}
-      <div className="p-4 border-t border-gray-800">
-        <div className="flex items-center space-x-3 mb-4">
-          <div className="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center">
-            <User className="text-white w-5 h-5" />
+      {/* Bottom Actions */}
+      <div className="px-2 pb-4 space-y-1">
+        <button className="flex items-center space-x-4 px-4 py-2 w-full text-left rounded-md transition-colors hover:bg-accent/50 hover:text-foreground group">
+          <div className="bg-muted group-hover:bg-accent p-1 rounded-sm transition-colors">
+            <PlusSquare className="w-4 h-4 text-foreground/80" />
           </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-white">My Venue</p>
-            <p className="text-xs text-gray-400">Premium Trial</p>
+          <span className="text-sm font-semibold">Create Playlist</span>
+        </button>
+        <button className="flex items-center space-x-4 px-4 py-2 w-full text-left rounded-md transition-colors hover:bg-accent/50 hover:text-foreground group">
+          <div className="bg-gradient-to-br from-indigo-700/80 to-blue-500/80 p-1 rounded-sm shadow-sm group-hover:scale-110 transition-transform">
+            <Heart className="w-4 h-4 text-white" />
           </div>
-        </div>
-        <div className="space-y-2 text-xs text-gray-500">
-          <div className="flex items-center space-x-2">
-            <HelpCircle className="w-3 h-3" />
-            <span>Help Center</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Mail className="w-3 h-3" />
-            <span>support@lobbylounge.com</span>
-          </div>
-          <div className="flex items-center space-x-2 hover:text-gray-300 transition-colors cursor-pointer">
-            <LogOut className="w-3 h-3" />
-            <span>Sign Out</span>
-          </div>
-        </div>
+          <span className="text-sm font-semibold">Liked Songs</span>
+        </button>
       </div>
     </div>
   );
 }
+
+export default Sidebar;
