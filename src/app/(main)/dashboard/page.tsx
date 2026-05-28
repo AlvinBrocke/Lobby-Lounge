@@ -1,190 +1,147 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Play, Music2, Users, Radio, Clock } from "lucide-react";
+import { PageWrapper } from "@/components/layout/page-wrapper";
+import { CategoryCard } from "@/components/ui/category-card";
+import { PlaylistCard } from "@/components/ui/playlist-card";
+import { PlaylistModal } from "@/components/ui/playlist-modal";
 import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { useState } from "react";
 
-import {
-  Card as UICard,
-  CardContent as UICardContent,
-} from "@/components/ui/card";
-import usePlayerStore from "@/store/usePlayerStore";
+// Mock Data
+const energeticPlaylists = [
+  {
+    id: "e1",
+    title: "Morning Boost",
+    description: "Start the day right",
+    gradient: "from-orange-400 to-rose-500",
+    image:
+      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop",
+  },
+  {
+    id: "e2",
+    title: "Power Workout",
+    description: "High BPM energy",
+    gradient: "from-red-500 to-orange-500",
+    image:
+      "https://images.unsplash.com/photo-1534258936925-c48947387e3b?w=400&h=400&fit=crop",
+  },
+  {
+    id: "e3",
+    title: "Summer Hits",
+    description: "Feel good vibes",
+    gradient: "from-amber-400 to-orange-500",
+    image:
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=400&fit=crop",
+  },
+  {
+    id: "e4",
+    title: "Retail Pop",
+    description: "Upbeat shopping tunes",
+    gradient: "from-rose-400 to-red-500",
+    image:
+      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=400&fit=crop",
+  },
+];
+
+const chillPlaylists = [
+  {
+    id: "c1",
+    title: "Lounge Jazz",
+    description: "Smooth background",
+    gradient: "from-blue-400 to-indigo-500",
+    image:
+      "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=400&h=400&fit=crop",
+  },
+  {
+    id: "c2",
+    title: "Deep Focus",
+    description: "Productivity flow",
+    gradient: "from-sky-400 to-blue-500",
+    image:
+      "https://images.unsplash.com/photo-1459749411177-042180ce673c?w=400&h=400&fit=crop",
+  },
+  {
+    id: "c3",
+    title: "Ambient Calm",
+    description: "Stress relief",
+    gradient: "from-cyan-400 to-blue-500",
+    image:
+      "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&h=400&fit=crop",
+  },
+  {
+    id: "c4",
+    title: "Night Mode",
+    description: "Dark & moody",
+    gradient: "from-indigo-400 to-purple-500",
+    image:
+      "https://images.unsplash.com/photo-1514525253440-b393452086a9?w=400&h=400&fit=crop",
+  },
+];
 
 export default function Dashboard() {
-  const [greeting, setGreeting] = useState("Good day");
-  const { setCurrentTrack } = usePlayerStore();
+  const [selectedPlaylist, setSelectedPlaylist] = useState<
+    (typeof energeticPlaylists)[0] | null
+  >(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting("Good morning");
-    else if (hour < 18) setGreeting("Good afternoon");
-    else setGreeting("Good evening");
-  }, []);
-
-  const quickStart = [
-    { id: "1", title: "Lounge Signature", color: "bg-indigo-900/40" },
-    { id: "2", title: "Deep Focus", color: "bg-emerald-900/40" },
-    { id: "3", title: "Retail Energy", color: "bg-rose-900/40" },
-    { id: "4", title: "Jazz for Business", color: "bg-amber-900/40" },
-    { id: "5", title: "Global Beats", color: "bg-blue-900/40" },
-    { id: "6", title: "Classical Morning", color: "bg-teal-900/40" },
-  ];
-
-  const categories = [
-    {
-      title: "Recommended for your venue",
-      items: [
-        {
-          id: "r1",
-          name: "Smooth Jazz",
-          desc: "Perfect for morning vibes",
-          img: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=400&h=400&fit=crop",
-        },
-        {
-          id: "r2",
-          name: "Upbeat Pop",
-          desc: "Energy for peak hours",
-          img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop",
-        },
-        {
-          id: "r3",
-          name: "Ambient Chill",
-          desc: "Reduce noise, increase focus",
-          img: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&h=400&fit=crop",
-        },
-        {
-          id: "r4",
-          name: "Modern Indie",
-          desc: "Trendsetting background music",
-          img: "https://images.unsplash.com/photo-1459749411177-042180ce673c?w=400&h=400&fit=crop",
-        },
-      ],
-    },
-  ];
+  const handlePlaylistClick = (playlist: (typeof energeticPlaylists)[0]) => {
+    setSelectedPlaylist(playlist);
+    setIsModalOpen(true);
+  };
 
   return (
-    <div className="space-y-8 pb-12">
-      {/* Greeting & Quick Access */}
-      <section>
-        <h1 className="text-3xl font-bold mb-6 tracking-tight">{greeting}</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {quickStart.map((item) => (
-            <div
-              key={item.id}
-              className={`group relative flex items-center ${item.color} rounded-xl overflow-hidden hover:bg-white/15 transition-all duration-300 cursor-pointer pr-4 border border-white/5 hover:border-white/10 hover:translate-x-1`}
-            >
-              <div className="w-20 h-20 bg-black/20 flex items-center justify-center shadow-2xl">
-                <Music2 className="text-white w-8 h-8 group-hover:scale-110 transition-transform duration-500" />
-              </div>
-              <span className="flex-1 px-4 font-bold truncate text-lg">
-                {item.title}
-              </span>
-              <Button
-                size="icon"
-                className="opacity-0 group-hover:opacity-100 bg-[#27e0c5] hover:bg-[#27e0c5] text-black rounded-full shadow-2xl transition-all duration-300 scale-90 group-hover:scale-100 hover:scale-110"
-              >
-                <Play className="fill-current w-5 h-5 ml-1" />
-              </Button>
-            </div>
+    <PageWrapper
+      title="Your Playlists"
+      action={
+        <Button
+          variant="outline"
+          className="rounded-full border-dashed border-border hover:bg-accent hover:text-accent-foreground transition-all duration-300"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Create New
+        </Button>
+      }
+    >
+      <div className="space-y-10 pb-24">
+        <PlaylistModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          playlist={selectedPlaylist}
+        />
+
+        {/* Grid Section 1: Energetic */}
+        <section className="grid grid-cols-1 md:grid-cols-5 gap-6">
+          <CategoryCard
+            title="Energetic Vibes"
+            subtitle="Keep the tempo up"
+            image="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200&h=200&fit=crop"
+          />
+          {energeticPlaylists.map((playlist) => (
+            <PlaylistCard
+              key={playlist.id}
+              item={playlist}
+              onClick={() => handlePlaylistClick(playlist)}
+            />
           ))}
-        </div>
-      </section>
-
-      {/* Metrics Section (B2B Focus) */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <UICard className="bg-[#181818]/60 backdrop-blur-sm border border-white/5 rounded-2xl hover:bg-[#181818]/80 transition-colors shadow-xl">
-          <UICardContent className="p-6 flex items-center space-x-4">
-            <div className="p-4 bg-indigo-500/10 rounded-2xl">
-              <Users className="w-6 h-6 text-indigo-400" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
-                Total Players
-              </p>
-              <p className="text-2xl font-bold text-white">12 Active</p>
-            </div>
-          </UICardContent>
-        </UICard>
-        <UICard className="bg-[#181818]/60 backdrop-blur-sm border border-white/5 rounded-2xl hover:bg-[#181818]/80 transition-colors shadow-xl">
-          <UICardContent className="p-6 flex items-center space-x-4">
-            <div className="p-4 bg-emerald-500/10 rounded-2xl">
-              <Radio className="w-6 h-6 text-emerald-400" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
-                Current Stream
-              </p>
-              <p className="text-2xl font-bold text-white">HQ 320kbps</p>
-            </div>
-          </UICardContent>
-        </UICard>
-        <UICard className="bg-[#181818]/60 backdrop-blur-sm border border-white/5 rounded-2xl hover:bg-[#181818]/80 transition-colors shadow-xl">
-          <UICardContent className="p-6 flex items-center space-x-4">
-            <div className="p-4 bg-amber-500/10 rounded-2xl">
-              <Clock className="w-6 h-6 text-amber-400" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
-                Next Update
-              </p>
-              <p className="text-2xl font-bold text-white">18:00 (Dinner)</p>
-            </div>
-          </UICardContent>
-        </UICard>
-      </section>
-
-      {/* Recommended Grids */}
-      {categories.map((cat) => (
-        <section key={cat.title}>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold hover:underline cursor-pointer tracking-tight">
-              {cat.title}
-            </h2>
-            <button className="text-sm font-bold text-gray-400 hover:text-white transition-colors">
-              Show all
-            </button>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {cat.items.map((item) => (
-              <div
-                key={item.id}
-                className="bg-[#181818]/40 hover:bg-[#282828] p-4 rounded-xl transition-all duration-300 cursor-pointer group border border-transparent hover:border-white/5 shadow-lg hover:shadow-2xl"
-              >
-                <div className="relative mb-4 aspect-square rounded-lg overflow-hidden shadow-lg border border-white/5">
-                  <img
-                    src={item.img}
-                    alt={item.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 translate-y-4 transition-all duration-300">
-                    <Button
-                      size="icon"
-                      className="bg-[#27e0c5] hover:bg-[#27e0c5] hover:scale-110 text-black rounded-full shadow-2xl w-12 h-12"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCurrentTrack({
-                          id: item.id,
-                          name: item.name,
-                          image: item.img,
-                          audioUrl: "",
-                        });
-                      }}
-                    >
-                      <Play className="fill-current w-6 h-6 ml-1" />
-                    </Button>
-                  </div>
-                </div>
-                <h3 className="font-bold mb-1 truncate text-white">
-                  {item.name}
-                </h3>
-                <p className="text-sm text-[#b3b3b3] line-clamp-2">
-                  {item.desc}
-                </p>
-              </div>
-            ))}
-          </div>
         </section>
-      ))}
-    </div>
+
+        {/* Grid Section 2: Chill */}
+        <section className="grid grid-cols-1 md:grid-cols-5 gap-6">
+          <CategoryCard
+            title="Chill Atmosphere"
+            subtitle="Relax and unwind"
+            image="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=200&h=200&fit=crop"
+          />
+          {chillPlaylists.map((playlist) => (
+            <PlaylistCard
+              key={playlist.id}
+              item={playlist}
+              onClick={() => handlePlaylistClick(playlist)}
+            />
+          ))}
+        </section>
+      </div>
+    </PageWrapper>
   );
 }

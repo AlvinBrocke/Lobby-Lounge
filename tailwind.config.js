@@ -26,6 +26,26 @@ module.exports = {
             transform: "translate(0px, 0px) scale(1)",
           },
         },
+        shimmer: {
+          "100%": {
+            transform: "translateX(100%)",
+          },
+        },
+        "gradient-xy": {
+          "0%, 100%": {
+            "background-size": "400% 400%",
+            "background-position": "left center",
+          },
+          "50%": {
+            "background-size": "200% 200%",
+            "background-position": "right center",
+          },
+        },
+      },
+      animation: {
+        blob: "blob 7s infinite",
+        shimmer: "shimmer 2s infinite",
+        "gradient-xy": "gradient-xy 15s ease infinite",
       },
       fontFamily: {
         sans: ["var(--font-jakarta)", "var(--font-dm-sans)", "sans-serif"],

@@ -130,9 +130,7 @@ export default function LoginPage() {
                 <div className="w-full border-t border-white/10"></div>
               </div>
               <div className="relative flex justify-center text-xs uppercase tracking-widest font-bold">
-                <span className="bg-[#1a1a1a] px-3 text-gray-500">
-                  Or sign in with
-                </span>
+                <span className="bg-inherit px-3 text-white">Or</span>
               </div>
             </div>
 

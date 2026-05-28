@@ -65,7 +65,7 @@ export async function middleware(request: NextRequest) {
   // const protectedRoutes = [
   //   "/dashboard",
   //   "/account",
-  //   "/music",
+  //   "/explore",
   //   "/schedule",
   //   "/onboarding",
   //   "/playlist",
