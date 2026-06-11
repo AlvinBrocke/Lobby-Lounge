@@ -1,3 +1,188 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ============================================================
+   LOBBY & LOUNGE — Brand tokens & landing animations
+   ============================================================ */
+:root {
+  --ll-navy: #151F6C;
+  --ll-teal: #2CB5B0;
+  --ll-accent: #4ECDC4;
+  --ll-accent-ink: #04201d;
+  --ll-ink-0: #0A0E12;
+  --ll-ink-1: #0F1419;
+  --ll-ink-2: #151B22;
+  --ll-ink-3: #1A222B;
+  --ll-ink-line: #232c36;
+  --ll-on-ink-2: #AEB8C4;
+  --ll-on-ink-3: #6C7783;
+  --ll-grad-product: linear-gradient(120deg, #4ECDC4 0%, #44A08D 100%);
+  --ll-grad-tide: linear-gradient(120deg, #4ECDC4 0%, #00388D 100%);
+  --ll-ease: cubic-bezier(.22, 1, .36, 1);
+  --ll-font-display: 'Poppins', system-ui, sans-serif;
+  --ll-font-body: 'Manrope', system-ui, sans-serif;
+}
+
+/* EQ bars animation */
+@keyframes ll-eq {
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
+}
+/* Floating orb */
+@keyframes ll-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
+/* Marquee scroll */
+@keyframes ll-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+/* Gradient drift on hero headline */
+@keyframes ll-grad-drift {
+  0%, 100% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+}
+/* Button shine sweep */
+@keyframes ll-btn-shine {
+  from { left: -130%; }
+  to { left: 150%; }
+}
+/* Floating stat card bob */
+@keyframes ll-floaty {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+/* Pricing "Most popular" tag pulse */
+@keyframes ll-tag-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(78, 205, 196, 0.55); }
+  50% { box-shadow: 0 0 0 9px rgba(78, 205, 196, 0); }
+}
+/* Scroll-reveal */
+@media (prefers-reduced-motion: no-preference) {
+  html.ll-js [data-ll-reveal] {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity .7s var(--ll-ease), transform .7s var(--ll-ease);
+  }
+  html.ll-js [data-ll-reveal].ll-visible {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  [data-ll-delay="1"] { transition-delay: .08s; }
+  [data-ll-delay="2"] { transition-delay: .16s; }
+  [data-ll-delay="3"] { transition-delay: .24s; }
+  html.ll-js .ll-bars [data-bar] {
+    transform: scaleY(0);
+    transition: transform .9s var(--ll-ease);
+    transform-origin: bottom;
+  }
+  html.ll-js .ll-bars.ll-visible [data-bar] { transform: scaleY(1) !important; }
+  .ll-bars [data-bar]:nth-child(2) { transition-delay: .06s; }
+  .ll-bars [data-bar]:nth-child(3) { transition-delay: .12s; }
+  .ll-bars [data-bar]:nth-child(4) { transition-delay: .18s; }
+  .ll-bars [data-bar]:nth-child(5) { transition-delay: .24s; }
+  .ll-bars [data-bar]:nth-child(6) { transition-delay: .3s; }
+}
+
+/* Catalog marquee pause on hover */
+.ll-catalog:hover .ll-track {
+  animation-play-state: paused;
+}
+
+/* ── Dashboard EQ animation ──────────────────────────── */
+@keyframes eq-bounce {
+  0%   { transform: scaleY(0.25); }
+  100% { transform: scaleY(1); }
+}
+@keyframes live-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.5); }
+  50%       { box-shadow: 0 0 0 5px rgba(52, 211, 153, 0); }
+}
+@keyframes hero-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(78, 205, 196, 0.3); }
+  50%       { box-shadow: 0 0 0 6px rgba(78, 205, 196, 0); }
+}
+
+.eq-bar {
+  border-radius: 2px;
+  transform-origin: bottom;
+  display: inline-block;
+  background: #4ECDC4;
+}
+.dark .eq-bar { background: #4ECDC4; }
+.eq-bar:nth-child(1) { animation: eq-bounce 0.52s 0.00s ease-in-out infinite alternate; }
+.eq-bar:nth-child(2) { animation: eq-bounce 0.61s 0.05s ease-in-out infinite alternate; }
+.eq-bar:nth-child(3) { animation: eq-bounce 0.70s 0.10s ease-in-out infinite alternate; }
+.eq-bar:nth-child(4) { animation: eq-bounce 0.79s 0.15s ease-in-out infinite alternate; }
+.eq-bar:nth-child(5) { animation: eq-bounce 0.88s 0.20s ease-in-out infinite alternate; }
+.eq-bar:nth-child(6) { animation: eq-bounce 0.97s 0.25s ease-in-out infinite alternate; }
+
+.eq-bars-paused .eq-bar { animation-play-state: paused; }
+
+.live-dot { animation: live-pulse 2s ease-in-out infinite; }
+.hero-pip { animation: hero-pulse 2s ease-in-out infinite; }
+
+@layer base {
+  :root {
+    /* Light mode */
+    --background: 194 21% 96%;   /* #F1F5F6 */
+    --foreground: 218 22% 8%;    /* #0F1419 */
+    --card: 0 0% 100%;
+    --card-foreground: 218 22% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 218 22% 8%;
+    --primary: 175 58% 41%;      /* #2BA89F */
+    --primary-foreground: 173 100% 7%;
+    --secondary: 200 14% 93%;    /* #E9EEF0 */
+    --secondary-foreground: 218 22% 8%;
+    --muted: 200 14% 93%;
+    --muted-foreground: 210 16% 37%; /* #51606E */
+    --accent: 200 14% 93%;
+    --accent-foreground: 218 22% 8%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 198 20% 88%;       /* #E0E7EB */
+    --input: 198 20% 88%;
+    --ring: 175 58% 41%;
+    --radius: 0.75rem;
+    --surface-2: 200 14% 93%;
+  }
+
+  .dark {
+    /* Dark mode — from design tokens */
+    --background: 218 22% 8%;    /* #0F1419 */
+    --foreground: 0 0% 100%;
+    --card: 218 20% 12%;         /* #1A1F26 */
+    --card-foreground: 0 0% 100%;
+    --popover: 218 20% 12%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 175 56% 62%;      /* #4ECDC4 */
+    --primary-foreground: 173 100% 7%;  /* #04201d */
+    --secondary: 218 21% 9%;     /* #131820 */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 218 18% 14%;
+    --muted-foreground: 213 14% 66%; /* #9CA7B4 */
+    --accent: 218 18% 14%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 218 17% 18%;       /* #252C36 */
+    --input: 218 17% 18%;
+    --ring: 175 56% 62%;
+    --radius: 0.75rem;
+    --surface-2: 218 21% 9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
