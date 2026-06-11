@@ -50,7 +50,12 @@ export default function RootLayout({
       <body
         className={`${outfit.variable} ${dmSans.variable} ${jakarta.variable} font-jakarta bg-background text-foreground`}
       >
-        <ClerkProvider>
+        <ClerkProvider
+          signInUrl="/signin"
+          signUpUrl="/signup"
+          signInFallbackRedirectUrl="/dashboard"
+          signUpFallbackRedirectUrl="/signup/onboarding"
+        >
           <ThemeProvider>{children}</ThemeProvider>
         </ClerkProvider>
       </body>
