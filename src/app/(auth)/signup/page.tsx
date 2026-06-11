@@ -41,7 +41,9 @@ export default function SignupPage() {
         await setActive({ session: result.createdSessionId });
         router.push("/signup/onboarding?step=3");
       } else {
-        await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+        await signUp.prepareEmailAddressVerification({
+          strategy: "email_code",
+        });
         setStep("verify");
       }
     } catch (err) {
@@ -204,7 +206,9 @@ export default function SignupPage() {
                       alt="Google"
                       className="w-5 h-5"
                     />
-                    <span className="font-bold text-white/80">Continue with Google</span>
+                    <span className="font-bold text-white/80">
+                      Continue with Google
+                    </span>
                   </Button>
                   <Button
                     variant="outline"
@@ -214,7 +218,9 @@ export default function SignupPage() {
                     <svg className="w-5 h-5 fill-current" viewBox="0 0 18 18">
                       <path d="M11.833 3.51c.367-1.16.035-2.28-.755-3.097a3.007 3.007 0 0 0-3.009-.64 2.822 2.822 0 0 0-2.202 2.766 2.89 2.89 0 0 0 3.037 3.03c1.071 0 2.298-.826 2.929-2.059Zm-1.637 4.197c-1.332 0-2.585.807-3.328.807-.738 0-1.844-.764-2.883-.746-1.365.02-2.625.795-3.328 2.016-.279.48-.44 1.157-.44 2.146 0 2.21 1.63 4.249 3.25 4.249.774 0 1.488-.52 2.261-.52.753 0 1.405.52 2.259.52 1.558 0 2.868-1.845 3.328-3.024-1.637-.622-2.311-2.146-2.311-3.693 0-1.32.744-2.593 1.836-3.235-.553-.872-1.46-1.428-2.644-1.52Z" />
                     </svg>
-                    <span className="font-bold text-white/80">Continue with Apple</span>
+                    <span className="font-bold text-white/80">
+                      Continue with Apple
+                    </span>
                   </Button>
                 </div>
               </>
