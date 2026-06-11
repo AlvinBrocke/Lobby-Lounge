@@ -5,12 +5,11 @@
  */
 
 import { createClient } from "@/utils/supabase/server";
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient(cookies());
+    const supabase = await createClient();
     const { searchParams } = new URL(request.url);
 
     const limit = parseInt(searchParams.get("limit") || "50");

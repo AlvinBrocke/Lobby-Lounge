@@ -1,14 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ["images.unsplash.com"],
+    remotePatterns: [
+      { protocol: "https", hostname: "images.unsplash.com" },
+    ],
   },
-  experimental: {
-    esmExternals: "loose",
-  },
-  webpack: (config) => {
-    config.externals = [...config.externals, { canvas: "canvas" }]; // required to make pdfjs work
-    return config;
+turbopack: {
+    root: __dirname,
   },
 };
 

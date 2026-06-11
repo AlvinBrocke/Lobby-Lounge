@@ -1,191 +1,170 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/theme-provider";
+import { useUser, useClerk } from "@clerk/nextjs";
 import {
-  BarChart2,
   Calendar,
-  ChevronLeft,
-  ChevronRight,
-  Globe,
   LayoutGrid,
   Library,
   ListMusic,
-  Menu,
+  LogOut,
+  Moon,
   Settings,
+  Sun,
 } from "lucide-react";
-import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Button } from "../ui/button";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 
 const navItems = [
-  { name: "Playlists", href: "/dashboard", icon: ListMusic },
-  { name: "Explore", href: "/explore", icon: Globe },
+  { name: "Channels", href: "/dashboard", icon: LayoutGrid },
   { name: "Schedule", href: "/schedule", icon: Calendar },
   { name: "Library", href: "/library", icon: Library },
-  { name: "Admin Console", href: "/admin", icon: Settings },
+  { name: "My Playlists", href: "/playlists", icon: ListMusic },
+  { name: "Settings", href: "/settings", icon: Settings },
 ];
-
-interface NavItemProps {
-  item: (typeof navItems)[0];
-  isActive: boolean;
-  isCollapsed: boolean;
-  onClick?: () => void;
-}
-
-function NavItem({ item, isActive, isCollapsed, onClick }: NavItemProps) {
-  const Icon = item.icon;
-
-  return (
-    <Link
-      href={item.href}
-      onClick={onClick}
-      className={cn(
-        "group flex items-center rounded-xl transition-all duration-300 ease-out",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2",
-        isCollapsed ? "justify-center p-3" : "px-4 py-3 space-x-3.5",
-        isActive
-          ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-[1.02]"
-          : "text-muted-foreground hover:bg-muted/80 hover:text-foreground hover:scale-[1.02]",
-      )}
-      aria-current={isActive ? "page" : undefined}
-      title={isCollapsed ? item.name : undefined}
-    >
-      <Icon
-        className={cn(
-          "flex-shrink-0 transition-colors duration-300",
-          isCollapsed ? "w-6 h-6" : "w-5 h-5",
-          isActive
-            ? "text-white"
-            : "text-muted-foreground group-hover:text-foreground",
-        )}
-        aria-hidden="true"
-      />
-      {!isCollapsed && (
-        <span className="font-medium text-[15px] tracking-tight truncate">
-          {item.name}
-        </span>
-      )}
-    </Link>
-  );
-}
 
 export function Sidebar() {
   const pathname = usePathname();
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const router = useRouter();
+  const { theme, toggleTheme } = useTheme();
+  const { user } = useUser();
+  const { signOut } = useClerk();
 
-  // Auto-collapse on mobile/tablet (simple check)
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 1024) {
-        setIsCollapsed(true);
-      }
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const userName = user?.fullName ?? user?.firstName ?? "Loading...";
+  const userEmail = user?.primaryEmailAddress?.emailAddress ?? "";
+  const initials = userName
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push("/signin");
+  };
 
   return (
-    <>
-      {/* Mobile Toggle & Overlay */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="bg-background/80 backdrop-blur-md border-white/10 shadow-lg"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-      </div>
-
-      {isMobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
-
-      {/* Sidebar Container */}
-      <aside
-        className={cn(
-          "flex flex-col h-full transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] z-40",
-          "bg-background/95 backdrop-blur-xl border border-border/50", // Theme-aware glassmorphism
-          "shadow-[0_8px_30px_rgb(0,0,0,0.04)]", // Subtle premium shadow
-          isCollapsed ? "w-[80px]" : "w-[280px]",
-          "lg:relative fixed inset-y-0 left-0 lg:translate-x-0 rounded-2xl my-2 ml-2",
-          isMobileMenuOpen
-            ? "translate-x-0"
-            : "-translate-x-full lg:translate-x-0",
-        )}
-      >
-        {/* Header / Brand */}
-        <div
-          className={cn(
-            "h-20 flex items-center",
-            isCollapsed ? "justify-center" : "px-6",
-          )}
-        >
-          <div className="flex items-center justify-center w-full overflow-hidden">
-            {isCollapsed ? (
-              <div className="relative w-10 h-10">
-                <Image
-                  src="/images/Logo Icon.png"
-                  alt="Lobby Lounge Icon"
-                  fill
-                  className="object-contain"
-                />
-              </div>
-            ) : (
-              <div className="relative w-40 h-12">
-                <Image
-                  src="/images/L&L Main Logo.png"
-                  alt="Lobby Lounge"
-                  fill
-                  className="object-contain"
-                />
-              </div>
-            )}
+    <aside className="w-64 min-w-[256px] flex flex-col bg-card border-r border-border overflow-hidden shrink-0">
+      {/* Brand */}
+      <div className="flex items-center gap-3 px-[18px] py-[18px] pb-4 border-b border-border">
+        <div className="relative w-[34px] h-[34px] rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-br from-[#4ECDC4] to-[#44A08D] flex items-center justify-center">
+          <Image
+            src="/images/Logo Icon.png"
+            alt="Logo"
+            fill
+            className="object-cover"
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div
+            className="font-bold text-sm text-foreground leading-tight truncate"
+            style={{ fontFamily: "'Poppins', sans-serif" }}
+          >
+            Lobby &amp; Lounge
+          </div>
+          <div className="text-[11px] font-medium text-muted-foreground mt-0.5">
+            Business Music
           </div>
         </div>
+        <button
+          onClick={toggleTheme}
+          title="Toggle theme"
+          className="w-7 h-7 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0"
+        >
+          {theme === "light" ? (
+            <Moon className="w-3.5 h-3.5" />
+          ) : (
+            <Sun className="w-3.5 h-3.5" />
+          )}
+        </button>
+      </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 px-3 py-6 space-y-1.5 overflow-y-auto scrollbar-none">
-          {navItems.map((item) => (
-            <NavItem
-              key={item.href}
-              item={item}
-              isActive={pathname === item.href}
-              isCollapsed={isCollapsed}
-              onClick={() => setIsMobileMenuOpen(false)}
-            />
-          ))}
-        </nav>
+      {/* Live bar */}
+      <div className="flex items-center gap-2 px-[18px] py-2.5 bg-[rgba(52,211,153,0.05)] border-b border-border">
+        <span className="live-dot w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+        <span className="text-xs font-semibold text-muted-foreground flex-1 truncate">
+          Live · The Grand Lobby
+        </span>
+        <span className="text-[9px] font-bold tracking-widest text-emerald-400 bg-[rgba(52,211,153,0.1)] px-2 py-0.5 rounded-full shrink-0">
+          ON AIR
+        </span>
+      </div>
 
-        {/* Bottom Actions / User */}
-        <div className="p-3 mt-auto space-y-3">
-          {/* Collapse Toggle (Desktop) */}
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className={cn(
-              "hidden lg:flex items-center justify-center w-full p-2 rounded-xl",
-              "text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all duration-300",
-            )}
-            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {isCollapsed ? (
-              <ChevronRight className="w-5 h-5" />
-            ) : (
-              <div className="flex items-center space-x-2">
-                <ChevronLeft className="w-5 h-5" />
-                <span className="text-sm font-medium">Collapse</span>
-              </div>
-            )}
-          </button>
+      {/* Nav */}
+      <nav className="flex-1 px-3 pt-3.5 flex flex-col gap-0.5">
+        <div className="text-[9px] font-bold text-muted-foreground tracking-[0.12em] uppercase px-2 pb-2">
+          Navigation
         </div>
-      </aside>
-    </>
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150",
+                isActive
+                  ? "bg-[rgba(78,205,196,0.10)] text-primary font-semibold dark:bg-[rgba(78,205,196,0.10)] dark:text-primary"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+              )}
+            >
+              <Icon className="w-4 h-4 shrink-0" />
+              <span className="flex-1">{item.name}</span>
+              {isActive && (
+                <span className="w-[5px] h-[5px] rounded-full bg-primary shrink-0" />
+              )}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Trial card */}
+      <div className="mx-3 mb-3 p-4 rounded-xl bg-gradient-to-br from-[rgba(78,205,196,0.11)] to-[rgba(68,160,141,0.05)] border border-[rgba(78,205,196,0.16)]">
+        <div
+          className="text-[9px] font-bold tracking-[0.12em] text-primary mb-1 uppercase"
+          style={{ fontFamily: "'Poppins', sans-serif" }}
+        >
+          Premium Trial
+        </div>
+        <div
+          className="text-base font-bold text-foreground mb-0.5"
+          style={{ fontFamily: "'Poppins', sans-serif" }}
+        >
+          12 days left
+        </div>
+        <div className="text-xs font-medium text-muted-foreground mb-3">
+          Full catalog, scheduling &amp; analytics.
+        </div>
+        <button className="w-full py-2 bg-primary text-[#04201d] rounded-lg text-xs font-bold hover:opacity-90 transition-opacity">
+          Upgrade Plan
+        </button>
+      </div>
+
+      {/* User row */}
+      <div className="flex items-center gap-2.5 px-3.5 py-3 border-t border-border">
+        <div className="w-[34px] h-[34px] rounded-full bg-gradient-to-br from-[#4ECDC4] to-[#44A08D] flex items-center justify-center shrink-0">
+          <span className="text-[#04201d] text-xs font-bold">{initials}</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-[13px] font-semibold text-foreground truncate">
+            {userName}
+          </div>
+          <div className="text-[11px] text-muted-foreground truncate">
+            {userEmail}
+          </div>
+        </div>
+        <button
+          onClick={handleSignOut}
+          title="Sign out"
+          className="w-7 h-7 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0"
+        >
+          <LogOut className="w-3 h-3" />
+        </button>
+      </div>
+    </aside>
   );
 }

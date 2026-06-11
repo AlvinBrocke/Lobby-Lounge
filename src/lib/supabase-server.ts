@@ -1,11 +1,4 @@
-/**
- * Supabase Server-Side Data Access Layer
- *
- * Use these functions in Server Components, Server Actions, and Route Handlers
- */
-
 import { createClient } from "@/utils/supabase/server";
-import { cookies } from "next/headers";
 import type {
   Track,
   Channel,
@@ -13,17 +6,12 @@ import type {
   UserProfile,
 } from "@/types/database.types";
 
-// Helper to get server supabase client
-function getServerClient() {
-  return createClient(cookies());
-}
-
 // ===================
 // TRACKS (Server)
 // ===================
 
 export async function getTracksServer(limit = 50) {
-  const supabase = getServerClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("tracks")
     .select("*")
@@ -35,7 +23,7 @@ export async function getTracksServer(limit = 50) {
 }
 
 export async function getTrackByIdServer(id: string) {
-  const supabase = getServerClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("tracks")
     .select("*")
@@ -51,7 +39,7 @@ export async function getTrackByIdServer(id: string) {
 // ===================
 
 export async function getChannelsServer(limit = 50) {
-  const supabase = getServerClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("channels")
     .select("*")
@@ -67,7 +55,7 @@ export async function getChannelsServer(limit = 50) {
 // ===================
 
 export async function getUserPlaylistsServer(userId: string) {
-  const supabase = getServerClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("playlists")
     .select("*")
@@ -83,7 +71,7 @@ export async function getUserPlaylistsServer(userId: string) {
 // ===================
 
 export async function getUserProfileServer(userId: string) {
-  const supabase = getServerClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("user_profiles")
     .select("*")
@@ -99,7 +87,7 @@ export async function getUserProfileServer(userId: string) {
 // ===================
 
 export async function getCurrentUserServer() {
-  const supabase = getServerClient();
+  const supabase = await createClient();
   const {
     data: { user },
     error,
@@ -110,7 +98,7 @@ export async function getCurrentUserServer() {
 }
 
 export async function getSessionServer() {
-  const supabase = getServerClient();
+  const supabase = await createClient();
   const {
     data: { session },
     error,

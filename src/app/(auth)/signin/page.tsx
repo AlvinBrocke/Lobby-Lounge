@@ -3,8 +3,9 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSignIn } from "@clerk/nextjs";
+import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { Loader2, Mail, Lock, ChevronRight } from "lucide-react";
-import { createClient } from "@/utils/supabase/client";
 import { AuthBackground } from "@/components/auth/AuthBackground";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ import {
 
 export default function LoginPage() {
   const router = useRouter();
+  const { isLoaded, signIn, setActive } = useSignIn();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,13 +28,34 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isLoaded) return;
     setLoading(true);
     setError(null);
 
-    // Mock login for development
-    setTimeout(() => {
-      router.push("/dashboard");
-    }, 1000);
+    try {
+      const result = await signIn.create({ identifier: email, password });
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+        router.push("/dashboard");
+      }
+    } catch (err) {
+      if (isClerkAPIResponseError(err)) {
+        setError(err.errors[0].longMessage ?? err.errors[0].message);
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    if (!isLoaded) return;
+    await signIn.authenticateWithRedirect({
+      strategy: "oauth_google",
+      redirectUrl: "/sso-callback",
+      redirectUrlComplete: "/dashboard",
+    });
   };
 
   return (
@@ -104,23 +127,20 @@ export default function LoginPage() {
               </div>
 
               {error && (
-                <p className="text-red-400 text-sm text-center font-medium animate-pulse">
+                <p className="text-red-400 text-sm text-center font-medium">
                   {error}
                 </p>
               )}
 
               <Button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !isLoaded}
                 className="w-full h-12 bg-white text-black hover:bg-gray-200 font-bold rounded-xl transition-all shadow-xl shadow-white/5 mt-4"
               >
                 {loading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
-                  <>
-                    Sign In
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </>
+                  <>Sign In</>
                 )}
               </Button>
             </form>
@@ -138,13 +158,7 @@ export default function LoginPage() {
               <Button
                 variant="outline"
                 className="bg-white/5 border-white/10 hover:bg-white/10 h-12 rounded-xl w-full flex items-center justify-center gap-3"
-                onClick={async () => {
-                  const supabase = createClient();
-                  await supabase.auth.signInWithOAuth({
-                    provider: "google",
-                    options: { redirectTo: "/dashboard" },
-                  });
-                }}
+                onClick={handleGoogleSignIn}
               >
                 <img
                   src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"

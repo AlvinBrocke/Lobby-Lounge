@@ -1,11 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import {
   ListMusic,
-  Mic2,
   MonitorSpeaker,
   Pause,
   Play,
@@ -15,136 +12,178 @@ import {
   SkipForward,
   Volume2,
 } from "lucide-react";
-import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+function EqBars({ playing }: { playing: boolean }) {
+  return (
+    <div
+      className={cn(
+        "flex gap-[2.5px] items-end",
+        !playing && "eq-bars-paused",
+      )}
+    >
+      <span className="eq-bar w-[2.5px] h-[9px]" />
+      <span className="eq-bar w-[2.5px] h-[14px]" />
+      <span className="eq-bar w-[2.5px] h-[11px]" />
+      <span className="eq-bar w-[2.5px] h-[17px]" />
+      <span className="eq-bar w-[2.5px] h-[13px]" />
+      <span className="eq-bar w-[2.5px] h-[16px]" />
+    </div>
+  );
+}
 
 export function PlayerBar() {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState([75]);
+  const [playing, setPlaying] = useState(true);
+  const [progress, setProgress] = useState(34);
+  const [volume, setVolume] = useState(72);
+  const [shuffle, setShuffle] = useState(false);
+  const [repeat, setRepeat] = useState(false);
+  const rafRef = useRef<number>(0);
+  const lastTimeRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (!playing) return;
+    const tick = (ts: number) => {
+      if (lastTimeRef.current !== 0) {
+        const delta = ts - lastTimeRef.current;
+        setProgress((p) => {
+          const next = p + (delta / 245000) * 100;
+          return next >= 100 ? 0 : next;
+        });
+      }
+      lastTimeRef.current = ts;
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      lastTimeRef.current = 0;
+    };
+  }, [playing]);
+
+  const totalSeconds = 245;
+  const currentSeconds = Math.round((progress / 100) * totalSeconds);
+  const formatTime = (s: number) =>
+    `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
   return (
-    <div className="h-full px-6 flex items-center justify-between text-foreground">
-      {/* 1. Track Info (Left) */}
-      <div className="flex items-center w-[30%] space-x-4 group/info cursor-pointer">
-        {/* Album Art */}
-        <div className="relative w-14 h-14 rounded-xl shadow-lg overflow-hidden border border-border/10 group-hover/info:scale-105 transition-transform duration-300">
-          {/* Placeholder Gradient if no image, or actual image */}
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 animate-gradient-xy" />
-          <div className="absolute inset-0 flex items-center justify-center bg-black/10">
-            <ListMusic className="text-white/50 w-6 h-6" />
-          </div>
-        </div>
-
-        <div className="flex flex-col min-w-0 justify-center">
-          <span className="text-sm font-bold hover:underline truncate cursor-pointer text-foreground">
-            Lounge Vibes Vol. 1
-          </span>
-          <span className="text-xs text-muted-foreground hover:text-foreground transition-colors truncate cursor-pointer hover:underline">
-            Lobby & Lounge Signature Mix
-          </span>
-        </div>
-
-        {/* Like Button (Hidden by default, visible on hover) */}
-        {/* Could add Heart icon here */}
-      </div>
-
-      {/* 2. Player Controls (Center) */}
-      <div className="flex flex-col items-center max-w-[40%] w-full space-y-2">
-        {/* Buttons */}
-        <div className="flex items-center gap-6">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-primary transition-colors hover:scale-110 w-8 h-8"
-          >
-            <Shuffle className="w-4 h-4" />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-foreground hover:text-primary transition-colors hover:scale-110 w-8 h-8"
-          >
-            <SkipBack className="w-5 h-5 fill-current" />
-          </Button>
-
-          <div
-            className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-105 transition-all duration-200 cursor-pointer active:scale-95"
-            onClick={() => setIsPlaying(!isPlaying)}
-          >
-            {isPlaying ? (
-              <Pause className="w-5 h-5 fill-current" />
-            ) : (
-              <Play className="w-5 h-5 fill-current ml-0.5" />
-            )}
-          </div>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-foreground hover:text-primary transition-colors hover:scale-110 w-8 h-8"
-          >
-            <SkipForward className="w-5 h-5 fill-current" />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-primary transition-colors hover:scale-110 w-8 h-8"
-          >
-            <Repeat className="w-4 h-4" />
-          </Button>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="w-full flex items-center gap-3 group/progress">
-          <span className="text-[10px] text-muted-foreground font-mono w-8 text-right tabular-nums">
-            1:24
-          </span>
-          <div className="relative flex-1 h-1 bg-secondary rounded-full cursor-pointer group-hover/progress:h-1.5 transition-all duration-300">
-            <div className="absolute top-0 left-0 h-full w-[33%] bg-primary rounded-full group-hover/progress:bg-primary/80" />
-            {/* Scrubber Handle (Visible on group hover) */}
-            <div className="absolute top-1/2 left-[33%] -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-md opacity-0 group-hover/progress:opacity-100 transition-opacity duration-200" />
-          </div>
-          <span className="text-[10px] text-muted-foreground font-mono w-8 tabular-nums">
-            3:45
-          </span>
-        </div>
-      </div>
-
-      {/* 3. Volume & Extra (Right) */}
-      <div className="flex items-center justify-end w-[30%] gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-muted-foreground hover:text-foreground h-8 w-8"
-        >
-          <Mic2 className="w-4 h-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-muted-foreground hover:text-foreground h-8 w-8"
-        >
-          <ListMusic className="w-4 h-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-muted-foreground hover:text-foreground h-8 w-8"
-        >
-          <MonitorSpeaker className="w-4 h-4" />
-        </Button>
-
-        <div className="flex items-center gap-2 w-28 group/volume">
-          <Volume2 className="w-4 h-4 text-muted-foreground group-hover/volume:text-foreground transition-colors" />
-          <Slider
-            defaultValue={[75]}
-            max={100}
-            step={1}
-            className="w-full cursor-pointer"
-            onValueChange={(val) => setVolume(val)}
+    <div className="h-full px-6 flex items-center justify-between gap-5">
+      {/* Track info */}
+      <div className="flex items-center gap-3 w-[28%] min-w-0">
+        <div className="relative w-[46px] h-[46px] rounded-lg overflow-hidden border border-border shrink-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=120&h=120&fit=crop"
+            alt="album"
+            className="w-full h-full object-cover"
           />
+          <div className="absolute inset-0 bg-black/22" />
+          <div className="absolute bottom-[5px] left-[5px]">
+            <EqBars playing={playing} />
+          </div>
+        </div>
+        <div className="min-w-0">
+          <div className="text-[13px] font-semibold text-foreground truncate">
+            Evening Lounge Jazz
+          </div>
+          <div className="text-[11px] text-muted-foreground truncate mt-0.5">
+            Lobby &amp; Lounge · Signature Mix
+          </div>
+        </div>
+      </div>
+
+      {/* Controls */}
+      <div className="flex flex-col items-center gap-2 flex-1 max-w-[460px]">
+        <div className="flex items-center gap-3.5">
+          <button
+            onClick={() => setShuffle((s) => !s)}
+            className={cn(
+              "flex items-center justify-center w-[30px] h-[30px] rounded-lg transition-colors",
+              shuffle ? "text-primary" : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <Shuffle className="w-[15px] h-[15px]" />
+          </button>
+          <button className="flex items-center justify-center w-[30px] h-[30px] rounded-lg text-foreground hover:text-primary transition-colors">
+            <SkipBack className="w-[17px] h-[17px]" />
+          </button>
+          <button
+            onClick={() => setPlaying((p) => !p)}
+            className="w-[38px] h-[38px] rounded-full flex items-center justify-center shrink-0 shadow-md transition-transform hover:scale-105 active:scale-95
+              bg-white text-[#0F1419] dark:bg-white dark:text-[#0F1419]
+              light:bg-[#00388D] light:text-white"
+          >
+            {playing ? (
+              <Pause className="w-[18px] h-[18px] fill-current" />
+            ) : (
+              <Play className="w-[18px] h-[18px] fill-current ml-0.5" />
+            )}
+          </button>
+          <button className="flex items-center justify-center w-[30px] h-[30px] rounded-lg text-foreground hover:text-primary transition-colors">
+            <SkipForward className="w-[17px] h-[17px]" />
+          </button>
+          <button
+            onClick={() => setRepeat((r) => !r)}
+            className={cn(
+              "flex items-center justify-center w-[30px] h-[30px] rounded-lg transition-colors",
+              repeat ? "text-primary" : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <Repeat className="w-[15px] h-[15px]" />
+          </button>
+        </div>
+
+        {/* Progress */}
+        <div className="flex items-center gap-2.5 w-full">
+          <span className="font-mono text-[10px] text-muted-foreground shrink-0 w-7 text-center tabular-nums">
+            {formatTime(currentSeconds)}
+          </span>
+          <div
+            className="flex-1 h-1 bg-border rounded-full relative cursor-pointer group"
+            onClick={(e) => {
+              const r = e.currentTarget.getBoundingClientRect();
+              setProgress(Math.max(0, Math.min(100, ((e.clientX - r.left) / r.width) * 100)));
+            }}
+          >
+            <div
+              className="absolute left-0 top-0 h-full bg-primary rounded-full"
+              style={{ width: `${progress}%` }}
+            />
+            <div
+              className="absolute top-1/2 -translate-y-1/2 w-[11px] h-[11px] rounded-full bg-foreground border-2 border-primary opacity-0 group-hover:opacity-100 transition-opacity -translate-x-1/2 pointer-events-none"
+              style={{ left: `${progress}%` }}
+            />
+          </div>
+          <span className="font-mono text-[10px] text-muted-foreground shrink-0 w-7 text-center tabular-nums">
+            {formatTime(totalSeconds)}
+          </span>
+        </div>
+      </div>
+
+      {/* Extras */}
+      <div className="flex items-center gap-1.5 w-[28%] justify-end">
+        <button className="flex items-center justify-center w-[30px] h-[30px] rounded-lg text-muted-foreground hover:text-foreground transition-colors">
+          <MonitorSpeaker className="w-[15px] h-[15px]" />
+        </button>
+        <button className="flex items-center justify-center w-[30px] h-[30px] rounded-lg text-muted-foreground hover:text-foreground transition-colors">
+          <ListMusic className="w-[15px] h-[15px]" />
+        </button>
+        <div className="flex items-center gap-2 ml-1">
+          <Volume2 className="w-[13px] h-[13px] text-muted-foreground shrink-0" />
+          <div className="relative w-20 h-1 bg-border rounded-full">
+            <div
+              className="absolute left-0 top-0 h-full bg-primary rounded-full pointer-events-none"
+              style={{ width: `${volume}%` }}
+            />
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={volume}
+              onChange={(e) => setVolume(Number(e.target.value))}
+              className="absolute inset-0 w-full h-[200%] -top-[50%] opacity-0 cursor-pointer"
+            />
+          </div>
         </div>
       </div>
     </div>
