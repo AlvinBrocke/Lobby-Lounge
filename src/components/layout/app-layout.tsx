@@ -2,7 +2,7 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlayerBar } from "./player-bar";
-import { Sidebar } from "./sidebar";
+import { Sidebar } from "./Sidebar";
 import { Topbar } from "./topbar";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
