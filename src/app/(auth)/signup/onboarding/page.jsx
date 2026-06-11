@@ -5,37 +5,29 @@ import {
   Music,
   Guitar,
   Star,
-  Mic2, // Hip-Hop/Singing
-  Zap, // Electrical/Electronic
-  Heart, // R&B/Romantic
-  Disc, // Indie/Record
-  Leaf, // Folk/Nature
-  CloudSun, // Reggae/Chill (using sun/cloud as proxy or similar)
-  // For specialized icons we might need generic fallbacks or specific lucide matches:
-  Piano, // Classical? No Piano in standard set? Use Music or similar
-  Speaker,
-  Settings,
-  Coffee, // Relaxed
-  Target, // Focused
+  Mic2,
+  Zap,
+  Heart,
+  Disc,
+  Leaf,
+  Coffee,
+  Target,
   Play,
-  Check,
 } from "lucide-react";
-// Using standard icons for best match
-import {
-  PiGuitarFill,
-  PiMicrophoneStageFill,
-  PiPianoKeysFill,
-  PiSaxophoneFill,
-} from "lucide-react";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { AuthBackground } from "@/components/auth/AuthBackground";
 
 const GUEST_MODE_GRADIENT =
   "bg-gradient-to-br from-secondary-500 to-primary-900"; // Teal (Secondary) to Deep Indigo (Primary)
 
 function MainComponent() {
+  const { user } = useUser();
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [selectedMood, setSelectedMood] = useState("");
+  const [saving, setSaving] = useState(false);
   const [preferences, setPreferences] = useState({
     tempo: "Medium",
     volume: "Medium",
@@ -83,9 +75,28 @@ function MainComponent() {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const handleSubmit = () => {
-    // Navigate to dashboard
-    window.location.href = "/dashboard";
+  const handleSubmit = async () => {
+    setSaving(true);
+    try {
+      await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          display_name: user?.fullName || user?.firstName || "",
+          venue_name: user?.fullName || "My Venue",
+          email: user?.primaryEmailAddress?.emailAddress || "",
+          genres: selectedGenres,
+          mood: selectedMood,
+          tempo: preferences.tempo,
+          allow_explicit: preferences.allowExplicit,
+          time_based: preferences.timeBased,
+        }),
+      });
+    } catch (e) {
+      console.error("Failed to save profile", e);
+    } finally {
+      router.push("/dashboard");
+    }
   };
 
   return (
@@ -353,9 +364,10 @@ function MainComponent() {
           ) : (
             <button
               onClick={handleSubmit}
-              className="bg-white text-blue-900 px-8 py-2.5 rounded-lg font-bold shadow-lg shadow-black/10 hover:bg-gray-100 hover:scale-105 transition-all"
+              disabled={saving}
+              className="bg-white text-blue-900 px-8 py-2.5 rounded-lg font-bold shadow-lg shadow-black/10 hover:bg-gray-100 hover:scale-105 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Start Exploring
+              {saving ? "Saving…" : "Start Exploring"}
             </button>
           )}
         </div>
