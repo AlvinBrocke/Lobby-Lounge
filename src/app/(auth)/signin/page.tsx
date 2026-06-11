@@ -1,26 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useSignIn } from "@clerk/nextjs";
+import { useAuth, useSignIn } from "@clerk/nextjs";
 import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
-import { Loader2, Mail, Lock, ChevronRight } from "lucide-react";
-import { AuthBackground } from "@/components/auth/AuthBackground";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardFooter,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Loader2, Mail, Lock } from "lucide-react";
+import { AuthShell } from "@/components/auth/AuthShell";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { isSignedIn } = useAuth();
   const { isLoaded, signIn, setActive } = useSignIn();
+
+  useEffect(() => {
+    if (isSignedIn) router.replace("/dashboard");
+  }, [isSignedIn, router]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -59,132 +54,308 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4 bg-background">
-      <AuthBackground />
+    <AuthShell>
+      <div
+        style={{
+          background: "rgba(15,20,25,.55)",
+          backdropFilter: "blur(24px)",
+          border: "1px solid rgba(255,255,255,.1)",
+          borderRadius: 24,
+          padding: "40px 36px",
+          boxShadow: "0 40px 80px -20px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04)",
+        }}
+      >
+        {/* Header */}
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <h1
+            style={{
+              fontFamily: "var(--ll-font-display)",
+              fontWeight: 800,
+              fontSize: 28,
+              letterSpacing: "-.025em",
+              color: "#fff",
+              marginBottom: 8,
+            }}
+          >
+            Welcome back
+          </h1>
+          <p
+            style={{
+              fontFamily: "var(--ll-font-body)",
+              fontSize: 14,
+              color: "var(--ll-on-ink-3)",
+            }}
+          >
+            Sign in to manage your venue&apos;s atmosphere
+          </p>
+        </div>
 
-      <div className="relative z-10 w-full max-w-[440px] animate-in fade-in zoom-in-95 duration-500">
-        <Card className="border-none shadow-2xl bg-black/40 backdrop-blur-xl text-white">
-          <CardHeader className="text-center pb-8">
-            <div className="flex justify-center mb-6">
-              <Link href="/">
-                <img
-                  src="/images/L&L Main Logo.png"
-                  alt="Lobby & Lounge Logo"
-                  className="h-10 w-auto brightness-0 invert"
-                />
-              </Link>
+        {/* Form */}
+        <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div>
+            <label
+              style={{
+                display: "block",
+                fontFamily: "var(--ll-font-body)",
+                fontWeight: 700,
+                fontSize: 11,
+                textTransform: "uppercase",
+                letterSpacing: ".12em",
+                color: "rgba(255,255,255,.5)",
+                marginBottom: 8,
+              }}
+            >
+              Email Address
+            </label>
+            <div style={{ position: "relative" }}>
+              <Mail
+                style={{
+                  position: "absolute",
+                  left: 14,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  width: 15,
+                  height: 15,
+                  color: "rgba(255,255,255,.3)",
+                  pointerEvents: "none",
+                }}
+              />
+              <input
+                type="email"
+                required
+                placeholder="name@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={{
+                  width: "100%",
+                  height: 48,
+                  paddingLeft: 40,
+                  paddingRight: 16,
+                  background: "rgba(255,255,255,.05)",
+                  border: "1px solid rgba(255,255,255,.1)",
+                  borderRadius: 12,
+                  color: "#fff",
+                  fontFamily: "var(--ll-font-body)",
+                  fontSize: 14,
+                  outline: "none",
+                  boxSizing: "border-box",
+                  transition: "border-color .2s",
+                }}
+                onFocus={(e) => (e.target.style.borderColor = "rgba(78,205,196,.6)")}
+                onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,.1)")}
+              />
             </div>
-            <CardTitle className="text-3xl font-bold tracking-tight">
-              Welcome back
-            </CardTitle>
-            <CardDescription className="text-gray-400 font-medium pt-1">
-              Sign in to manage your venue's atmosphere
-            </CardDescription>
-          </CardHeader>
+          </div>
 
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-300 ml-1">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                  <Input
-                    type="email"
-                    required
-                    placeholder="name@company.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus-visible:ring-primary-500 h-12 rounded-xl"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between items-center px-1">
-                  <label className="text-sm font-semibold text-gray-300">
-                    Password
-                  </label>
-                  <Link
-                    href="#"
-                    className="text-xs text-white/60 hover:text-white transition-colors"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                  <Input
-                    type="password"
-                    required
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus-visible:ring-primary-500 h-12 rounded-xl"
-                  />
-                </div>
-              </div>
-
-              {error && (
-                <p className="text-red-400 text-sm text-center font-medium">
-                  {error}
-                </p>
-              )}
-
-              <Button
-                type="submit"
-                disabled={loading || !isLoaded}
-                className="w-full h-12 bg-white text-black hover:bg-gray-200 font-bold rounded-xl transition-all shadow-xl shadow-white/5 mt-4"
+          <div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 8,
+              }}
+            >
+              <label
+                style={{
+                  fontFamily: "var(--ll-font-body)",
+                  fontWeight: 700,
+                  fontSize: 11,
+                  textTransform: "uppercase",
+                  letterSpacing: ".12em",
+                  color: "rgba(255,255,255,.5)",
+                }}
               >
-                {loading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <>Sign In</>
-                )}
-              </Button>
-            </form>
-
-            <div className="relative my-8">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/10"></div>
-              </div>
-              <div className="relative flex justify-center text-xs uppercase tracking-widest font-bold">
-                <span className="bg-inherit px-3 text-white">Or</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4">
-              <Button
-                variant="outline"
-                className="bg-white/5 border-white/10 hover:bg-white/10 h-12 rounded-xl w-full flex items-center justify-center gap-3"
-                onClick={handleGoogleSignIn}
-              >
-                <img
-                  src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                  alt="Google"
-                  className="w-5 h-5"
-                />
-                <span className="font-bold text-white/80">
-                  Continue with Google
-                </span>
-              </Button>
-            </div>
-          </CardContent>
-
-          <CardFooter className="flex justify-center pt-2">
-            <p className="text-sm text-gray-400">
-              Don't have an account?{" "}
+                Password
+              </label>
               <Link
-                href="/signup"
-                className="text-white hover:underline font-bold"
+                href="#"
+                style={{
+                  fontFamily: "var(--ll-font-body)",
+                  fontSize: 12,
+                  color: "rgba(255,255,255,.4)",
+                  transition: "color .2s",
+                }}
+                onMouseEnter={(e) => ((e.target as HTMLElement).style.color = "#fff")}
+                onMouseLeave={(e) =>
+                  ((e.target as HTMLElement).style.color = "rgba(255,255,255,.4)")
+                }
               >
-                Register
+                Forgot password?
               </Link>
+            </div>
+            <div style={{ position: "relative" }}>
+              <Lock
+                style={{
+                  position: "absolute",
+                  left: 14,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  width: 15,
+                  height: 15,
+                  color: "rgba(255,255,255,.3)",
+                  pointerEvents: "none",
+                }}
+              />
+              <input
+                type="password"
+                required
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{
+                  width: "100%",
+                  height: 48,
+                  paddingLeft: 40,
+                  paddingRight: 16,
+                  background: "rgba(255,255,255,.05)",
+                  border: "1px solid rgba(255,255,255,.1)",
+                  borderRadius: 12,
+                  color: "#fff",
+                  fontFamily: "var(--ll-font-body)",
+                  fontSize: 14,
+                  outline: "none",
+                  boxSizing: "border-box",
+                  transition: "border-color .2s",
+                }}
+                onFocus={(e) => (e.target.style.borderColor = "rgba(78,205,196,.6)")}
+                onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,.1)")}
+              />
+            </div>
+          </div>
+
+          {error && (
+            <p
+              style={{
+                fontFamily: "var(--ll-font-body)",
+                fontSize: 13,
+                color: "#f87171",
+                textAlign: "center",
+              }}
+            >
+              {error}
             </p>
-          </CardFooter>
-        </Card>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading || !isLoaded}
+            style={{
+              width: "100%",
+              height: 48,
+              marginTop: 4,
+              background: "var(--ll-accent)",
+              color: "var(--ll-accent-ink)",
+              border: "none",
+              borderRadius: 12,
+              fontFamily: "var(--ll-font-body)",
+              fontWeight: 700,
+              fontSize: 15,
+              cursor: loading ? "not-allowed" : "pointer",
+              opacity: loading ? 0.7 : 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              boxShadow: "0 8px 24px -6px rgba(78,205,196,.5)",
+              transition: "opacity .2s, transform .2s",
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.transform = "none";
+            }}
+          >
+            {loading ? <Loader2 style={{ width: 18, height: 18, animation: "spin 1s linear infinite" }} /> : "Sign In"}
+          </button>
+        </form>
+
+        {/* Divider */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            margin: "24px 0",
+          }}
+        >
+          <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,.08)" }} />
+          <span
+            style={{
+              fontFamily: "var(--ll-font-body)",
+              fontWeight: 700,
+              fontSize: 10,
+              textTransform: "uppercase",
+              letterSpacing: ".15em",
+              color: "rgba(255,255,255,.3)",
+            }}
+          >
+            Or
+          </span>
+          <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,.08)" }} />
+        </div>
+
+        {/* Google OAuth */}
+        <button
+          onClick={handleGoogleSignIn}
+          style={{
+            width: "100%",
+            height: 48,
+            background: "rgba(255,255,255,.05)",
+            border: "1px solid rgba(255,255,255,.1)",
+            borderRadius: 12,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 12,
+            cursor: "pointer",
+            transition: "background .2s, border-color .2s",
+            fontFamily: "var(--ll-font-body)",
+            fontWeight: 700,
+            fontSize: 14,
+            color: "rgba(255,255,255,.8)",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,.09)";
+            (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,.2)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,.05)";
+            (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,.1)";
+          }}
+        >
+          <img
+            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+            alt="Google"
+            style={{ width: 18, height: 18 }}
+          />
+          Continue with Google
+        </button>
+
+        {/* Footer */}
+        <p
+          style={{
+            marginTop: 24,
+            textAlign: "center",
+            fontFamily: "var(--ll-font-body)",
+            fontSize: 13,
+            color: "rgba(255,255,255,.4)",
+          }}
+        >
+          Don&apos;t have an account?{" "}
+          <Link
+            href="/signup"
+            style={{
+              color: "var(--ll-accent)",
+              fontWeight: 700,
+              textDecoration: "none",
+            }}
+          >
+            Register free
+          </Link>
+        </p>
       </div>
-    </div>
+    </AuthShell>
   );
 }

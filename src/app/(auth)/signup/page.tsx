@@ -1,27 +1,60 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useSignUp } from "@clerk/nextjs";
+import { useAuth, useSignUp } from "@clerk/nextjs";
 import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
-import { Loader2, Mail, Lock, ChevronRight, KeyRound } from "lucide-react";
-import { AuthBackground } from "@/components/auth/AuthBackground";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardFooter,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Loader2, Mail, Lock, KeyRound, ChevronRight } from "lucide-react";
+import { AuthShell } from "@/components/auth/AuthShell";
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  height: 48,
+  paddingLeft: 40,
+  paddingRight: 16,
+  background: "rgba(255,255,255,.05)",
+  border: "1px solid rgba(255,255,255,.1)",
+  borderRadius: 12,
+  color: "#fff",
+  fontFamily: "var(--ll-font-body)",
+  fontSize: 14,
+  outline: "none",
+  boxSizing: "border-box",
+  transition: "border-color .2s",
+};
+
+const labelStyle: React.CSSProperties = {
+  display: "block",
+  fontFamily: "var(--ll-font-body)",
+  fontWeight: 700,
+  fontSize: 11,
+  textTransform: "uppercase",
+  letterSpacing: ".12em",
+  color: "rgba(255,255,255,.5)",
+  marginBottom: 8,
+};
+
+const iconStyle: React.CSSProperties = {
+  position: "absolute",
+  left: 14,
+  top: "50%",
+  transform: "translateY(-50%)",
+  width: 15,
+  height: 15,
+  color: "rgba(255,255,255,.3)",
+  pointerEvents: "none",
+};
 
 export default function SignupPage() {
   const router = useRouter();
+  const { isSignedIn } = useAuth();
   const { isLoaded, signUp, setActive } = useSignUp();
   const [step, setStep] = useState<"signup" | "verify">("signup");
+
+  useEffect(() => {
+    if (isSignedIn) router.replace("/dashboard");
+  }, [isSignedIn, router]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
@@ -36,14 +69,11 @@ export default function SignupPage() {
 
     try {
       const result = await signUp.create({ emailAddress: email, password });
-
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
-        router.push("/signup/onboarding?step=3");
+        router.push("/signup/onboarding");
       } else {
-        await signUp.prepareEmailAddressVerification({
-          strategy: "email_code",
-        });
+        await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
         setStep("verify");
       }
     } catch (err) {
@@ -67,7 +97,7 @@ export default function SignupPage() {
       const result = await signUp.attemptEmailAddressVerification({ code });
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
-        router.push("/signup/onboarding?step=3");
+        router.push("/signup/onboarding");
       }
     } catch (err) {
       if (isClerkAPIResponseError(err)) {
@@ -85,218 +115,310 @@ export default function SignupPage() {
     await signUp.authenticateWithRedirect({
       strategy,
       redirectUrl: "/sso-callback",
-      redirectUrlComplete: "/signup/onboarding?step=3",
+      redirectUrlComplete: "/signup/onboarding",
     });
   };
 
+  const primaryBtn: React.CSSProperties = {
+    width: "100%",
+    height: 48,
+    marginTop: 4,
+    background: "var(--ll-accent)",
+    color: "var(--ll-accent-ink)",
+    border: "none",
+    borderRadius: 12,
+    fontFamily: "var(--ll-font-body)",
+    fontWeight: 700,
+    fontSize: 15,
+    cursor: loading ? "not-allowed" : "pointer",
+    opacity: loading ? 0.7 : 1,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    boxShadow: "0 8px 24px -6px rgba(78,205,196,.5)",
+    transition: "opacity .2s, transform .2s",
+  };
+
   return (
-    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4 bg-background">
-      <AuthBackground />
+    <AuthShell>
+      <div
+        style={{
+          background: "rgba(15,20,25,.55)",
+          backdropFilter: "blur(24px)",
+          border: "1px solid rgba(255,255,255,.1)",
+          borderRadius: 24,
+          padding: "40px 36px",
+          boxShadow: "0 40px 80px -20px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04)",
+        }}
+      >
+        {/* Header */}
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          {step === "signup" ? (
+            <>
+              <h1
+                style={{
+                  fontFamily: "var(--ll-font-display)",
+                  fontWeight: 800,
+                  fontSize: 28,
+                  letterSpacing: "-.025em",
+                  color: "#fff",
+                  marginBottom: 8,
+                }}
+              >
+                Create your account
+              </h1>
+              <p style={{ fontFamily: "var(--ll-font-body)", fontSize: 14, color: "var(--ll-on-ink-3)" }}>
+                Start your 14-day free business trial
+              </p>
+            </>
+          ) : (
+            <>
+              <div
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 14,
+                  background: "rgba(78,205,196,.12)",
+                  border: "1px solid rgba(78,205,196,.2)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "0 auto 16px",
+                }}
+              >
+                <Mail style={{ width: 22, height: 22, color: "var(--ll-accent)" }} />
+              </div>
+              <h1
+                style={{
+                  fontFamily: "var(--ll-font-display)",
+                  fontWeight: 800,
+                  fontSize: 28,
+                  letterSpacing: "-.025em",
+                  color: "#fff",
+                  marginBottom: 8,
+                }}
+              >
+                Check your email
+              </h1>
+              <p style={{ fontFamily: "var(--ll-font-body)", fontSize: 14, color: "var(--ll-on-ink-3)" }}>
+                We sent a 6-digit code to{" "}
+                <span style={{ color: "#fff", fontWeight: 600 }}>{email}</span>
+              </p>
+            </>
+          )}
+        </div>
 
-      <div className="relative z-10 w-full max-w-[440px] animate-in fade-in zoom-in-95 duration-500">
-        <Card className="border-none shadow-2xl bg-black/40 backdrop-blur-xl text-white">
-          <CardHeader className="text-center pb-8">
-            <div className="flex justify-center mb-6">
-              <Link href="/">
-                <img
-                  src="/images/L&L Main Logo.png"
-                  alt="Lobby & Lounge Logo"
-                  className="h-10 w-auto brightness-0 invert"
-                />
-              </Link>
-            </div>
-            {step === "signup" ? (
-              <>
-                <CardTitle className="text-3xl font-bold tracking-tight">
-                  Create your account
-                </CardTitle>
-                <CardDescription className="text-gray-400 font-medium pt-1">
-                  Start your 14-day free business trial
-                </CardDescription>
-              </>
-            ) : (
-              <>
-                <CardTitle className="text-3xl font-bold tracking-tight">
-                  Check your email
-                </CardTitle>
-                <CardDescription className="text-gray-400 font-medium pt-1">
-                  We sent a code to <span className="text-white">{email}</span>
-                </CardDescription>
-              </>
-            )}
-          </CardHeader>
-
-          <CardContent>
-            {step === "signup" ? (
-              <>
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-300 ml-1">
-                      Email Address
-                    </label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                      <Input
-                        type="email"
-                        required
-                        placeholder="name@company.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus-visible:ring-primary-500 h-12 rounded-xl"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-300 ml-1">
-                      Password
-                    </label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                      <Input
-                        type="password"
-                        required
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus-visible:ring-primary-500 h-12 rounded-xl"
-                      />
-                    </div>
-                  </div>
-
-                  {error && (
-                    <p className="text-red-400 text-sm text-center font-medium">
-                      {error}
-                    </p>
-                  )}
-
-                  <Button
-                    type="submit"
-                    disabled={loading || !isLoaded}
-                    className="w-full h-12 bg-white text-black hover:bg-gray-200 font-bold rounded-xl transition-all shadow-xl shadow-white/5 mt-4"
-                  >
-                    {loading ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <>
-                        Continue
-                        <ChevronRight className="w-4 h-4 ml-1" />
-                      </>
-                    )}
-                  </Button>
-                </form>
-
-                <div className="relative my-8">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-white/10"></div>
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase tracking-widest font-bold">
-                    <span className="px-3 text-white">Or</span>
-                  </div>
+        {step === "signup" ? (
+          <>
+            <form onSubmit={handleSignup} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div>
+                <label style={labelStyle}>Email Address</label>
+                <div style={{ position: "relative" }}>
+                  <Mail style={iconStyle} />
+                  <input
+                    type="email"
+                    required
+                    placeholder="name@company.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    style={inputStyle}
+                    onFocus={(e) => (e.target.style.borderColor = "rgba(78,205,196,.6)")}
+                    onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,.1)")}
+                  />
                 </div>
+              </div>
 
-                <div className="flex flex-col gap-3">
-                  <Button
-                    variant="outline"
-                    className="bg-white/5 border-white/10 hover:bg-white/10 h-12 rounded-xl w-full flex items-center justify-center gap-3"
-                    onClick={() => handleOAuth("oauth_google")}
-                  >
+              <div>
+                <label style={labelStyle}>Password</label>
+                <div style={{ position: "relative" }}>
+                  <Lock style={iconStyle} />
+                  <input
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    style={inputStyle}
+                    onFocus={(e) => (e.target.style.borderColor = "rgba(78,205,196,.6)")}
+                    onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,.1)")}
+                  />
+                </div>
+              </div>
+
+              {error && (
+                <p style={{ fontFamily: "var(--ll-font-body)", fontSize: 13, color: "#f87171", textAlign: "center" }}>
+                  {error}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading || !isLoaded}
+                style={primaryBtn}
+                onMouseEnter={(e) => { if (!loading) (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "none"; }}
+              >
+                {loading ? (
+                  <Loader2 style={{ width: 18, height: 18 }} className="animate-spin" />
+                ) : (
+                  <>
+                    Continue
+                    <ChevronRight style={{ width: 16, height: 16 }} />
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* Divider */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "24px 0" }}>
+              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,.08)" }} />
+              <span style={{ fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".15em", color: "rgba(255,255,255,.3)" }}>
+                Or
+              </span>
+              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,.08)" }} />
+            </div>
+
+            {/* OAuth buttons */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {[
+                {
+                  label: "Continue with Google",
+                  icon: (
                     <img
                       src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
                       alt="Google"
-                      className="w-5 h-5"
+                      style={{ width: 18, height: 18 }}
                     />
-                    <span className="font-bold text-white/80">
-                      Continue with Google
-                    </span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="bg-white/5 border-white/10 hover:bg-white/10 h-12 rounded-xl w-full flex items-center justify-center gap-3"
-                    onClick={() => handleOAuth("oauth_apple")}
-                  >
-                    <svg className="w-5 h-5 fill-current" viewBox="0 0 18 18">
+                  ),
+                  onClick: () => handleOAuth("oauth_google"),
+                },
+                {
+                  label: "Continue with Apple",
+                  icon: (
+                    <svg style={{ width: 18, height: 18, fill: "#fff" }} viewBox="0 0 18 18">
                       <path d="M11.833 3.51c.367-1.16.035-2.28-.755-3.097a3.007 3.007 0 0 0-3.009-.64 2.822 2.822 0 0 0-2.202 2.766 2.89 2.89 0 0 0 3.037 3.03c1.071 0 2.298-.826 2.929-2.059Zm-1.637 4.197c-1.332 0-2.585.807-3.328.807-.738 0-1.844-.764-2.883-.746-1.365.02-2.625.795-3.328 2.016-.279.48-.44 1.157-.44 2.146 0 2.21 1.63 4.249 3.25 4.249.774 0 1.488-.52 2.261-.52.753 0 1.405.52 2.259.52 1.558 0 2.868-1.845 3.328-3.024-1.637-.622-2.311-2.146-2.311-3.693 0-1.32.744-2.593 1.836-3.235-.553-.872-1.46-1.428-2.644-1.52Z" />
                     </svg>
-                    <span className="font-bold text-white/80">
-                      Continue with Apple
-                    </span>
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <form onSubmit={handleVerify} className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-gray-300 ml-1">
-                    Verification Code
-                  </label>
-                  <div className="relative">
-                    <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                    <Input
-                      type="text"
-                      required
-                      placeholder="Enter 6-digit code"
-                      value={code}
-                      onChange={(e) => setCode(e.target.value)}
-                      className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus-visible:ring-primary-500 h-12 rounded-xl tracking-widest text-center"
-                      maxLength={6}
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                    />
-                  </div>
-                </div>
-
-                {error && (
-                  <p className="text-red-400 text-sm text-center font-medium">
-                    {error}
-                  </p>
-                )}
-
-                <Button
-                  type="submit"
-                  disabled={loading || !isLoaded}
-                  className="w-full h-12 bg-white text-black hover:bg-gray-200 font-bold rounded-xl transition-all shadow-xl shadow-white/5 mt-4"
-                >
-                  {loading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <>
-                      Verify Email
-                      <ChevronRight className="w-4 h-4 ml-1" />
-                    </>
-                  )}
-                </Button>
-
+                  ),
+                  onClick: () => handleOAuth("oauth_apple"),
+                },
+              ].map(({ label, icon, onClick }) => (
                 <button
-                  type="button"
-                  className="w-full text-sm text-gray-400 hover:text-white transition-colors mt-2"
-                  onClick={() => {
-                    setStep("signup");
-                    setError(null);
-                    setCode("");
+                  key={label}
+                  onClick={onClick}
+                  style={{
+                    width: "100%",
+                    height: 48,
+                    background: "rgba(255,255,255,.05)",
+                    border: "1px solid rgba(255,255,255,.1)",
+                    borderRadius: 12,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 12,
+                    cursor: "pointer",
+                    fontFamily: "var(--ll-font-body)",
+                    fontWeight: 700,
+                    fontSize: 14,
+                    color: "rgba(255,255,255,.8)",
+                    transition: "background .2s, border-color .2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,.09)";
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,.2)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,.05)";
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,.1)";
                   }}
                 >
-                  ← Back to sign up
+                  {icon}
+                  {label}
                 </button>
-              </form>
-            )}
-          </CardContent>
+              ))}
+            </div>
 
-          {step === "signup" && (
-            <CardFooter className="flex justify-center pt-2">
-              <p className="text-sm text-gray-400">
-                Already have an account?{" "}
-                <Link
-                  href="/signin"
-                  className="text-white hover:underline font-bold"
-                >
-                  Sign In
-                </Link>
+            <p style={{ marginTop: 24, textAlign: "center", fontFamily: "var(--ll-font-body)", fontSize: 13, color: "rgba(255,255,255,.4)" }}>
+              Already have an account?{" "}
+              <Link href="/signin" style={{ color: "var(--ll-accent)", fontWeight: 700, textDecoration: "none" }}>
+                Sign In
+              </Link>
+            </p>
+          </>
+        ) : (
+          <form onSubmit={handleVerify} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div>
+              <label style={labelStyle}>Verification Code</label>
+              <div style={{ position: "relative" }}>
+                <KeyRound style={iconStyle} />
+                <input
+                  type="text"
+                  required
+                  placeholder="000000"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  maxLength={6}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  autoFocus
+                  style={{
+                    ...inputStyle,
+                    textAlign: "center",
+                    letterSpacing: "0.3em",
+                    fontSize: 20,
+                    fontWeight: 700,
+                    paddingLeft: 16,
+                  }}
+                  onFocus={(e) => (e.target.style.borderColor = "rgba(78,205,196,.6)")}
+                  onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,.1)")}
+                />
+              </div>
+            </div>
+
+            {error && (
+              <p style={{ fontFamily: "var(--ll-font-body)", fontSize: 13, color: "#f87171", textAlign: "center" }}>
+                {error}
               </p>
-            </CardFooter>
-          )}
-        </Card>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading || !isLoaded}
+              style={primaryBtn}
+              onMouseEnter={(e) => { if (!loading) (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "none"; }}
+            >
+              {loading ? (
+                <Loader2 style={{ width: 18, height: 18 }} className="animate-spin" />
+              ) : (
+                <>
+                  Verify Email
+                  <ChevronRight style={{ width: 16, height: 16 }} />
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setStep("signup"); setError(null); setCode(""); }}
+              style={{
+                background: "none",
+                border: "none",
+                fontFamily: "var(--ll-font-body)",
+                fontSize: 13,
+                color: "rgba(255,255,255,.4)",
+                cursor: "pointer",
+                transition: "color .2s",
+                padding: 0,
+              }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.color = "#fff")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,.4)")}
+            >
+              ← Back to sign up
+            </button>
+          </form>
+        )}
       </div>
-    </div>
+    </AuthShell>
   );
 }

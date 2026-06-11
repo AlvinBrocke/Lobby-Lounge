@@ -55,6 +55,7 @@ export function Sidebar() {
             src="/images/Logo Icon.png"
             alt="Logo"
             fill
+            sizes="34px"
             className="object-cover"
           />
         </div>
