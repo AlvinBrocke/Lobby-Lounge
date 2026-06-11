@@ -32,4 +32,6 @@ export interface PlayerState {
   addToQueue: (track: Track) => void;
   clearQueue: () => void;
   togglePlay: () => void;
+  nextTrack: () => void;
+  previousTrack: () => void;
 }

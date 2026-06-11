@@ -5,6 +5,7 @@
  * POST /api/tracks - Create a new track (requires auth)
  */
 
+import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -42,19 +43,14 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const supabase = await createClient();
-
-    // Check if user is authenticated
-    // const {
-    //   data: { user },
-    //   error: authError,
-    // } = await supabase.auth.getUser();
-
-    // if (authError || !user) {
-    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    // }
-
     const body = await request.json();
     const { name, image, audio_url, category, duration, artist } = body;
 

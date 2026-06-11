@@ -3,70 +3,108 @@
 import { cn } from "@/lib/utils";
 import { Clock, Music, Plus, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
+import usePlayerStore from "@/store/usePlayerStore";
 
-/* ── Data ─────────────────────────────────────────────── */
-const CHANNELS = [
-  {
-    id: "lounge",
-    name: "Lounge & Chill",
-    cat: "Relaxing",
-    bpm: "72 BPM",
-    img: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=600&h=600&fit=crop",
-  },
-  {
-    id: "retail",
-    name: "Retail Energy",
-    cat: "Upbeat",
-    bpm: "112 BPM",
-    img: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&h=600&fit=crop",
-  },
-  {
-    id: "focus",
-    name: "Deep Focus",
-    cat: "Productivity",
-    bpm: "84 BPM",
-    img: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&h=600&fit=crop",
-  },
-  {
-    id: "dinner",
-    name: "Dinner Jazz",
-    cat: "Elegant",
-    bpm: "74 BPM",
-    img: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=600&fit=crop",
-  },
-  {
-    id: "morning",
-    name: "Morning Boost",
-    cat: "Energetic",
-    bpm: "108 BPM",
-    img: "https://images.unsplash.com/photo-1498804103079-a6351b050096?w=600&h=600&fit=crop",
-  },
-  {
-    id: "ambient",
-    name: "Ambient Spa",
-    cat: "Wellness",
-    bpm: "60 BPM",
-    img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop",
-  },
-];
+/* ── API shape returned by /api/channels ──────────────── */
+interface ApiChannel {
+  id: string;
+  name: string;
+  category: string;
+  bpm: number | string | null;
+  cover_image: string | null;
+  audio_url?: string | null;
+}
 
-const SCHEDULE = [
-  { name: "Morning Boost", time: "8:00 AM", status: "done" as const },
-  { name: "Lunch Rush Pop", time: "12:00 PM", status: "done" as const },
-  { name: "Afternoon Chill", time: "3:00 PM", status: "now" as const },
-  { name: "Evening Jazz", time: "7:00 PM", status: "upcoming" as const },
-  { name: "Night Ambient", time: "10:00 PM", status: "upcoming" as const },
-];
+/* ── Normalised shape used by this page ──────────────── */
+interface Channel {
+  id: string;
+  name: string;
+  cat: string;
+  bpm: string;
+  img: string;
+  audio_url?: string | null;
+}
 
-const TRACKS = [
-  { num: 1, name: "Blue Bossa", artist: "Chet Baker Trio", energy: "low" as const, dur: "4:22" },
-  { num: 2, name: "Autumn Leaves", artist: "Coltrane Quartet", energy: "low" as const, dur: "4:47" },
-  { num: 3, name: "So What", artist: "Miles Davis", energy: "mid" as const, dur: "5:14" },
-  { num: 4, name: "Fly Me to the Moon", artist: "Frank Sinatra", energy: "low" as const, dur: "3:08" },
-  { num: 5, name: "Round Midnight", artist: "Thelonious Monk", energy: "mid" as const, dur: "5:32" },
-];
+/* ── API shape returned by /api/schedule ─────────────── */
+interface ApiScheduleItem {
+  name?: string;
+  channel_name?: string;
+  time?: string;
+  scheduled_time?: string;
+  status?: "done" | "now" | "upcoming";
+}
 
-type Channel = (typeof CHANNELS)[0];
+/* ── API shape returned by /api/tracks ───────────────── */
+interface ApiTrack {
+  id: string;
+  name?: string;
+  title?: string;
+  artist?: string;
+  artist_name?: string;
+  energy?: "low" | "mid" | "high" | string | null;
+  duration?: string | number | null;
+  audio_url?: string | null;
+  cover_image?: string | null;
+}
+
+/* ── Normalised schedule / track shapes ─────────────── */
+interface ScheduleItem {
+  name: string;
+  time: string;
+  status: "done" | "now" | "upcoming";
+}
+
+interface TrackItem {
+  num: number;
+  name: string;
+  artist: string;
+  energy: "low" | "mid";
+  dur: string;
+}
+
+/* ── Helpers ──────────────────────────────────────────── */
+function normaliseChannel(ch: ApiChannel): Channel {
+  return {
+    id: ch.id,
+    name: ch.name,
+    cat: ch.category ?? "Music",
+    bpm: ch.bpm ? `${ch.bpm} BPM` : "— BPM",
+    img:
+      ch.cover_image ??
+      "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=600&h=600&fit=crop",
+    audio_url: ch.audio_url,
+  };
+}
+
+function normaliseSchedule(item: ApiScheduleItem, idx: number): ScheduleItem {
+  return {
+    name: item.name ?? item.channel_name ?? `Slot ${idx + 1}`,
+    time: item.time ?? item.scheduled_time ?? "--:--",
+    status: item.status ?? "upcoming",
+  };
+}
+
+function normaliseDuration(dur: string | number | null | undefined): string {
+  if (!dur) return "—:——";
+  if (typeof dur === "number") {
+    const m = Math.floor(dur / 60);
+    const s = String(dur % 60).padStart(2, "0");
+    return `${m}:${s}`;
+  }
+  return String(dur);
+}
+
+function normaliseTrack(tr: ApiTrack, idx: number): TrackItem {
+  const rawEnergy = (tr.energy ?? "").toLowerCase();
+  const energy: "low" | "mid" = rawEnergy === "mid" || rawEnergy === "medium" ? "mid" : "low";
+  return {
+    num: idx + 1,
+    name: tr.name ?? tr.title ?? "Unknown Track",
+    artist: tr.artist ?? tr.artist_name ?? "Unknown Artist",
+    energy,
+    dur: normaliseDuration(tr.duration),
+  };
+}
 
 /* ── Sub-components ───────────────────────────────────── */
 
@@ -161,7 +199,7 @@ function HeroSection({ channel }: { channel: Channel }) {
           </div>
           <div className="flex flex-wrap gap-2">
             <span className="text-[11px] font-semibold text-white/72 bg-white/10 border border-white/14 px-2.5 py-1 rounded-full">
-              72 BPM
+              {channel.bpm}
             </span>
             <span className="text-[11px] font-semibold text-white/72 bg-white/10 border border-white/14 px-2.5 py-1 rounded-full">
               F Major
@@ -265,7 +303,13 @@ function ChannelTile({
   );
 }
 
-function ScheduleRow({ item }: { item: (typeof SCHEDULE)[0] }) {
+function ChannelTileSkeleton() {
+  return (
+    <div className="aspect-square rounded-xl bg-muted animate-pulse" />
+  );
+}
+
+function ScheduleRow({ item }: { item: ScheduleItem }) {
   const isNow = item.status === "now";
   const isDone = item.status === "done";
   return (
@@ -303,7 +347,7 @@ function ScheduleRow({ item }: { item: (typeof SCHEDULE)[0] }) {
   );
 }
 
-function TrackRow({ track }: { track: (typeof TRACKS)[0] }) {
+function TrackRow({ track }: { track: TrackItem }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div
@@ -343,17 +387,77 @@ function TrackRow({ track }: { track: (typeof TRACKS)[0] }) {
 
 /* ── Page ─────────────────────────────────────────────── */
 export default function Dashboard() {
-  const [activeChannel, setActiveChannel] = useState(CHANNELS[0]);
+  const setCurrentTrack = usePlayerStore((s) => s.setCurrentTrack);
+
+  const [channels, setChannels] = useState<Channel[]>([]);
+  const [channelsLoading, setChannelsLoading] = useState(true);
+
+  const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
+  const [scheduleLoading, setScheduleLoading] = useState(true);
+
+  const [tracks, setTracks] = useState<TrackItem[]>([]);
+  const [tracksLoading, setTracksLoading] = useState(true);
+
+  const [activeChannel, setActiveChannel] = useState<Channel | null>(null);
+
+  // TODO: Stat cards (6h 42m / 247 tracks / Low/Chill) are hardcoded —
+  //       replace with real aggregates from /api/stats once that endpoint exists.
+
+  useEffect(() => {
+    fetch("/api/channels")
+      .then((r) => r.json())
+      .then((data: ApiChannel[]) => {
+        const normalised = (Array.isArray(data) ? data : []).map(normaliseChannel);
+        setChannels(normalised);
+        if (normalised.length > 0) setActiveChannel(normalised[0]);
+      })
+      .catch(() => setChannels([]))
+      .finally(() => setChannelsLoading(false));
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/schedule")
+      .then((r) => r.json())
+      .then((data: ApiScheduleItem[]) => {
+        const normalised = (Array.isArray(data) ? data : []).map(normaliseSchedule);
+        setSchedule(normalised);
+      })
+      .catch(() => setSchedule([]))
+      .finally(() => setScheduleLoading(false));
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/tracks?limit=5")
+      .then((r) => r.json())
+      .then((data: ApiTrack[]) => {
+        const normalised = (Array.isArray(data) ? data : []).map(normaliseTrack);
+        setTracks(normalised);
+      })
+      .catch(() => setTracks([]))
+      .finally(() => setTracksLoading(false));
+  }, []);
+
+  function handleChannelClick(ch: Channel) {
+    setActiveChannel(ch);
+    // Wire channel selection into the global player store
+    setCurrentTrack({
+      id: ch.id,
+      name: ch.name,
+      image: ch.img,
+      audioUrl: ch.audio_url ?? undefined,
+    });
+  }
 
   return (
     <div className="flex flex-col gap-6">
+      {/* TODO: replace these three hardcoded stat values with /api/stats data */}
       <div className="flex gap-3.5">
         <StatCard icon={<Clock className="w-[15px] h-[15px]" />} value="6h 42m" label="Playing today" />
         <StatCard icon={<Music className="w-[15px] h-[15px]" />} value="247" label="Tracks served" />
         <StatCard icon={<Zap className="w-[15px] h-[15px]" />} value="Low / Chill" label="Current energy" />
       </div>
 
-      <HeroSection channel={activeChannel} />
+      {activeChannel && <HeroSection channel={activeChannel} />}
 
       <section className="flex flex-col gap-3.5">
         <div className="flex items-start justify-between">
@@ -372,15 +476,28 @@ export default function Dashboard() {
             Browse all →
           </button>
         </div>
+
         <div className="grid grid-cols-6 gap-3">
-          {CHANNELS.map((ch) => (
-            <ChannelTile
-              key={ch.id}
-              channel={ch}
-              active={ch.id === activeChannel.id}
-              onClick={() => setActiveChannel(ch)}
-            />
-          ))}
+          {channelsLoading ? (
+            <>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <ChannelTileSkeleton key={i} />
+              ))}
+            </>
+          ) : channels.length === 0 ? (
+            <p className="col-span-6 text-sm text-muted-foreground text-center py-6">
+              No channels yet. Create your first channel to get started.
+            </p>
+          ) : (
+            channels.map((ch) => (
+              <ChannelTile
+                key={ch.id}
+                channel={ch}
+                active={ch.id === activeChannel?.id}
+                onClick={() => handleChannelClick(ch)}
+              />
+            ))
+          )}
         </div>
       </section>
 
@@ -404,9 +521,21 @@ export default function Dashboard() {
             </button>
           </div>
           <div className="flex flex-col gap-0.5">
-            {SCHEDULE.map((item) => (
-              <ScheduleRow key={item.name} item={item} />
-            ))}
+            {scheduleLoading ? (
+              <div className="flex flex-col gap-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="h-10 rounded-lg bg-muted animate-pulse" />
+                ))}
+              </div>
+            ) : schedule.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No schedule entries yet.
+              </p>
+            ) : (
+              schedule.map((item, i) => (
+                <ScheduleRow key={`${item.name}-${i}`} item={item} />
+              ))
+            )}
           </div>
         </div>
 
@@ -421,9 +550,21 @@ export default function Dashboard() {
             <p className="text-xs text-muted-foreground mt-0.5">Last 5 tracks</p>
           </div>
           <div className="flex flex-col gap-0.5">
-            {TRACKS.map((track) => (
-              <TrackRow key={track.num} track={track} />
-            ))}
+            {tracksLoading ? (
+              <div className="flex flex-col gap-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="h-9 rounded-lg bg-muted animate-pulse" />
+                ))}
+              </div>
+            ) : tracks.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No tracks played yet.
+              </p>
+            ) : (
+              tracks.map((track) => (
+                <TrackRow key={track.num} track={track} />
+              ))
+            )}
           </div>
         </div>
       </div>

@@ -5,8 +5,14 @@ import { CreditCard, Shield } from "lucide-react";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useUser } from "@clerk/nextjs";
 
 export default function AccountPage() {
+  const { user } = useUser();
+
+  const businessName = user?.fullName ?? "Your Business";
+  const email = user?.primaryEmailAddress?.emailAddress ?? "—";
+
   return (
     <PageWrapper
       title="Account & Settings"
@@ -70,7 +76,7 @@ export default function AccountPage() {
                   Business Name
                 </label>
                 <div className="w-full bg-muted/30 border border-border rounded-lg px-4 py-2 mt-1 text-muted-foreground cursor-not-allowed">
-                  The Grand Lobby
+                  {businessName}
                 </div>
               </div>
               <div>
@@ -78,7 +84,7 @@ export default function AccountPage() {
                   Email Address
                 </label>
                 <div className="w-full bg-muted/30 border border-border rounded-lg px-4 py-2 mt-1 text-muted-foreground cursor-not-allowed">
-                  manager@grandlobby.com
+                  {email}
                 </div>
               </div>
             </CardContent>

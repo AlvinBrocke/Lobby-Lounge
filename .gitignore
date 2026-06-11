@@ -51,3 +51,4 @@ local.db
 
 # clerk configuration (can include secrets)
 /.clerk/
+.env*

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { User, Sun, Moon } from "lucide-react";
 import {
   Card,
@@ -15,6 +15,27 @@ import { useTheme } from "@/components/theme-provider";
 
 export default function SettingsPage() {
   const { theme, toggleTheme } = useTheme();
+
+  const [venueName, setVenueName] = useState("My Venue");
+  const [isSaving, setIsSaving] = useState(false);
+  const [savedFeedback, setSavedFeedback] = useState(false);
+
+  async function handleSaveVenueName() {
+    setIsSaving(true);
+    try {
+      await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ venue_name: venueName }),
+      });
+      setSavedFeedback(true);
+      setTimeout(() => setSavedFeedback(false), 2000);
+    } catch {
+      // Silently fail for now; a toast system can be wired up later
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   return (
     <PageWrapper
@@ -72,16 +93,40 @@ export default function SettingsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between py-3 border-b border-border/50">
-              <span className="text-muted-foreground">Business Name</span>
-              <span className="font-semibold text-foreground">My Venue</span>
+            {/* Business Name — editable */}
+            <div className="flex items-center justify-between py-3 border-b border-border/50 gap-4">
+              <span className="text-muted-foreground shrink-0">Business Name</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <input
+                  type="text"
+                  value={venueName}
+                  onChange={(e) => setVenueName(e.target.value)}
+                  className="font-semibold text-foreground bg-transparent border border-border rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 min-w-0 w-48"
+                />
+                <button
+                  onClick={handleSaveVenueName}
+                  disabled={isSaving}
+                  className="shrink-0 text-[11px] font-bold px-3 py-1.5 rounded-lg bg-primary text-[#04201d] hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {isSaving ? "Saving…" : "Save"}
+                </button>
+                {savedFeedback && (
+                  <span className="shrink-0 text-[11px] font-semibold text-primary">
+                    Saved!
+                  </span>
+                )}
+              </div>
             </div>
+
+            {/* Email — read-only */}
             <div className="flex items-center justify-between py-3 border-b border-border/50">
               <span className="text-muted-foreground">Email</span>
               <span className="font-semibold text-foreground">
                 venue@lobbylounge.com
               </span>
             </div>
+
+            {/* Subscription — hardcoded, fine for now */}
             <div className="flex items-center justify-between py-3">
               <span className="text-muted-foreground">Subscription Plan</span>
               <span className="text-primary font-bold">Premium Business</span>
