@@ -48,3 +48,6 @@ skills-lock.json
 # Local SQLite dev database
 local.db
 
+
+# clerk configuration (can include secrets)
+/.clerk/
