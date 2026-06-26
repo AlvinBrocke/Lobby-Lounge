@@ -3,6 +3,7 @@ import "./globals.css";
 import { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ConvexClientProvider } from "./ConvexClientProvider";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -56,7 +57,9 @@ export default function RootLayout({
           signInFallbackRedirectUrl="/dashboard"
           signUpFallbackRedirectUrl="/signup/onboarding"
         >
-          <ThemeProvider>{children}</ThemeProvider>
+          <ConvexClientProvider>
+            <ThemeProvider>{children}</ThemeProvider>
+          </ConvexClientProvider>
         </ClerkProvider>
       </body>
     </html>

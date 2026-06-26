@@ -1,21 +1,17 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth, useSignIn } from "@clerk/nextjs";
+import { useSignIn } from "@clerk/nextjs";
 import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { Loader2, Mail, Lock } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { isSignedIn } = useAuth();
   const { isLoaded, signIn, setActive } = useSignIn();
 
-  useEffect(() => {
-    if (isSignedIn) router.replace("/dashboard");
-  }, [isSignedIn, router]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);

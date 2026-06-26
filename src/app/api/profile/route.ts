@@ -14,12 +14,9 @@ export async function POST(request: NextRequest) {
     const {
       display_name,
       venue_name,
-      email,
       genres = [],
       mood = "",
-      tempo = "Medium",
-      allow_explicit = false,
-      time_based = true,
+      onboarding_completed,
     } = body;
 
     const supabase = await createClient();
@@ -31,13 +28,9 @@ export async function POST(request: NextRequest) {
           clerk_user_id: userId,
           display_name,
           venue_name,
-          email,
           genres,
           mood,
-          tempo,
-          allow_explicit,
-          time_based,
-          onboarding_completed: true,
+          ...(onboarding_completed !== undefined && { onboarding_completed }),
         },
         { onConflict: "clerk_user_id" },
       )

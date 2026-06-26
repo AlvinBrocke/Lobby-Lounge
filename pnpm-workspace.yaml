@@ -1,9 +1,11 @@
 onlyBuiltDependencies:
   - '@clerk/shared'
+  - esbuild
   - sharp
 
 allowBuilds:
   '@clerk/shared': true
+  esbuild: true
   sharp: true
 
 overrides:
