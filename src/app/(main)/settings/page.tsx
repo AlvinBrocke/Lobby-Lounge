@@ -2,6 +2,20 @@
 
 import React, { useEffect, useState } from "react";
 import { useClerk, useSession, useUser } from "@clerk/nextjs";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { LogOut, Monitor, Moon, Shield, Smartphone, Sun, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { PageWrapper } from "@/components/layout/page-wrapper";
+import { useTheme } from "@/components/theme-provider";
+import { useRouter } from "next/navigation";
 
 interface SessionInfo {
   id: string;
@@ -16,18 +30,6 @@ interface SessionInfo {
   };
   revoke(): Promise<unknown>;
 }
-import { LogOut, Monitor, Moon, Shield, Smartphone, Sun, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { PageWrapper } from "@/components/layout/page-wrapper";
-import { useTheme } from "@/components/theme-provider";
-import { useRouter } from "next/navigation";
 
 function relativeTime(date: Date): string {
   const s = Math.floor((Date.now() - date.getTime()) / 1000);
@@ -46,8 +48,14 @@ export default function SettingsPage() {
   const { signOut } = useClerk();
   const router = useRouter();
 
+  const profile = useQuery(
+    api.userProfiles.get,
+    user?.id ? { clerkUserId: user.id } : "skip",
+  );
+  const saveProfile = useMutation(api.userProfiles.createOrUpdate);
+
   const [venueName, setVenueName] = useState("");
-  const [venueNameLoaded, setVenueNameLoaded] = useState(false);
+  const [venueNameInitialised, setVenueNameInitialised] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [savedFeedback, setSavedFeedback] = useState(false);
 
@@ -56,15 +64,13 @@ export default function SettingsPage() {
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [signingOutAll, setSigningOutAll] = useState(false);
 
+  // Sync venue name from Convex once loaded
   useEffect(() => {
-    fetch("/api/profile")
-      .then((r) => r.json())
-      .then(({ data }) => {
-        setVenueName(data?.venue_name ?? "");
-        setVenueNameLoaded(true);
-      })
-      .catch(() => setVenueNameLoaded(true));
-  }, []);
+    if (profile !== undefined && !venueNameInitialised) {
+      setVenueName(profile?.venueName ?? "");
+      setVenueNameInitialised(true);
+    }
+  }, [profile, venueNameInitialised]);
 
   useEffect(() => {
     if (!user) return;
@@ -76,12 +82,12 @@ export default function SettingsPage() {
   }, [user]);
 
   async function handleSaveVenueName() {
+    if (!user?.id) return;
     setIsSaving(true);
     try {
-      await fetch("/api/profile", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ venue_name: venueName }),
+      await saveProfile({
+        clerkUserId: user.id,
+        venueName: venueName || undefined,
       });
       setSavedFeedback(true);
       setTimeout(() => setSavedFeedback(false), 2000);
@@ -115,6 +121,7 @@ export default function SettingsPage() {
 
   const userEmail = user?.primaryEmailAddress?.emailAddress ?? "";
   const activeSessions = sessionList.filter((s) => s.status === "active");
+  const venueNameLoaded = venueNameInitialised;
 
   return (
     <PageWrapper
@@ -212,7 +219,9 @@ export default function SettingsPage() {
 
             <div className="flex items-center justify-between py-3">
               <span className="text-muted-foreground">Subscription Plan</span>
-              <span className="text-primary font-bold">Premium Business</span>
+              <span className="text-primary font-bold">
+                {profile?.plan ?? "trial"}
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -225,8 +234,8 @@ export default function SettingsPage() {
               Security
             </CardTitle>
             <CardDescription className="text-muted-foreground">
-              Active sessions across your devices. You&apos;ll be signed out after 30 minutes of
-              inactivity.
+              Active sessions across your devices. You&apos;ll be signed out after 30
+              minutes of inactivity.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">

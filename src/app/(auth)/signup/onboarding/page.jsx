@@ -2,6 +2,8 @@
 export const dynamic = "force-dynamic";
 import React, { useState } from "react";
 import { useUser } from "@clerk/nextjs";
+import { useMutation } from "convex/react";
+import { api } from "../../../../../convex/_generated/api";
 import { AuthShell } from "@/components/auth/AuthShell";
 
 // ─── Shared style tokens ─────────────────────────────────────────────────────
@@ -106,7 +108,7 @@ function StepIndicator({ currentStep, totalSteps }) {
 
 const GENRES = [
   { id: "jazz", name: "Jazz" },
-  { id: "lofi", name: "Lo-Fi" },
+  { id: "lo-fi", name: "Lo-Fi" },
   { id: "classical", name: "Classical" },
   { id: "pop", name: "Pop" },
   { id: "acoustic", name: "Acoustic" },
@@ -330,7 +332,7 @@ function Step3({ preferences, setPreferences }) {
     <div>
       <h1 style={headingStyle}>Almost there!</h1>
       <p style={subTextStyle}>
-        A few last details to personalise your experience.
+        A few last details to personalize your experience.
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -422,6 +424,7 @@ function Step3({ preferences, setPreferences }) {
 
 function MainComponent() {
   const { user } = useUser();
+  const saveProfile = useMutation(api.userProfiles.createOrUpdate);
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [selectedMood, setSelectedMood] = useState("");
@@ -430,11 +433,6 @@ function MainComponent() {
   const [preferences, setPreferences] = useState({
     venueName: "",
     businessType: "",
-    // keep legacy fields for API compat
-    tempo: "Medium",
-    volume: "Medium",
-    allowExplicit: false,
-    timeBased: true,
   });
 
   const totalSteps = 3;
@@ -454,23 +452,18 @@ function MainComponent() {
   };
 
   const handleSubmit = async () => {
+    if (!user?.id) return;
     setSaving(true);
     setSaveError(null);
     try {
-      const res = await fetch("/api/profile", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          display_name: user?.fullName || user?.firstName || "",
-          genres: selectedGenres,
-          mood: selectedMood,
-          onboarding_completed: true,
-        }),
+      await saveProfile({
+        clerkUserId: user.id,
+        displayName: user.fullName || user.firstName || "",
+        venueName: preferences.venueName || undefined,
+        genres: selectedGenres,
+        mood: selectedMood,
+        onboardingCompleted: true,
       });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data?.error || `Request failed (${res.status})`);
-      }
       document.cookie = "ll-onboarded=true; path=/; max-age=31536000";
       window.location.href = "/dashboard";
     } catch (e) {

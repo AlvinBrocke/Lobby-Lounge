@@ -2,22 +2,16 @@
 
 import { cn } from "@/lib/utils";
 import { Clock, Music, Plus, Zap } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "convex/react";
+import { useUser } from "@clerk/nextjs";
+import { api } from "../../../convex/_generated/api";
+import { Doc, Id } from "../../../convex/_generated/dataModel";
 import usePlayerStore from "@/store/usePlayerStore";
 
-/* ── API shape returned by /api/channels ──────────────── */
-interface ApiChannel {
-  id: string;
-  name: string;
-  category: string;
-  bpm: number | string | null;
-  cover_image: string | null;
-  audio_url?: string | null;
-}
-
-/* ── Normalised shape used by this page ──────────────── */
+/* ── Normalised shapes used by this page ──────────────── */
 interface Channel {
-  id: string;
+  id: Id<"channels">;
   name: string;
   cat: string;
   bpm: string;
@@ -25,29 +19,6 @@ interface Channel {
   audio_url?: string | null;
 }
 
-/* ── API shape returned by /api/schedule ─────────────── */
-interface ApiScheduleItem {
-  name?: string;
-  channel_name?: string;
-  time?: string;
-  scheduled_time?: string;
-  status?: "done" | "now" | "upcoming";
-}
-
-/* ── API shape returned by /api/tracks ───────────────── */
-interface ApiTrack {
-  id: string;
-  name?: string;
-  title?: string;
-  artist?: string;
-  artist_name?: string;
-  energy?: "low" | "mid" | "high" | string | null;
-  duration?: string | number | null;
-  audio_url?: string | null;
-  cover_image?: string | null;
-}
-
-/* ── Normalised schedule / track shapes ─────────────── */
 interface ScheduleItem {
   name: string;
   time: string;
@@ -63,44 +34,60 @@ interface TrackItem {
 }
 
 /* ── Helpers ──────────────────────────────────────────── */
-function normaliseChannel(ch: ApiChannel): Channel {
+function normaliseChannel(ch: Doc<"channels">): Channel {
   return {
-    id: ch.id,
+    id: ch._id,
     name: ch.name,
     cat: ch.category ?? "Music",
     bpm: ch.bpm ? `${ch.bpm} BPM` : "— BPM",
     img:
-      ch.cover_image ??
+      ch.coverImage ??
       "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=600&h=600&fit=crop",
-    audio_url: ch.audio_url,
+    audio_url: ch.audioUrl,
   };
 }
 
-function normaliseSchedule(item: ApiScheduleItem, idx: number): ScheduleItem {
+function computeStatus(block: {
+  day: string;
+  startHour: number;
+  duration: number;
+}): "done" | "now" | "upcoming" {
+  const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const now = new Date();
+  const todayIdx = now.getDay();
+  const blockIdx = DAYS.indexOf(block.day);
+  const h = now.getHours();
+  if (blockIdx !== todayIdx) return blockIdx < todayIdx ? "done" : "upcoming";
+  if (h >= block.startHour && h < block.startHour + block.duration) return "now";
+  return h >= block.startHour + block.duration ? "done" : "upcoming";
+}
+
+function normaliseSchedule(block: Doc<"scheduleBlocks">): ScheduleItem {
+  const h = block.startHour;
+  const period = h >= 12 ? "PM" : "AM";
+  const display = h % 12 || 12;
   return {
-    name: item.name ?? item.channel_name ?? `Slot ${idx + 1}`,
-    time: item.time ?? item.scheduled_time ?? "--:--",
-    status: item.status ?? "upcoming",
+    name: block.title ?? "Untitled",
+    time: `${display}:00 ${period}`,
+    status: computeStatus(block),
   };
 }
 
-function normaliseDuration(dur: string | number | null | undefined): string {
+function normaliseDuration(dur: number | undefined | null): string {
   if (!dur) return "—:——";
-  if (typeof dur === "number") {
-    const m = Math.floor(dur / 60);
-    const s = String(dur % 60).padStart(2, "0");
-    return `${m}:${s}`;
-  }
-  return String(dur);
+  const m = Math.floor(dur / 60);
+  const s = String(dur % 60).padStart(2, "0");
+  return `${m}:${s}`;
 }
 
-function normaliseTrack(tr: ApiTrack, idx: number): TrackItem {
+function normaliseTrack(tr: Doc<"tracks">, idx: number): TrackItem {
   const rawEnergy = (tr.energy ?? "").toLowerCase();
-  const energy: "low" | "mid" = rawEnergy === "mid" || rawEnergy === "medium" ? "mid" : "low";
+  const energy: "low" | "mid" =
+    rawEnergy === "mid" || rawEnergy === "medium" ? "mid" : "low";
   return {
     num: idx + 1,
-    name: tr.name ?? tr.title ?? "Unknown Track",
-    artist: tr.artist ?? tr.artist_name ?? "Unknown Artist",
+    name: tr.name ?? "Unknown Track",
+    artist: tr.artist ?? "Unknown Artist",
     energy,
     dur: normaliseDuration(tr.duration),
   };
@@ -118,11 +105,7 @@ function EqBars({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
   return (
     <div className="flex gap-[2.5px] items-end">
       {heights.map((h, i) => (
-        <span
-          key={i}
-          className="eq-bar w-[2.5px]"
-          style={{ height: h }}
-        />
+        <span key={i} className="eq-bar w-[2.5px]" style={{ height: h }} />
       ))}
     </div>
   );
@@ -304,9 +287,7 @@ function ChannelTile({
 }
 
 function ChannelTileSkeleton() {
-  return (
-    <div className="aspect-square rounded-xl bg-muted animate-pulse" />
-  );
+  return <div className="aspect-square rounded-xl bg-muted animate-pulse" />;
 }
 
 function ScheduleRow({ item }: { item: ScheduleItem }) {
@@ -323,7 +304,11 @@ function ScheduleRow({ item }: { item: ScheduleItem }) {
       <span
         className={cn(
           "w-[9px] h-[9px] rounded-full shrink-0",
-          isNow ? "bg-primary live-dot" : isDone ? "bg-muted-foreground" : "bg-border",
+          isNow
+            ? "bg-primary live-dot"
+            : isDone
+              ? "bg-muted-foreground"
+              : "bg-border",
         )}
         style={isNow ? { boxShadow: "0 0 0 4px rgba(78,205,196,0.18)" } : undefined}
       />
@@ -331,7 +316,11 @@ function ScheduleRow({ item }: { item: ScheduleItem }) {
         <div
           className={cn(
             "text-[13px] font-semibold",
-            isNow ? "text-primary" : isDone ? "text-muted-foreground" : "text-foreground",
+            isNow
+              ? "text-primary"
+              : isDone
+                ? "text-muted-foreground"
+                : "text-foreground",
           )}
         >
           {item.name}
@@ -357,7 +346,13 @@ function TrackRow({ track }: { track: TrackItem }) {
     >
       <span className="font-mono text-[11px] text-muted-foreground w-[18px] text-center shrink-0 flex items-center justify-center">
         {hovered ? (
-          <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor" className="text-primary">
+          <svg
+            viewBox="0 0 24 24"
+            width="11"
+            height="11"
+            fill="currentColor"
+            className="text-primary"
+          >
             <polygon points="5 3 19 12 5 21 5 3" />
           </svg>
         ) : (
@@ -365,8 +360,12 @@ function TrackRow({ track }: { track: TrackItem }) {
         )}
       </span>
       <div className="flex-1 min-w-0">
-        <div className="text-[13px] font-semibold text-foreground truncate">{track.name}</div>
-        <div className="text-xs text-muted-foreground mt-0.5 truncate">{track.artist}</div>
+        <div className="text-[13px] font-semibold text-foreground truncate">
+          {track.name}
+        </div>
+        <div className="text-xs text-muted-foreground mt-0.5 truncate">
+          {track.artist}
+        </div>
       </div>
       <span
         className={cn(
@@ -387,59 +386,25 @@ function TrackRow({ track }: { track: TrackItem }) {
 
 /* ── Page ─────────────────────────────────────────────── */
 export default function Dashboard() {
+  const { user } = useUser();
   const setCurrentTrack = usePlayerStore((s) => s.setCurrentTrack);
 
-  const [channels, setChannels] = useState<Channel[]>([]);
-  const [channelsLoading, setChannelsLoading] = useState(true);
+  const rawChannels = useQuery(api.channels.list);
+  const rawTracks = useQuery(api.tracks.list, {});
+  const rawSchedule = useQuery(
+    api.scheduleBlocks.listByUser,
+    user?.id ? { clerkUserId: user.id } : "skip",
+  );
 
-  const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
-  const [scheduleLoading, setScheduleLoading] = useState(true);
-
-  const [tracks, setTracks] = useState<TrackItem[]>([]);
-  const [tracksLoading, setTracksLoading] = useState(true);
+  const channels = (rawChannels ?? []).map(normaliseChannel);
+  const tracks = (rawTracks ?? []).slice(0, 5).map(normaliseTrack);
+  const schedule = (rawSchedule ?? []).map(normaliseSchedule);
 
   const [activeChannel, setActiveChannel] = useState<Channel | null>(null);
-
-  // TODO: Stat cards (6h 42m / 247 tracks / Low/Chill) are hardcoded —
-  //       replace with real aggregates from /api/stats once that endpoint exists.
-
-  useEffect(() => {
-    fetch("/api/channels")
-      .then((r) => r.json())
-      .then((data: ApiChannel[]) => {
-        const normalised = (Array.isArray(data) ? data : []).map(normaliseChannel);
-        setChannels(normalised);
-        if (normalised.length > 0) setActiveChannel(normalised[0]);
-      })
-      .catch(() => setChannels([]))
-      .finally(() => setChannelsLoading(false));
-  }, []);
-
-  useEffect(() => {
-    fetch("/api/schedule")
-      .then((r) => r.json())
-      .then((data: ApiScheduleItem[]) => {
-        const normalised = (Array.isArray(data) ? data : []).map(normaliseSchedule);
-        setSchedule(normalised);
-      })
-      .catch(() => setSchedule([]))
-      .finally(() => setScheduleLoading(false));
-  }, []);
-
-  useEffect(() => {
-    fetch("/api/tracks?limit=5")
-      .then((r) => r.json())
-      .then((data: ApiTrack[]) => {
-        const normalised = (Array.isArray(data) ? data : []).map(normaliseTrack);
-        setTracks(normalised);
-      })
-      .catch(() => setTracks([]))
-      .finally(() => setTracksLoading(false));
-  }, []);
+  const activeDisplay = activeChannel ?? channels[0] ?? null;
 
   function handleChannelClick(ch: Channel) {
     setActiveChannel(ch);
-    // Wire channel selection into the global player store
     setCurrentTrack({
       id: ch.id,
       name: ch.name,
@@ -448,16 +413,31 @@ export default function Dashboard() {
     });
   }
 
+  const channelsLoading = rawChannels === undefined;
+  const tracksLoading = rawTracks === undefined;
+  const scheduleLoading = rawSchedule === undefined && !!user?.id;
+
   return (
     <div className="flex flex-col gap-6">
-      {/* TODO: replace these three hardcoded stat values with /api/stats data */}
       <div className="flex gap-3.5">
-        <StatCard icon={<Clock className="w-[15px] h-[15px]" />} value="6h 42m" label="Playing today" />
-        <StatCard icon={<Music className="w-[15px] h-[15px]" />} value="247" label="Tracks served" />
-        <StatCard icon={<Zap className="w-[15px] h-[15px]" />} value="Low / Chill" label="Current energy" />
+        <StatCard
+          icon={<Clock className="w-[15px] h-[15px]" />}
+          value="6h 42m"
+          label="Playing today"
+        />
+        <StatCard
+          icon={<Music className="w-[15px] h-[15px]" />}
+          value="247"
+          label="Tracks served"
+        />
+        <StatCard
+          icon={<Zap className="w-[15px] h-[15px]" />}
+          value="Low / Chill"
+          label="Current energy"
+        />
       </div>
 
-      {activeChannel && <HeroSection channel={activeChannel} />}
+      {activeDisplay && <HeroSection channel={activeDisplay} />}
 
       <section className="flex flex-col gap-3.5">
         <div className="flex items-start justify-between">
@@ -479,21 +459,19 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-6 gap-3">
           {channelsLoading ? (
-            <>
-              {Array.from({ length: 6 }).map((_, i) => (
-                <ChannelTileSkeleton key={i} />
-              ))}
-            </>
+            Array.from({ length: 6 }).map((_, i) => (
+              <ChannelTileSkeleton key={i} />
+            ))
           ) : channels.length === 0 ? (
             <p className="col-span-6 text-sm text-muted-foreground text-center py-6">
-              No channels yet. Create your first channel to get started.
+              No channels yet.
             </p>
           ) : (
             channels.map((ch) => (
               <ChannelTile
                 key={ch.id}
                 channel={ch}
-                active={ch.id === activeChannel?.id}
+                active={ch.id === (activeDisplay?.id ?? null)}
                 onClick={() => handleChannelClick(ch)}
               />
             ))
@@ -558,12 +536,10 @@ export default function Dashboard() {
               </div>
             ) : tracks.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                No tracks played yet.
+                No tracks yet.
               </p>
             ) : (
-              tracks.map((track) => (
-                <TrackRow key={track.num} track={track} />
-              ))
+              tracks.map((track) => <TrackRow key={track.num} track={track} />)
             )}
           </div>
         </div>

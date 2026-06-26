@@ -41,6 +41,9 @@ next-env.d.ts
 .agent
 .claude
 
+# Personal Claude instructions (not shared)
+CLAUDE.local.md
+
 # Clerk CLI tooling
 .agents/
 skills-lock.json
