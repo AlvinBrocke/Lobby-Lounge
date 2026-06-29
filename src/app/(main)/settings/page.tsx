@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useClerk, useSession, useUser } from "@clerk/nextjs";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../convex/_generated/api";
+import { api } from "@convex/_generated/api";
 import { LogOut, Monitor, Moon, Shield, Smartphone, Sun, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {

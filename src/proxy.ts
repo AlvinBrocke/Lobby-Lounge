@@ -22,12 +22,6 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.redirect(signInUrl);
   }
 
-  // Check onboarding cookie — set by the onboarding page after profile is saved
-  const hasOnboarded = req.cookies.get("ll-onboarded")?.value === "true";
-  if (!hasOnboarded) {
-    return NextResponse.redirect(new URL("/signup/onboarding", req.url));
-  }
-
   return NextResponse.next();
 });
 

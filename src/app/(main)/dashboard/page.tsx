@@ -5,8 +5,8 @@ import { Clock, Music, Plus, Zap } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { useUser } from "@clerk/nextjs";
-import { api } from "../../../convex/_generated/api";
-import { Doc, Id } from "../../../convex/_generated/dataModel";
+import { api } from "@convex/_generated/api";
+import { Doc, Id } from "@convex/_generated/dataModel";
 import usePlayerStore from "@/store/usePlayerStore";
 
 /* ── Normalised shapes used by this page ──────────────── */
