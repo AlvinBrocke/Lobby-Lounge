@@ -23,6 +23,50 @@ export const get = query({
   },
 });
 
+export const create = mutation({
+  args: {
+    name: v.string(),
+    artist: v.optional(v.string()),
+    category: v.optional(v.string()),
+    duration: v.optional(v.number()),
+    energy: v.optional(v.string()),
+    audioUrl: v.optional(v.string()),
+    coverImage: v.optional(v.string()),
+    channelId: v.optional(v.id("channels")),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("tracks", args);
+  },
+});
+
+export const update = mutation({
+  args: {
+    id: v.id("tracks"),
+    name: v.optional(v.string()),
+    artist: v.optional(v.string()),
+    category: v.optional(v.string()),
+    duration: v.optional(v.number()),
+    energy: v.optional(v.string()),
+    audioUrl: v.optional(v.string()),
+    coverImage: v.optional(v.string()),
+    channelId: v.optional(v.id("channels")),
+  },
+  handler: async (ctx, args) => {
+    const { id, ...fields } = args;
+    const patch = Object.fromEntries(
+      Object.entries(fields).filter(([, v]) => v !== undefined),
+    );
+    await ctx.db.patch(id, patch);
+  },
+});
+
+export const remove = mutation({
+  args: { id: v.id("tracks") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.id);
+  },
+});
+
 export const seed = mutation({
   args: {},
   handler: async (ctx) => {

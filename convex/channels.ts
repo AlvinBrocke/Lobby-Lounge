@@ -15,6 +15,46 @@ export const get = query({
   },
 });
 
+export const create = mutation({
+  args: {
+    name: v.string(),
+    description: v.optional(v.string()),
+    category: v.optional(v.string()),
+    bpm: v.optional(v.number()),
+    coverImage: v.optional(v.string()),
+    audioUrl: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("channels", args);
+  },
+});
+
+export const update = mutation({
+  args: {
+    id: v.id("channels"),
+    name: v.optional(v.string()),
+    description: v.optional(v.string()),
+    category: v.optional(v.string()),
+    bpm: v.optional(v.number()),
+    coverImage: v.optional(v.string()),
+    audioUrl: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { id, ...fields } = args;
+    const patch = Object.fromEntries(
+      Object.entries(fields).filter(([, v]) => v !== undefined),
+    );
+    await ctx.db.patch(id, patch);
+  },
+});
+
+export const remove = mutation({
+  args: { id: v.id("channels") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.id);
+  },
+});
+
 export const seed = mutation({
   args: {},
   handler: async (ctx) => {
