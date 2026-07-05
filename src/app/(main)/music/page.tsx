@@ -1,77 +1,41 @@
 "use client";
 import React, { useState } from "react";
 import { Search, Filter } from "lucide-react";
+import { useQuery } from "convex/react";
+import { api } from "@convex/_generated/api";
+import { Doc } from "@convex/_generated/dataModel";
 import ChannelGrid from "@/components/dashboard/ChannelGrid";
 import usePlayerStore from "@/store/usePlayerStore";
 import { Channel } from "@/types";
 
-const allChannels: Channel[] = [
-  {
-    id: "focus",
-    name: "Focus & Productivity",
-    image:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-    category: "Productivity",
-  },
-  {
-    id: "retail",
-    name: "Retail Energy",
-    image:
-      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-    category: "Upbeat",
-  },
-  {
-    id: "lounge",
-    name: "Lounge & Chill",
-    image:
-      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
-    category: "Relaxing",
-  },
-  {
-    id: "upbeat",
-    name: "Upbeat & Modern",
-    image:
-      "https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=400&h=300&fit=crop",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
-    category: "Upbeat",
-  },
-  {
-    id: "ambient",
-    name: "Ambient & Calm",
-    image:
-      "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3",
-    category: "Relaxing",
-  },
-  {
-    id: "morning",
-    name: "Morning Boost",
-    image:
-      "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3",
-    category: "Productivity",
-  },
-  {
-    id: "evening",
-    name: "Evening Wind Down",
-    image:
-      "https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=400&h=300&fit=crop",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3",
-    category: "Relaxing",
-  },
-];
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=400&h=300&fit=crop";
+
+function toChannel(ch: Doc<"channels">): Channel {
+  return {
+    id: ch._id,
+    name: ch.name,
+    image: ch.coverImage ?? FALLBACK_IMAGE,
+    audioUrl: ch.audioUrl,
+    category: ch.category,
+  };
+}
 
 export default function MusicPage() {
   const { setCurrentTrack } = usePlayerStore();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
 
-  const filters = ["All", "Productivity", "Upbeat", "Relaxing"];
+  const rawChannels = useQuery(api.channels.list);
+  const channelsLoading = rawChannels === undefined;
+  const channels = (rawChannels ?? []).map(toChannel);
 
-  const filteredChannels = allChannels.filter((channel) => {
+  const filters = [
+    "All",
+    ...Array.from(new Set(channels.map((c) => c.category).filter((c): c is string => !!c))),
+  ];
+
+  const filteredChannels = channels.filter((channel) => {
     const matchesSearch = channel.name
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
@@ -121,16 +85,26 @@ export default function MusicPage() {
         ))}
       </div>
 
-      <ChannelGrid
-        title={`${activeFilter} Channels`}
-        channels={filteredChannels}
-        onChannelSelect={setCurrentTrack}
-      />
-
-      {filteredChannels.length === 0 && (
-        <div className="text-center py-20 text-gray-500">
-          <p>No playlists found matching your criteria.</p>
+      {channelsLoading ? (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="aspect-square rounded-xl bg-surface animate-pulse" />
+          ))}
         </div>
+      ) : (
+        <>
+          <ChannelGrid
+            title={`${activeFilter} Channels`}
+            channels={filteredChannels}
+            onChannelSelect={setCurrentTrack}
+          />
+
+          {filteredChannels.length === 0 && (
+            <div className="text-center py-20 text-gray-500">
+              <p>No playlists found matching your criteria.</p>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
