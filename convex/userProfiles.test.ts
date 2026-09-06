@@ -8,17 +8,19 @@ const USER = "user_test456";
 describe("userProfiles", () => {
   it("get returns null for unknown user", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    const profile = await t.query(api.userProfiles.get, { clerkUserId: USER });
+    const asUser = t.withIdentity({ subject: USER });
+    const profile = await asUser.query(api.userProfiles.get, {});
     expect(profile).toBeNull();
   });
 
   it("createOrUpdate creates a new profile with defaults", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    await t.mutation(api.userProfiles.createOrUpdate, {
-      clerkUserId: USER,
+    const asUser = t.withIdentity({ subject: USER });
+    await asUser.mutation(api.userProfiles.createOrUpdate, {
       displayName: "Alvin",
     });
-    const profile = await t.query(api.userProfiles.get, { clerkUserId: USER });
+    const profile = await asUser.query(api.userProfiles.get, {});
+    expect(profile?.clerkUserId).toBe(USER);
     expect(profile?.displayName).toBe("Alvin");
     expect(profile?.plan).toBe("trial");
     expect(profile?.genres).toEqual([]);
@@ -27,17 +29,16 @@ describe("userProfiles", () => {
 
   it("createOrUpdate updates an existing profile", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    await t.mutation(api.userProfiles.createOrUpdate, {
-      clerkUserId: USER,
+    const asUser = t.withIdentity({ subject: USER });
+    await asUser.mutation(api.userProfiles.createOrUpdate, {
       displayName: "Alvin",
       genres: ["jazz"],
     });
-    await t.mutation(api.userProfiles.createOrUpdate, {
-      clerkUserId: USER,
+    await asUser.mutation(api.userProfiles.createOrUpdate, {
       venueName: "The Grand Café",
       onboardingCompleted: true,
     });
-    const profile = await t.query(api.userProfiles.get, { clerkUserId: USER });
+    const profile = await asUser.query(api.userProfiles.get, {});
     expect(profile?.venueName).toBe("The Grand Café");
     expect(profile?.onboardingCompleted).toBe(true);
     expect(profile?.genres).toEqual(["jazz"]); // untouched
@@ -46,10 +47,33 @@ describe("userProfiles", () => {
 
   it("does not create duplicate profiles for the same user", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    await t.mutation(api.userProfiles.createOrUpdate, { clerkUserId: USER });
-    await t.mutation(api.userProfiles.createOrUpdate, { clerkUserId: USER });
+    const asUser = t.withIdentity({ subject: USER });
+    await asUser.mutation(api.userProfiles.createOrUpdate, {});
+    await asUser.mutation(api.userProfiles.createOrUpdate, {});
     // get uses .unique() so duplicate would throw — passing means only one row
-    const profile = await t.query(api.userProfiles.get, { clerkUserId: USER });
+    const profile = await asUser.query(api.userProfiles.get, {});
     expect(profile).not.toBeNull();
+  });
+
+  it("profiles are scoped to the calling identity", async () => {
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    await t
+      .withIdentity({ subject: USER })
+      .mutation(api.userProfiles.createOrUpdate, { displayName: "Alvin" });
+
+    const other = await t
+      .withIdentity({ subject: "user_other" })
+      .query(api.userProfiles.get, {});
+    expect(other).toBeNull();
+  });
+
+  it("rejects unauthenticated calls", async () => {
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    await expect(t.query(api.userProfiles.get, {})).rejects.toThrow(
+      /Not authenticated/,
+    );
+    await expect(
+      t.mutation(api.userProfiles.createOrUpdate, { displayName: "Nobody" }),
+    ).rejects.toThrow(/Not authenticated/);
   });
 });

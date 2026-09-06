@@ -1,19 +1,20 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { assertOwner, requireUser } from "./lib/auth";
 
 export const listByUser = query({
-  args: { clerkUserId: v.string() },
-  handler: async (ctx, args) => {
+  args: {},
+  handler: async (ctx) => {
+    const clerkUserId = await requireUser(ctx);
     return await ctx.db
       .query("scheduleBlocks")
-      .withIndex("by_clerk_user", (q) => q.eq("clerkUserId", args.clerkUserId))
+      .withIndex("by_clerk_user", (q) => q.eq("clerkUserId", clerkUserId))
       .collect();
   },
 });
 
 export const create = mutation({
   args: {
-    clerkUserId: v.string(),
     day: v.string(),
     startHour: v.number(),
     duration: v.number(),
@@ -21,7 +22,8 @@ export const create = mutation({
     title: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert("scheduleBlocks", args);
+    const clerkUserId = await requireUser(ctx);
+    return await ctx.db.insert("scheduleBlocks", { ...args, clerkUserId });
   },
 });
 
@@ -35,7 +37,12 @@ export const update = mutation({
     title: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const clerkUserId = await requireUser(ctx);
     const { id, ...fields } = args;
+
+    const block = await ctx.db.get(id);
+    assertOwner(block, clerkUserId, "Schedule block");
+
     const patch = Object.fromEntries(
       Object.entries(fields).filter(([, v]) => v !== undefined),
     );
@@ -46,6 +53,11 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id("scheduleBlocks") },
   handler: async (ctx, args) => {
+    const clerkUserId = await requireUser(ctx);
+
+    const block = await ctx.db.get(args.id);
+    assertOwner(block, clerkUserId, "Schedule block");
+
     await ctx.db.delete(args.id);
   },
 });

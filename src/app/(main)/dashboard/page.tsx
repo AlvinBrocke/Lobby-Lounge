@@ -3,8 +3,7 @@
 import { cn } from "@/lib/utils";
 import { Clock, Music, Plus, Zap } from "lucide-react";
 import { useState } from "react";
-import { useQuery } from "convex/react";
-import { useUser } from "@clerk/nextjs";
+import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { Doc, Id } from "@convex/_generated/dataModel";
 import usePlayerStore from "@/store/usePlayerStore";
@@ -386,14 +385,14 @@ function TrackRow({ track }: { track: TrackItem }) {
 
 /* ── Page ─────────────────────────────────────────────── */
 export default function Dashboard() {
-  const { user } = useUser();
+  const { isAuthenticated } = useConvexAuth();
   const setCurrentTrack = usePlayerStore((s) => s.setCurrentTrack);
 
   const rawChannels = useQuery(api.channels.list);
   const rawTracks = useQuery(api.tracks.list, {});
   const rawSchedule = useQuery(
     api.scheduleBlocks.listByUser,
-    user?.id ? { clerkUserId: user.id } : "skip",
+    isAuthenticated ? {} : "skip",
   );
 
   const channels = (rawChannels ?? []).map(normaliseChannel);
@@ -415,7 +414,7 @@ export default function Dashboard() {
 
   const channelsLoading = rawChannels === undefined;
   const tracksLoading = rawTracks === undefined;
-  const scheduleLoading = rawSchedule === undefined && !!user?.id;
+  const scheduleLoading = rawSchedule === undefined && isAuthenticated;
 
   return (
     <div className="flex flex-col gap-6">

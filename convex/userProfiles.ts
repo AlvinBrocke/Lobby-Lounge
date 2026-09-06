@@ -1,9 +1,9 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { requireUser } from "./lib/auth";
 
 export const createOrUpdate = mutation({
   args: {
-    clerkUserId: v.string(),
     displayName: v.optional(v.string()),
     venueName: v.optional(v.string()),
     genres: v.optional(v.array(v.string())),
@@ -11,9 +11,11 @@ export const createOrUpdate = mutation({
     onboardingCompleted: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    const clerkUserId = await requireUser(ctx);
+
     const existing = await ctx.db
       .query("userProfiles")
-      .withIndex("by_clerk_user", (q) => q.eq("clerkUserId", args.clerkUserId))
+      .withIndex("by_clerk_user", (q) => q.eq("clerkUserId", clerkUserId))
       .unique();
 
     if (existing) {
@@ -30,7 +32,7 @@ export const createOrUpdate = mutation({
     }
 
     return await ctx.db.insert("userProfiles", {
-      clerkUserId: args.clerkUserId,
+      clerkUserId,
       displayName: args.displayName,
       venueName: args.venueName,
       plan: "trial",
@@ -42,11 +44,12 @@ export const createOrUpdate = mutation({
 });
 
 export const get = query({
-  args: { clerkUserId: v.string() },
-  handler: async (ctx, args) => {
+  args: {},
+  handler: async (ctx) => {
+    const clerkUserId = await requireUser(ctx);
     return await ctx.db
       .query("userProfiles")
-      .withIndex("by_clerk_user", (q) => q.eq("clerkUserId", args.clerkUserId))
+      .withIndex("by_clerk_user", (q) => q.eq("clerkUserId", clerkUserId))
       .unique();
   },
 });
