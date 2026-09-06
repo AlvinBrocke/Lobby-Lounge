@@ -11,6 +11,7 @@
 import type * as channels from "../channels.js";
 import type * as jamendo from "../jamendo.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_energy from "../lib/energy.js";
 import type * as playlists from "../playlists.js";
 import type * as scheduleBlocks from "../scheduleBlocks.js";
 import type * as tracks from "../tracks.js";
@@ -26,6 +27,7 @@ declare const fullApi: ApiFromModules<{
   channels: typeof channels;
   jamendo: typeof jamendo;
   "lib/auth": typeof lib_auth;
+  "lib/energy": typeof lib_energy;
   playlists: typeof playlists;
   scheduleBlocks: typeof scheduleBlocks;
   tracks: typeof tracks;
