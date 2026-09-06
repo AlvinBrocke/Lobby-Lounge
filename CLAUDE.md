@@ -23,7 +23,11 @@ Push functions and validate the schema with:
 CONVEX_AGENT_MODE=anonymous npx convex dev --once
 ```
 
-Run this after any change to `convex/` files. The Next.js dev server (`pnpm dev`) is started separately. Convex runs locally on `127.0.0.1:3210`.
+Run this after any change to `convex/` files. The Next.js dev server (`pnpm dev`) is
+started separately. The local backend's ports are assigned per deployment and recorded in
+`.convex/local/default/config.json` — **this project uses `127.0.0.1:3212` (site: `3213`)**,
+not the `3210` Convex allocates first. `npx convex dev` prints the URL on startup, and
+`NEXT_PUBLIC_CONVEX_URL` / `NEXT_PUBLIC_CONVEX_SITE_URL` in `.env.local` must match it.
 
 ## Convex (production deployment)
 
@@ -45,7 +49,7 @@ npx convex env set SOME_KEY value --prod
 npx convex run someModule:someFunction --prod
 ```
 
-After `npx convex deploy`, copy the printed production URL into Vercel's Production environment variables (`NEXT_PUBLIC_CONVEX_URL`, `NEXT_PUBLIC_CONVEX_SITE_URL`) — Vercel cannot reach `127.0.0.1:3210`, so a Vercel-hosted deployment always needs a real cloud Convex deployment, never the anonymous local one.
+After `npx convex deploy`, copy the printed production URL into Vercel's Production environment variables (`NEXT_PUBLIC_CONVEX_URL`, `NEXT_PUBLIC_CONVEX_SITE_URL`) — Vercel cannot reach `127.0.0.1`, so a Vercel-hosted deployment always needs a real cloud Convex deployment, never the anonymous local one.
 
 ## Auth middleware
 
