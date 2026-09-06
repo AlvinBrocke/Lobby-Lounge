@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { Doc, Id } from "@convex/_generated/dataModel";
+import type { Energy } from "@convex/lib/energy";
 import usePlayerStore from "@/store/usePlayerStore";
 
 /* ── Normalised shapes used by this page ──────────────── */
@@ -28,9 +29,22 @@ interface TrackItem {
   num: number;
   name: string;
   artist: string;
-  energy: "low" | "mid";
+  energy: Energy;
   dur: string;
 }
+
+/* Matches the badge styling on the library page. */
+const ENERGY_STYLES: Record<Energy, string> = {
+  low: "text-blue-400 bg-blue-400/12",
+  mid: "text-emerald-400 bg-emerald-400/12",
+  high: "text-amber-400 bg-amber-400/12",
+};
+
+const ENERGY_LABELS: Record<Energy, string> = {
+  low: "LOW",
+  mid: "MID",
+  high: "HIGH",
+};
 
 /* ── Helpers ──────────────────────────────────────────── */
 function normaliseChannel(ch: Doc<"channels">): Channel {
@@ -81,8 +95,12 @@ function normaliseDuration(dur: number | undefined | null): string {
 
 function normaliseTrack(tr: Doc<"tracks">, idx: number): TrackItem {
   const rawEnergy = (tr.energy ?? "").toLowerCase();
-  const energy: "low" | "mid" =
-    rawEnergy === "mid" || rawEnergy === "medium" ? "mid" : "low";
+  const energy: Energy =
+    rawEnergy === "high"
+      ? "high"
+      : rawEnergy === "mid" || rawEnergy === "medium"
+        ? "mid"
+        : "low";
   return {
     num: idx + 1,
     name: tr.name ?? "Unknown Track",
@@ -369,12 +387,10 @@ function TrackRow({ track }: { track: TrackItem }) {
       <span
         className={cn(
           "text-[9px] font-bold tracking-[0.1em] px-2 py-[3px] rounded-full shrink-0",
-          track.energy === "low"
-            ? "text-blue-400 bg-blue-400/12"
-            : "text-emerald-400 bg-emerald-400/12",
+          ENERGY_STYLES[track.energy],
         )}
       >
-        {track.energy === "low" ? "LOW" : "MID"}
+        {ENERGY_LABELS[track.energy]}
       </span>
       <span className="font-mono text-[11px] text-muted-foreground min-w-[32px] text-right">
         {track.dur}
