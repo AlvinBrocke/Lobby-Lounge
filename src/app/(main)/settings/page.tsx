@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useClerk, useSession, useUser } from "@clerk/nextjs";
-import { useQuery, useMutation } from "convex/react";
+import { useConvexAuth, useQuery, useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { LogOut, Monitor, Moon, Shield, Smartphone, Sun, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -48,10 +48,8 @@ export default function SettingsPage() {
   const { signOut } = useClerk();
   const router = useRouter();
 
-  const profile = useQuery(
-    api.userProfiles.get,
-    user?.id ? { clerkUserId: user.id } : "skip",
-  );
+  const { isAuthenticated } = useConvexAuth();
+  const profile = useQuery(api.userProfiles.get, isAuthenticated ? {} : "skip");
   const saveProfile = useMutation(api.userProfiles.createOrUpdate);
 
   const [venueName, setVenueName] = useState("");
@@ -82,13 +80,10 @@ export default function SettingsPage() {
   }, [user]);
 
   async function handleSaveVenueName() {
-    if (!user?.id) return;
+    if (!isAuthenticated) return;
     setIsSaving(true);
     try {
-      await saveProfile({
-        clerkUserId: user.id,
-        venueName: venueName || undefined,
-      });
+      await saveProfile({ venueName: venueName || undefined });
       setSavedFeedback(true);
       setTimeout(() => setSavedFeedback(false), 2000);
     } catch {

@@ -4,93 +4,225 @@ import { api } from "./_generated/api";
 import schema from "./schema";
 
 const USER = "user_test123";
+const OTHER = "user_other";
 
 describe("playlists", () => {
   it("listByUser returns empty array for new user", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    const playlists = await t.query(api.playlists.listByUser, { clerkUserId: USER });
+    const asUser = t.withIdentity({ subject: USER });
+    const playlists = await asUser.query(api.playlists.listByUser, {});
     expect(playlists).toEqual([]);
   });
 
   it("create adds a playlist visible via listByUser", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    await t.mutation(api.playlists.create, { clerkUserId: USER, name: "My Mix" });
-    const playlists = await t.query(api.playlists.listByUser, { clerkUserId: USER });
+    const asUser = t.withIdentity({ subject: USER });
+    await asUser.mutation(api.playlists.create, { name: "My Mix" });
+    const playlists = await asUser.query(api.playlists.listByUser, {});
     expect(playlists).toHaveLength(1);
+    expect(playlists[0].clerkUserId).toBe(USER);
     expect(playlists[0].name).toBe("My Mix");
     expect(playlists[0].isPublic).toBe(false);
   });
 
   it("create defaults isPublic to false", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    const id = await t.mutation(api.playlists.create, { clerkUserId: USER, name: "Private" });
-    const playlist = await t.query(api.playlists.get, { id });
+    const asUser = t.withIdentity({ subject: USER });
+    const id = await asUser.mutation(api.playlists.create, { name: "Private" });
+    const playlist = await asUser.query(api.playlists.get, { id });
     expect(playlist?.isPublic).toBe(false);
   });
 
   it("update patches name and description", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    const id = await t.mutation(api.playlists.create, { clerkUserId: USER, name: "Old" });
-    await t.mutation(api.playlists.update, { id, name: "New", description: "Cool mix" });
-    const playlist = await t.query(api.playlists.get, { id });
+    const asUser = t.withIdentity({ subject: USER });
+    const id = await asUser.mutation(api.playlists.create, { name: "Old" });
+    await asUser.mutation(api.playlists.update, {
+      id,
+      name: "New",
+      description: "Cool mix",
+    });
+    const playlist = await asUser.query(api.playlists.get, { id });
     expect(playlist?.name).toBe("New");
     expect(playlist?.description).toBe("Cool mix");
   });
 
   it("remove deletes the playlist", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    const id = await t.mutation(api.playlists.create, { clerkUserId: USER, name: "Temp" });
-    await t.mutation(api.playlists.remove, { id });
-    const playlist = await t.query(api.playlists.get, { id });
+    const asUser = t.withIdentity({ subject: USER });
+    const id = await asUser.mutation(api.playlists.create, { name: "Temp" });
+    await asUser.mutation(api.playlists.remove, { id });
+    const playlist = await asUser.query(api.playlists.get, { id });
     expect(playlist).toBeNull();
   });
 
   it("addTrack adds a track to the playlist", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    const playlistId = await t.mutation(api.playlists.create, { clerkUserId: USER, name: "Mix" });
+    const asUser = t.withIdentity({ subject: USER });
+    const playlistId = await asUser.mutation(api.playlists.create, { name: "Mix" });
     const trackId = await t.mutation(api.tracks.create, { name: "Track A" });
-    await t.mutation(api.playlists.addTrack, { playlistId, trackId });
-    const tracks = await t.query(api.playlists.getTracks, { playlistId });
+    await asUser.mutation(api.playlists.addTrack, { playlistId, trackId });
+    const tracks = await asUser.query(api.playlists.getTracks, { playlistId });
     expect(tracks).toHaveLength(1);
     expect(tracks[0]?.name).toBe("Track A");
   });
 
   it("addTrack is idempotent — duplicate is ignored", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    const playlistId = await t.mutation(api.playlists.create, { clerkUserId: USER, name: "Mix" });
+    const asUser = t.withIdentity({ subject: USER });
+    const playlistId = await asUser.mutation(api.playlists.create, { name: "Mix" });
     const trackId = await t.mutation(api.tracks.create, { name: "Track A" });
-    await t.mutation(api.playlists.addTrack, { playlistId, trackId });
-    await t.mutation(api.playlists.addTrack, { playlistId, trackId });
-    const tracks = await t.query(api.playlists.getTracks, { playlistId });
+    await asUser.mutation(api.playlists.addTrack, { playlistId, trackId });
+    await asUser.mutation(api.playlists.addTrack, { playlistId, trackId });
+    const tracks = await asUser.query(api.playlists.getTracks, { playlistId });
     expect(tracks).toHaveLength(1);
   });
 
   it("removeTrack removes a track from the playlist", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    const playlistId = await t.mutation(api.playlists.create, { clerkUserId: USER, name: "Mix" });
+    const asUser = t.withIdentity({ subject: USER });
+    const playlistId = await asUser.mutation(api.playlists.create, { name: "Mix" });
     const trackId = await t.mutation(api.tracks.create, { name: "Track A" });
-    const playlistTrackId = await t.mutation(api.playlists.addTrack, { playlistId, trackId });
-    await t.mutation(api.playlists.removeTrack, { playlistTrackId });
-    const tracks = await t.query(api.playlists.getTracks, { playlistId });
+    const playlistTrackId = await asUser.mutation(api.playlists.addTrack, {
+      playlistId,
+      trackId,
+    });
+    await asUser.mutation(api.playlists.removeTrack, { playlistTrackId });
+    const tracks = await asUser.query(api.playlists.getTracks, { playlistId });
     expect(tracks).toHaveLength(0);
   });
 
   it("remove playlist also removes its tracks", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    const playlistId = await t.mutation(api.playlists.create, { clerkUserId: USER, name: "Mix" });
+    const asUser = t.withIdentity({ subject: USER });
+    const playlistId = await asUser.mutation(api.playlists.create, { name: "Mix" });
     const trackId = await t.mutation(api.tracks.create, { name: "Track A" });
-    await t.mutation(api.playlists.addTrack, { playlistId, trackId });
-    await t.mutation(api.playlists.remove, { id: playlistId });
+    await asUser.mutation(api.playlists.addTrack, { playlistId, trackId });
+    await asUser.mutation(api.playlists.remove, { id: playlistId });
     // Playlist is gone
-    expect(await t.query(api.playlists.get, { id: playlistId })).toBeNull();
+    expect(await asUser.query(api.playlists.get, { id: playlistId })).toBeNull();
   });
 
   it("listByUser only returns playlists for that user", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    await t.mutation(api.playlists.create, { clerkUserId: USER, name: "Mine" });
-    await t.mutation(api.playlists.create, { clerkUserId: "other_user", name: "Theirs" });
-    const mine = await t.query(api.playlists.listByUser, { clerkUserId: USER });
+    await t
+      .withIdentity({ subject: USER })
+      .mutation(api.playlists.create, { name: "Mine" });
+    await t
+      .withIdentity({ subject: OTHER })
+      .mutation(api.playlists.create, { name: "Theirs" });
+    const mine = await t
+      .withIdentity({ subject: USER })
+      .query(api.playlists.listByUser, {});
     expect(mine).toHaveLength(1);
     expect(mine[0].name).toBe("Mine");
+  });
+
+  it("rejects unauthenticated calls", async () => {
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    const asUser = t.withIdentity({ subject: USER });
+    const id = await asUser.mutation(api.playlists.create, { name: "Mine" });
+    const trackId = await t.mutation(api.tracks.create, { name: "Track A" });
+    const playlistTrackId = await asUser.mutation(api.playlists.addTrack, {
+      playlistId: id,
+      trackId,
+    });
+
+    await expect(t.query(api.playlists.listByUser, {})).rejects.toThrow(
+      /Not authenticated/,
+    );
+    await expect(t.query(api.playlists.get, { id })).rejects.toThrow(
+      /Not authenticated/,
+    );
+    await expect(
+      t.query(api.playlists.getTracks, { playlistId: id }),
+    ).rejects.toThrow(/Not authenticated/);
+    await expect(
+      t.mutation(api.playlists.create, { name: "Nobody" }),
+    ).rejects.toThrow(/Not authenticated/);
+    await expect(
+      t.mutation(api.playlists.update, { id, name: "Hijacked" }),
+    ).rejects.toThrow(/Not authenticated/);
+    await expect(t.mutation(api.playlists.remove, { id })).rejects.toThrow(
+      /Not authenticated/,
+    );
+    await expect(
+      t.mutation(api.playlists.addTrack, { playlistId: id, trackId }),
+    ).rejects.toThrow(/Not authenticated/);
+    await expect(
+      t.mutation(api.playlists.removeTrack, { playlistTrackId }),
+    ).rejects.toThrow(/Not authenticated/);
+  });
+
+  it("another user cannot update or remove someone else's playlist", async () => {
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    const asUser = t.withIdentity({ subject: USER });
+    const asOther = t.withIdentity({ subject: OTHER });
+    const id = await asUser.mutation(api.playlists.create, { name: "Mine" });
+
+    await expect(
+      asOther.mutation(api.playlists.update, { id, name: "Hijacked" }),
+    ).rejects.toThrow(/Not authorized/);
+    await expect(asOther.mutation(api.playlists.remove, { id })).rejects.toThrow(
+      /Not authorized/,
+    );
+
+    const playlist = await asUser.query(api.playlists.get, { id });
+    expect(playlist?.name).toBe("Mine");
+  });
+
+  it("another user cannot add or remove tracks on someone else's playlist", async () => {
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    const asUser = t.withIdentity({ subject: USER });
+    const asOther = t.withIdentity({ subject: OTHER });
+    const playlistId = await asUser.mutation(api.playlists.create, { name: "Mine" });
+    const trackId = await t.mutation(api.tracks.create, { name: "Track A" });
+    const playlistTrackId = await asUser.mutation(api.playlists.addTrack, {
+      playlistId,
+      trackId,
+    });
+
+    await expect(
+      asOther.mutation(api.playlists.addTrack, { playlistId, trackId }),
+    ).rejects.toThrow(/Not authorized/);
+    await expect(
+      asOther.mutation(api.playlists.removeTrack, { playlistTrackId }),
+    ).rejects.toThrow(/Not authorized/);
+
+    const tracks = await asUser.query(api.playlists.getTracks, { playlistId });
+    expect(tracks).toHaveLength(1);
+  });
+
+  it("a private playlist is not readable by another user", async () => {
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    const asUser = t.withIdentity({ subject: USER });
+    const asOther = t.withIdentity({ subject: OTHER });
+    const id = await asUser.mutation(api.playlists.create, { name: "Secret" });
+    const trackId = await t.mutation(api.tracks.create, { name: "Track A" });
+    await asUser.mutation(api.playlists.addTrack, { playlistId: id, trackId });
+
+    await expect(asOther.query(api.playlists.get, { id })).rejects.toThrow(
+      /Not authorized/,
+    );
+    await expect(
+      asOther.query(api.playlists.getTracks, { playlistId: id }),
+    ).rejects.toThrow(/Not authorized/);
+  });
+
+  it("a public playlist is readable by another user", async () => {
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    const asUser = t.withIdentity({ subject: USER });
+    const asOther = t.withIdentity({ subject: OTHER });
+    const id = await asUser.mutation(api.playlists.create, {
+      name: "Shared",
+      isPublic: true,
+    });
+    const trackId = await t.mutation(api.tracks.create, { name: "Track A" });
+    await asUser.mutation(api.playlists.addTrack, { playlistId: id, trackId });
+
+    const playlist = await asOther.query(api.playlists.get, { id });
+    expect(playlist?.name).toBe("Shared");
+    const tracks = await asOther.query(api.playlists.getTracks, { playlistId: id });
+    expect(tracks).toHaveLength(1);
   });
 });

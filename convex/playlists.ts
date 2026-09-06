@@ -1,12 +1,44 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { Doc, Id } from "./_generated/dataModel";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
+import { assertOwner, requireUser } from "./lib/auth";
+
+/**
+ * Read access to a playlist: the owner, or anyone when it is marked public.
+ * Returns null for a genuinely missing id; throws when access is denied.
+ */
+async function readablePlaylist(
+  ctx: QueryCtx | MutationCtx,
+  id: Id<"playlists">,
+  clerkUserId: string,
+): Promise<Doc<"playlists"> | null> {
+  const playlist = await ctx.db.get(id);
+  if (!playlist) return null;
+  if (playlist.clerkUserId !== clerkUserId && !playlist.isPublic) {
+    throw new Error("Not authorized");
+  }
+  return playlist;
+}
+
+/** Loads a playlist and throws unless the caller owns it. */
+async function ownedPlaylist(
+  ctx: MutationCtx,
+  id: Id<"playlists">,
+  clerkUserId: string,
+): Promise<Doc<"playlists">> {
+  const playlist = await ctx.db.get(id);
+  assertOwner(playlist, clerkUserId, "Playlist");
+  return playlist;
+}
 
 export const listByUser = query({
-  args: { clerkUserId: v.string() },
-  handler: async (ctx, args) => {
+  args: {},
+  handler: async (ctx) => {
+    const clerkUserId = await requireUser(ctx);
     return await ctx.db
       .query("playlists")
-      .withIndex("by_clerk_user", (q) => q.eq("clerkUserId", args.clerkUserId))
+      .withIndex("by_clerk_user", (q) => q.eq("clerkUserId", clerkUserId))
       .collect();
   },
 });
@@ -14,21 +46,22 @@ export const listByUser = query({
 export const get = query({
   args: { id: v.id("playlists") },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
+    const clerkUserId = await requireUser(ctx);
+    return await readablePlaylist(ctx, args.id, clerkUserId);
   },
 });
 
 export const create = mutation({
   args: {
-    clerkUserId: v.string(),
     name: v.string(),
     description: v.optional(v.string()),
     coverImage: v.optional(v.string()),
     isPublic: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    const clerkUserId = await requireUser(ctx);
     return await ctx.db.insert("playlists", {
-      clerkUserId: args.clerkUserId,
+      clerkUserId,
       name: args.name,
       description: args.description,
       coverImage: args.coverImage,
@@ -46,7 +79,11 @@ export const update = mutation({
     isPublic: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    const clerkUserId = await requireUser(ctx);
     const { id, ...fields } = args;
+
+    await ownedPlaylist(ctx, id, clerkUserId);
+
     const patch = Object.fromEntries(
       Object.entries(fields).filter(([, v]) => v !== undefined),
     );
@@ -57,6 +94,9 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id("playlists") },
   handler: async (ctx, args) => {
+    const clerkUserId = await requireUser(ctx);
+    await ownedPlaylist(ctx, args.id, clerkUserId);
+
     // Remove all tracks from playlist first
     const tracks = await ctx.db
       .query("playlistTracks")
@@ -76,6 +116,9 @@ export const addTrack = mutation({
     position: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    const clerkUserId = await requireUser(ctx);
+    await ownedPlaylist(ctx, args.playlistId, clerkUserId);
+
     // Prevent duplicates
     const existing = await ctx.db
       .query("playlistTracks")
@@ -101,6 +144,12 @@ export const addTrack = mutation({
 export const removeTrack = mutation({
   args: { playlistTrackId: v.id("playlistTracks") },
   handler: async (ctx, args) => {
+    const clerkUserId = await requireUser(ctx);
+
+    const playlistTrack = await ctx.db.get(args.playlistTrackId);
+    if (!playlistTrack) throw new Error("Playlist track not found");
+    await ownedPlaylist(ctx, playlistTrack.playlistId, clerkUserId);
+
     await ctx.db.delete(args.playlistTrackId);
   },
 });
@@ -108,6 +157,10 @@ export const removeTrack = mutation({
 export const getTracks = query({
   args: { playlistId: v.id("playlists") },
   handler: async (ctx, args) => {
+    const clerkUserId = await requireUser(ctx);
+    const playlist = await readablePlaylist(ctx, args.playlistId, clerkUserId);
+    if (!playlist) return [];
+
     const playlistTracks = await ctx.db
       .query("playlistTracks")
       .withIndex("by_playlist", (q) => q.eq("playlistId", args.playlistId))

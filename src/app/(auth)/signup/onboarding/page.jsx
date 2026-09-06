@@ -2,7 +2,7 @@
 export const dynamic = "force-dynamic";
 import React, { useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import { useMutation } from "convex/react";
+import { useConvexAuth, useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { AuthShell } from "@/components/auth/AuthShell";
 
@@ -424,6 +424,7 @@ function Step3({ preferences, setPreferences }) {
 
 function MainComponent() {
   const { user } = useUser();
+  const { isAuthenticated } = useConvexAuth();
   const saveProfile = useMutation(api.userProfiles.createOrUpdate);
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedGenres, setSelectedGenres] = useState([]);
@@ -452,12 +453,11 @@ function MainComponent() {
   };
 
   const handleSubmit = async () => {
-    if (!user?.id) return;
+    if (!isAuthenticated || !user) return;
     setSaving(true);
     setSaveError(null);
     try {
       await saveProfile({
-        clerkUserId: user.id,
         displayName: user.fullName || user.firstName || "",
         venueName: preferences.venueName || undefined,
         genres: selectedGenres,
