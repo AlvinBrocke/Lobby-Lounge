@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { action } from "./_generated/server";
 import { api } from "./_generated/api";
+import { energyForCategory } from "./lib/energy";
 
 const JAMENDO_TRACKS_URL = "https://api.jamendo.com/v3.0/tracks/";
 
@@ -54,6 +55,11 @@ export const syncChannel = action({
       throw new Error(`Jamendo request failed: ${res.status} ${res.statusText}`);
     }
     const data: { results: JamendoTrack[] } = await res.json();
+    if (!Array.isArray(data.results)) {
+      throw new Error(`Jamendo returned an unexpected response shape for tag "${tag}"`);
+    }
+
+    const energy = energyForCategory(channel.category);
 
     const existingTracks = await ctx.runQuery(api.tracks.list, {
       channelId: args.channelId,
@@ -70,6 +76,7 @@ export const syncChannel = action({
         audioUrl: track.audio,
         coverImage: track.image,
         category: channel.category,
+        energy,
         channelId: args.channelId,
       });
       inserted++;
@@ -90,13 +97,17 @@ export const syncChannel = action({
 
 export const syncAllChannels = action({
   args: {},
-  handler: async (ctx): Promise<Record<string, number>> => {
+  handler: async (ctx): Promise<Record<string, number | string>> => {
     const channels = await ctx.runQuery(api.channels.list, {});
-    const results: Record<string, number> = {};
+    const results: Record<string, number | string> = {};
     for (const channel of channels) {
-      results[channel.name] = await ctx.runAction(api.jamendo.syncChannel, {
-        channelId: channel._id,
-      });
+      try {
+        results[channel.name] = await ctx.runAction(api.jamendo.syncChannel, {
+          channelId: channel._id,
+        });
+      } catch (err) {
+        results[channel.name] = `error: ${err instanceof Error ? err.message : String(err)}`;
+      }
     }
     return results;
   },

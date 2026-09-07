@@ -47,6 +47,67 @@ describe("tracks", () => {
     expect(track).toBeNull();
   });
 
+  it("backfillEnergy fills missing energy from the channel category", async () => {
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    const channelId = await t.mutation(api.channels.create, {
+      name: "Morning Boost",
+      category: "Upbeat",
+    });
+    await t.mutation(api.tracks.create, { name: "No Energy", channelId });
+
+    const result = await t.mutation(api.tracks.backfillEnergy, {});
+    expect(result).toMatchObject({ scanned: 1, patched: 1, remaining: 0 });
+
+    const [track] = await t.query(api.tracks.list, { channelId });
+    expect(track.energy).toBe("high");
+  });
+
+  it("backfillEnergy leaves already-set energy alone", async () => {
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    const channelId = await t.mutation(api.channels.create, {
+      name: "Morning Boost",
+      category: "Upbeat",
+    });
+    const id = await t.mutation(api.tracks.create, {
+      name: "Hand Tagged",
+      channelId,
+      energy: "low",
+    });
+
+    const result = await t.mutation(api.tracks.backfillEnergy, {});
+    expect(result.patched).toBe(0);
+    expect((await t.query(api.tracks.get, { id }))?.energy).toBe("low");
+  });
+
+  it("backfillEnergy defaults unknown categories to mid", async () => {
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    const channelId = await t.mutation(api.channels.create, {
+      name: "Mystery",
+      category: "Polka",
+    });
+    const id = await t.mutation(api.tracks.create, { name: "Unmapped", channelId });
+
+    await t.mutation(api.tracks.backfillEnergy, {});
+    expect((await t.query(api.tracks.get, { id }))?.energy).toBe("mid");
+  });
+
+  it("backfillEnergy honours the limit and reports what is left", async () => {
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    const channelId = await t.mutation(api.channels.create, {
+      name: "Spa",
+      category: "Wellness",
+    });
+    for (const name of ["A", "B", "C"]) {
+      await t.mutation(api.tracks.create, { name, channelId });
+    }
+
+    const first = await t.mutation(api.tracks.backfillEnergy, { limit: 2 });
+    expect(first).toMatchObject({ patched: 2, remaining: 1 });
+
+    const second = await t.mutation(api.tracks.backfillEnergy, { limit: 2 });
+    expect(second).toMatchObject({ patched: 1, remaining: 0 });
+  });
+
   it("seed populates 10 tracks", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
     const result = await t.mutation(api.tracks.seed);

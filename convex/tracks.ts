@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { energyForCategory } from "./lib/energy";
 
 export const list = query({
   args: {
@@ -64,6 +65,45 @@ export const remove = mutation({
   args: { id: v.id("tracks") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
+  },
+});
+
+/**
+ * Fills in `energy` on tracks that predate the field.
+ *
+ * `jamendo.syncChannel` only sets `energy` on newly inserted tracks, and it
+ * skips tracks it has already synced — so rows written before the field existed
+ * would otherwise stay unset forever.
+ *
+ * Runs in capped batches because a single Convex mutation is a transaction with
+ * a bounded read/write budget; call it repeatedly until `remaining` is 0:
+ *   npx convex run tracks:backfillEnergy '{}'
+ */
+export const backfillEnergy = mutation({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const limit = args.limit ?? 200;
+    const tracks = await ctx.db.query("tracks").collect();
+    const missing = tracks.filter((t) => t.energy === undefined);
+
+    let patched = 0;
+    for (const track of missing.slice(0, limit)) {
+      // Tracks carry the channel's category at insert time, but fall back to
+      // the channel itself for rows created before that was true.
+      let category = track.category;
+      if (!category && track.channelId) {
+        const channel = await ctx.db.get(track.channelId);
+        category = channel?.category;
+      }
+      await ctx.db.patch(track._id, { energy: energyForCategory(category) });
+      patched++;
+    }
+
+    return {
+      scanned: tracks.length,
+      patched,
+      remaining: missing.length - patched,
+    };
   },
 });
 
