@@ -165,7 +165,7 @@ export default function LoginPage() {
                 Password
               </label>
               <Link
-                href="#"
+                href="/forgot-password"
                 style={{
                   fontFamily: "var(--ll-font-body)",
                   fontSize: 12,

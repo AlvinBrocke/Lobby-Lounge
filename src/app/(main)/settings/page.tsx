@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { useTheme } from "@/components/theme-provider";
+import { PasswordCard } from "@/components/settings/PasswordCard";
 import { useRouter } from "next/navigation";
 
 interface SessionInfo {
@@ -220,6 +221,9 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Password */}
+        <PasswordCard />
 
         {/* Security */}
         <Card className="bg-card border-border text-card-foreground shadow-sm rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
