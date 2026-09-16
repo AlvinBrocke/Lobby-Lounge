@@ -3,13 +3,19 @@
 import React from "react";
 import Image from "next/image";
 
+// Each montage tile is a 511×689 slice with the label baked in. The card inside
+// sits at a different x-offset per slice, so `crop` records where it is
+// (source px) and the tile is scaled/offset to show just the card.
+const TILE = 270;
 const tiles = [
-  { src: "/images/montage-tile-0.jpg", label: "Day-Time", sub: "Morning & midday" },
-  { src: "/images/montage-tile-1.jpg", label: "Happy Hour", sub: "Early evening" },
-  { src: "/images/montage-tile-2.jpg", label: "Evening Rush", sub: "Dinner service" },
-  { src: "/images/montage-tile-3.jpg", label: "Late-Night", sub: "After hours" },
-  { src: "/images/montage-tile-4.jpg", label: "Weekly Rotation", sub: "AI curated" },
+  { src: "/images/montage-tile-0.jpg", label: "Day-Time", sub: "Morning & midday", crop: { left: 18, top: 91, size: 462 } },
+  { src: "/images/montage-tile-1.jpg", label: "Happy Hour", sub: "Early evening", crop: { left: 55, top: 92, size: 455 } },
+  { src: "/images/montage-tile-2.jpg", label: "Evening Rush", sub: "Dinner service", crop: { left: 22, top: 91, size: 459 } },
+  { src: "/images/montage-tile-3.jpg", label: "Late-Night", sub: "After hours", crop: { left: 0, top: 93, size: 458 } },
+  { src: "/images/montage-tile-4.jpg", label: "Weekly Rotation", sub: "Fresh every week", crop: { left: 0, top: 95, size: 454 } },
 ];
+const SRC_W = 511;
+const SRC_H = 689;
 
 export const CatalogBand = () => {
   return (
@@ -17,7 +23,7 @@ export const CatalogBand = () => {
       style={{
         background: "var(--ll-ink-0)",
         color: "#fff",
-        padding: "110px 0 0",
+        padding: "96px 0 0",
         overflow: "hidden",
         position: "relative",
       }}
@@ -34,26 +40,9 @@ export const CatalogBand = () => {
             Sound great, all day
           </h2>
           <p style={{ marginTop: 18, maxWidth: 560, fontFamily: "var(--ll-font-body)", fontSize: "clamp(17px,2vw,20px)", lineHeight: 1.6, color: "var(--ll-on-ink-2)" }}>
-            Choose from hundreds of soundtracks updated weekly, or let our AI curate the perfect rotation for every part of the day.
+            A fully licensed catalogue of 1,000+ tracks, refreshed every week and built for every part of the day.
           </p>
         </div>
-        <a
-          href="#"
-          data-ll-reveal
-          data-ll-delay="1"
-          style={{
-            display: "inline-flex", alignItems: "center", gap: 9,
-            fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 15,
-            padding: "16px 28px", borderRadius: 999,
-            background: "transparent", color: "#fff",
-            border: "1.5px solid rgba(255,255,255,.28)",
-            transition: "transform .25s, border-color .25s, color .25s",
-            whiteSpace: "nowrap" as const,
-          }}
-          className="ll-btn-ghost"
-        >
-          View all genres
-        </a>
       </div>
 
       {/* Marquee band */}
@@ -72,7 +61,7 @@ export const CatalogBand = () => {
               key={i}
               style={{
                 position: "relative",
-                width: 270,
+                width: TILE,
                 flexShrink: 0,
                 borderRadius: 16,
                 overflow: "hidden",
@@ -85,19 +74,21 @@ export const CatalogBand = () => {
             >
               <Image
                 src={tile.src}
-                alt={i < tiles.length ? tile.label : ""}
-                width={270}
-                height={270}
-                style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .6s var(--ll-ease)", display: "block" }}
+                alt={i < tiles.length ? `${tile.label} — ${tile.sub}` : ""}
+                width={SRC_W}
+                height={SRC_H}
+                style={{
+                  position: "absolute",
+                  width: SRC_W * (TILE / tile.crop.size),
+                  height: SRC_H * (TILE / tile.crop.size),
+                  left: -tile.crop.left * (TILE / tile.crop.size),
+                  top: -tile.crop.top * (TILE / tile.crop.size),
+                  maxWidth: "none",
+                  transition: "transform .6s var(--ll-ease)",
+                  display: "block",
+                }}
                 className="ll-tile-img"
               />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(8,12,16,.92) 8%, transparent 55%)" }} />
-              {i < tiles.length && (
-                <div style={{ position: "absolute", left: 18, right: 18, bottom: 16 }}>
-                  <b style={{ display: "block", fontFamily: "var(--ll-font-display)", fontWeight: 700, fontSize: 19, lineHeight: 1.2, letterSpacing: "-.01em" }}>{tile.label}</b>
-                  <span style={{ fontFamily: "var(--ll-font-body)", fontWeight: 500, fontSize: 12.5, lineHeight: 1, color: "rgba(255,255,255,.6)" }}>{tile.sub}</span>
-                </div>
-              )}
             </div>
           ))}
         </div>

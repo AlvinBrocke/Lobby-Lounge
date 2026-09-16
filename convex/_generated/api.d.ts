@@ -9,6 +9,7 @@
  */
 
 import type * as channels from "../channels.js";
+import type * as crons from "../crons.js";
 import type * as jamendo from "../jamendo.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_energy from "../lib/energy.js";
@@ -25,6 +26,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   channels: typeof channels;
+  crons: typeof crons;
   jamendo: typeof jamendo;
   "lib/auth": typeof lib_auth;
   "lib/energy": typeof lib_energy;

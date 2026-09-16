@@ -54,8 +54,8 @@ export const Navigation = () => {
 
         {/* Nav links */}
         <nav style={{ display: "flex", alignItems: "center", gap: 36 }} className="hidden md:flex">
-          {["#music", "#control", "#results", "#pricing"].map((href, i) => {
-            const labels = ["Music", "Control", "Results", "Pricing"];
+          {["#licensing", "#control", "#results", "#pricing"].map((href, i) => {
+            const labels = ["Licensing", "Control", "Results", "Pricing"];
             return (
               <a
                 key={href}
