@@ -45,7 +45,7 @@ export const CallToAction = () => {
             color: "var(--ll-on-ink-2)",
           }}
         >
-          Set the perfect atmosphere in minutes. Compatible with the hardware you already use — or just open the app.
+          Set the perfect atmosphere in minutes — just open the app. Free for your first month, no credit card required.
         </p>
 
         <div data-ll-reveal data-ll-delay="1" style={{ marginTop: 40, display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
@@ -80,24 +80,6 @@ export const CallToAction = () => {
           </a>
         </div>
 
-        <div data-ll-reveal data-ll-delay="2" style={{ marginTop: 40, display: "flex", alignItems: "center", justifyContent: "center", gap: 22, flexWrap: "wrap" }}>
-          <span style={{ fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 13, letterSpacing: ".12em", textTransform: "uppercase" as const, color: "var(--ll-on-ink-3)" }}>
-            Works with
-          </span>
-          {["Sonos", "Axis", "Bose", "Any pro audio"].map((hw, i, arr) => (
-            <React.Fragment key={hw}>
-              <b
-                style={{ fontFamily: "var(--ll-font-display)", fontWeight: 700, fontSize: 17, color: "rgba(255,255,255,.78)", letterSpacing: "-.01em", transition: "color .25s, transform .25s", cursor: "default" }}
-                className="ll-hw-item"
-              >
-                {hw}
-              </b>
-              {i < arr.length - 1 && (
-                <span style={{ width: 4, height: 4, borderRadius: "50%", background: "var(--ll-on-ink-3)" }} />
-              )}
-            </React.Fragment>
-          ))}
-        </div>
       </div>
 
       <style>{`
@@ -110,7 +92,6 @@ export const CallToAction = () => {
         }
         .ll-btn-primary:hover::after { animation: ll-btn-shine .85s var(--ll-ease); }
         .ll-btn-ghost:hover { border-color: var(--ll-accent) !important; color: var(--ll-accent) !important; transform: translateY(-2px); }
-        .ll-hw-item:hover { color: #fff !important; transform: translateY(-2px); }
       `}</style>
     </section>
   );

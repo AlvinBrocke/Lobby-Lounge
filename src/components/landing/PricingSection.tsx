@@ -1,6 +1,12 @@
 "use client";
 
 import React from "react";
+import { useUser } from "@clerk/nextjs";
+
+// Stripe Payment Link for the Premium plan, created in the Stripe Dashboard.
+// It's a plain URL — no Stripe SDK or API key lives in this repo. If it's
+// not configured, Premium falls back to /signup so the button never dead-ends.
+const PREMIUM_PAYMENT_LINK = process.env.NEXT_PUBLIC_STRIPE_PREMIUM_PAYMENT_LINK;
 
 const CheckIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ width: 18, height: 18, color: "var(--ll-accent)", flexShrink: 0, marginTop: 1 }}>
@@ -11,38 +17,38 @@ const CheckIcon = () => (
 const plans = [
   {
     name: "Starter",
-    price: "£0",
-    period: "/ 14-day trial",
-    desc: "Everything you need to try Lobby & Lounge in one space.",
-    features: ["1 zone", "Full licensed catalog", "Web & tablet app", "Email support"],
-    cta: "Start free trial",
-    ctaHref: "/signup",
+    price: "$0",
+    period: "/ first month",
+    desc: "Everything you need to try Lobby & Lounge in your venue.",
+    features: ["Full licensed catalogue", "1,000+ tracks", "Web app — any device", "Email support"],
+    cta: "Start free",
     featured: false,
   },
   {
     name: "Premium",
-    price: "£29",
+    price: "$22",
     period: "/ month",
-    desc: "For growing venues that want full control of their sound.",
-    features: ["Up to 5 zones", "AI curation & scheduling", "Scheduled announcements", "Priority support"],
-    cta: "Start free trial",
-    ctaHref: "/signup",
+    desc: "For venues that want their sound to run itself, all week long.",
+    features: ["Everything in Starter", "Weekly scheduling", "Your own playlists", "Priority support"],
+    cta: "Get Premium",
     featured: true,
     tag: "Most popular",
-  },
-  {
-    name: "Pro",
-    price: "£49",
-    period: "/ month",
-    desc: "For groups and chains managing many locations at scale.",
-    features: ["Unlimited zones & sites", "Multi-location sync", "Roles & team permissions", "Dedicated account manager"],
-    cta: "Talk to sales",
-    ctaHref: "/signup",
-    featured: false,
   },
 ];
 
 export const PricingSection = () => {
+  const { user } = useUser();
+  const email = user?.primaryEmailAddress?.emailAddress;
+
+  // Premium → Stripe Payment Link (pre-filled with the signed-in email so the
+  // Stripe receipt matches the account); Starter → sign-up.
+  const hrefFor = (plan: (typeof plans)[number]) => {
+    if (!plan.featured || !PREMIUM_PAYMENT_LINK) return "/signup";
+    return email
+      ? `${PREMIUM_PAYMENT_LINK}?prefilled_email=${encodeURIComponent(email)}`
+      : PREMIUM_PAYMENT_LINK;
+  };
+
   return (
     <section id="pricing" style={{ position: "relative", padding: "120px 0", background: "#0B0F14", color: "#fff" }}>
       <div style={{ width: "100%", maxWidth: 1240, margin: "0 auto", padding: "0 32px" }}>
@@ -56,12 +62,12 @@ export const PricingSection = () => {
             Simple plans for every venue
           </h2>
           <p style={{ marginTop: 18, fontFamily: "var(--ll-font-body)", fontSize: "clamp(17px,2vw,20px)", lineHeight: 1.6, color: "var(--ll-on-ink-2)" }}>
-            Start free for 14 days. No credit card, no commitment — cancel anytime.
+            Start free for 1 month. No credit card required — cancel anytime.
           </p>
         </div>
 
         {/* Cards */}
-        <div style={{ marginTop: 64, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 22, alignItems: "stretch" }} className="price-grid">
+        <div style={{ marginTop: 64, display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 22, alignItems: "stretch", maxWidth: 860, marginLeft: "auto", marginRight: "auto" }} className="price-grid">
           {plans.map((plan, i) => (
             <article
               key={plan.name}
@@ -119,7 +125,9 @@ export const PricingSection = () => {
               </ul>
 
               <a
-                href={plan.ctaHref}
+                href={hrefFor(plan)}
+                target={plan.featured && PREMIUM_PAYMENT_LINK ? "_blank" : undefined}
+                rel={plan.featured && PREMIUM_PAYMENT_LINK ? "noopener noreferrer" : undefined}
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 15,
@@ -130,6 +138,10 @@ export const PricingSection = () => {
                   boxShadow: plan.featured ? "0 12px 30px -8px rgba(78,205,196,.6)" : "none",
                   transition: "transform .25s, border-color .25s, color .25s, box-shadow .25s",
                   marginTop: "auto",
+                  // .ll-btn-primary::after (shine sweep) is absolutely positioned —
+                  // without these it anchors to the card and bleeds across the grid.
+                  position: "relative",
+                  overflow: "hidden",
                 }}
                 className={plan.featured ? "ll-btn-primary" : "ll-btn-ghost"}
               >
@@ -140,7 +152,7 @@ export const PricingSection = () => {
         </div>
 
         <p style={{ textAlign: "center", marginTop: 36, fontFamily: "var(--ll-font-body)", fontWeight: 500, fontSize: 14, color: "var(--ll-on-ink-3)" }}>
-          All plans include the full licensed catalog and weekly updates. Prices exclude VAT.
+          Both plans include the full licensed catalogue and weekly updates. Secure card &amp; debit payments by Stripe.
         </p>
       </div>
 

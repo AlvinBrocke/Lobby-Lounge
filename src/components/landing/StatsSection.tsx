@@ -18,10 +18,15 @@ const CheckIcon = () => (
   </svg>
 );
 
+// "Importance of background music" — % of US businesses agreeing.
+// MRC Data × Soundtrack Your Brand, B2B study, 2021 (n=1,001).
 const bars = [
-  { h: "40%", opacity: 0.18 }, { h: "58%", opacity: 0.18 },
-  { h: "50%", opacity: 0.32 }, { h: "74%", opacity: 0.55 },
-  { h: "90%", opacity: 0.80 }, { h: "85%", opacity: 1 },
+  { h: "65%", opacity: 0.18, label: "Longer stays" },
+  { h: "67%", opacity: 0.18, label: "Fits our brand" },
+  { h: "71%", opacity: 0.32, label: "Purchasing" },
+  { h: "75%", opacity: 0.55, label: "Opinion of us" },
+  { h: "76%", opacity: 0.80, label: "Atmosphere" },
+  { h: "79%", opacity: 1, label: "Guest mood" },
 ];
 
 function useCountUp(target: number, trigger: boolean, duration = 1400) {
@@ -66,7 +71,7 @@ export const StatsSection = () => {
     return () => obs.disconnect();
   }, []);
 
-  const dwell = useCountUp(24, statVisible);
+  const dwell = useCountUp(65, statVisible);
   const bigStat = useCountUp(71, bigVisible);
 
   return (
@@ -85,8 +90,8 @@ export const StatsSection = () => {
                   <BarChartIcon />
                 </div>
                 <div>
-                  <small style={{ display: "block", fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 13, color: "var(--ll-on-ink-3)", marginBottom: 6 }}>Customer dwell time</small>
-                  <b style={{ fontFamily: "var(--ll-font-display)", fontWeight: 800, fontSize: 26, lineHeight: 1 }}>+{dwell}%</b>
+                  <small style={{ display: "block", fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 13, color: "var(--ll-on-ink-3)", marginBottom: 6 }}>Say music keeps guests longer</small>
+                  <b style={{ fontFamily: "var(--ll-font-display)", fontWeight: 800, fontSize: 26, lineHeight: 1 }}>{dwell}%</b>
                 </div>
               </div>
 
@@ -96,6 +101,7 @@ export const StatsSection = () => {
                   <span
                     key={i}
                     data-bar
+                    title={`${b.label} — ${b.h}`}
                     style={{
                       flex: 1, height: b.h, borderRadius: "8px 8px 0 0",
                       background: `rgba(78,205,196,${b.opacity})`,
@@ -103,9 +109,12 @@ export const StatsSection = () => {
                   />
                 ))}
               </div>
+              <small style={{ display: "block", marginTop: 14, fontFamily: "var(--ll-font-body)", fontSize: 11.5, color: "var(--ll-on-ink-3)" }}>
+                % of businesses who agree music impacts each outcome
+              </small>
             </div>
 
-            {/* Floating time-saved badge */}
+            {/* Floating badge */}
             <div style={{
               position: "absolute", top: -22, right: -18,
               padding: "15px 18px", borderRadius: 16,
@@ -114,9 +123,9 @@ export const StatsSection = () => {
               animation: "ll-floaty 4.5s ease-in-out infinite",
             }}>
               <small style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 11, textTransform: "uppercase" as const, letterSpacing: ".1em", color: "var(--ll-on-ink-3)", marginBottom: 9 }}>
-                <span style={{ color: "var(--ll-accent)" }}><ClockIcon /></span> Time saved
+                <span style={{ color: "var(--ll-accent)" }}><ClockIcon /></span> Businesses playing music
               </small>
-              <b style={{ fontFamily: "var(--ll-font-display)", fontWeight: 800, fontSize: 20, lineHeight: 1, color: "#fff" }}>3h / week</b>
+              <b style={{ fontFamily: "var(--ll-font-display)", fontWeight: 800, fontSize: 20, lineHeight: 1, color: "#fff" }}>87%</b>
             </div>
           </div>
 
@@ -127,13 +136,13 @@ export const StatsSection = () => {
               The results
             </span>
             <h2 style={{ fontFamily: "var(--ll-font-display)", fontSize: "clamp(36px,5vw,60px)", fontWeight: 700, lineHeight: 1.02, letterSpacing: "-.02em", margin: "18px 0 0" }}>
-              Save time. Sell more.
+              The right music pays for itself.
             </h2>
             <p style={{ marginTop: 20, fontFamily: "var(--ll-font-body)", fontSize: "clamp(17px,2vw,20px)", lineHeight: 1.6, color: "var(--ll-on-ink-2)" }}>
-              Stop manually curating playlists. Automation lets you set the perfect schedule for the entire year in minutes — and the right atmosphere keeps guests staying, and spending, longer.
+              Business owners agree: music shapes the mood in the room, how long guests stay, and what they buy. Lobby &amp; Lounge gives you a licensed catalogue and the tools to set that atmosphere on purpose.
             </p>
             <ul style={{ listStyle: "none", padding: 0, margin: "30px 0 0", display: "grid", gap: 14 }}>
-              {["AI-powered music selection", "Multi-location sync", "Remote management from any device"].map((item) => (
+              {["Fully licensed catalogue", "Weekly scheduling", "Playlists you control"].map((item) => (
                 <li key={item} style={{ display: "flex", alignItems: "center", gap: 13, fontFamily: "var(--ll-font-body)", fontWeight: 600, fontSize: 16, lineHeight: 1.4, color: "var(--ll-on-ink-2)" }} className="ll-stat-li">
                   <CheckIcon /> {item}
                 </li>
@@ -162,10 +171,10 @@ export const StatsSection = () => {
             {bigStat}%
           </h3>
           <p style={{ maxWidth: 640, margin: "26px auto 0", fontFamily: "var(--ll-font-body)", fontWeight: 500, fontSize: "clamp(18px,2.4vw,24px)", lineHeight: 1.5, color: "#fff" }}>
-            of businesses find that the right music helps staff start conversations with customers.
+            of businesses say the right music positively impacts what their customers buy.
           </p>
           <small style={{ display: "block", marginTop: 18, fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 12, textTransform: "uppercase" as const, letterSpacing: ".2em", color: "var(--ll-accent)" }}>
-            Lobby &amp; Lounge Research · 2025
+            MRC Data × Soundtrack Your Brand · B2B study · 2021
           </small>
         </div>
       </div>

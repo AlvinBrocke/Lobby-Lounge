@@ -88,6 +88,16 @@
   .ll-bars [data-bar]:nth-child(6) { transition-delay: .3s; }
 }
 
+/* Hero soundwave drift */
+@keyframes ll-wave-drift {
+  0%   { transform: translate3d(-2%, 0, 0) scale(1.04); }
+  50%  { transform: translate3d(2%, -1%, 0) scale(1.08); }
+  100% { transform: translate3d(-2%, 0, 0) scale(1.04); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ll-hero-wave, .ll-hero-eq span { animation: none !important; }
+}
+
 /* Catalog marquee pause on hover */
 .ll-catalog:hover .ll-track {
   animation-play-state: paused;

@@ -3,8 +3,7 @@
 import React, { useEffect } from "react";
 import { Hero } from "@/components/landing/Hero";
 import { Navigation } from "@/components/landing/Navigation";
-import { FeatureGrid } from "@/components/landing/FeatureGrid";
-import { TrustSection } from "@/components/landing/TrustSection";
+import { LicensingSection } from "@/components/landing/LicensingSection";
 import { ControlSection } from "@/components/landing/ControlSection";
 import { StatsSection } from "@/components/landing/StatsSection";
 import { CallToAction } from "@/components/landing/CallToAction";
@@ -71,9 +70,8 @@ export default function LandingPage() {
 
       <main>
         <Hero />
-        <TrustSection />
-        <FeatureGrid />
         <CatalogBand />
+        <LicensingSection />
         <ControlSection />
         <StatsSection />
         <PricingSection />
