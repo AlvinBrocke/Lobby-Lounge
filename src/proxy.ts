@@ -12,7 +12,11 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 // Exact paths only — `/signup/onboarding` must stay reachable while signed in.
-const isAuthRoute = createRouteMatcher(["/signin", "/signup", "/forgot-password"]);
+const isAuthRoute = createRouteMatcher([
+  "/signin",
+  "/signup",
+  "/forgot-password",
+]);
 
 const ONBOARDED_COOKIE = "ll-onboarded";
 const ONBOARDING_PATH = "/signup/onboarding";
