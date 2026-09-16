@@ -22,6 +22,15 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.redirect(signInUrl);
   }
 
+  // Onboarding gate. Middleware can't query Convex, so the onboarding page
+  // mirrors `userProfiles.onboardingCompleted` into this cookie. Users who
+  // already onboarded elsewhere land on /signup/onboarding, which reads their
+  // profile, sets the cookie and forwards them straight to the dashboard.
+  const hasOnboarded = req.cookies.get("ll-onboarded")?.value === "true";
+  if (!hasOnboarded) {
+    return NextResponse.redirect(new URL("/signup/onboarding", req.url));
+  }
+
   return NextResponse.next();
 });
 
