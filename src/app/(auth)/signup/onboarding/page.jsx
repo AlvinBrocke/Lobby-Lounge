@@ -1,10 +1,11 @@
 "use client";
 export const dynamic = "force-dynamic";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import { useConvexAuth, useMutation } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { AuthShell } from "@/components/auth/AuthShell";
+import { COUNTRIES, US_STATES, PINNED_COUNTRY_COUNT } from "@/lib/countries";
 
 // ─── Shared style tokens ─────────────────────────────────────────────────────
 
@@ -62,6 +63,18 @@ const inputStyle = {
   transition: "border-color .2s",
 };
 
+const selectStyle = {
+  ...inputStyle,
+  appearance: "none",
+  WebkitAppearance: "none",
+  MozAppearance: "none",
+  paddingRight: 40,
+  cursor: "pointer",
+};
+
+const focusIn = (e) => (e.target.style.borderColor = "rgba(78,205,196,.6)");
+const focusOut = (e) => (e.target.style.borderColor = "rgba(255,255,255,.1)");
+
 // ─── Step indicator ───────────────────────────────────────────────────────────
 
 function StepIndicator({ currentStep, totalSteps }) {
@@ -104,20 +117,9 @@ function StepIndicator({ currentStep, totalSteps }) {
   );
 }
 
-// ─── Step 1 — Genre selection ─────────────────────────────────────────────────
+// ─── Reusable inputs ──────────────────────────────────────────────────────────
 
-const GENRES = [
-  { id: "jazz", name: "Jazz" },
-  { id: "lo-fi", name: "Lo-Fi" },
-  { id: "classical", name: "Classical" },
-  { id: "pop", name: "Pop" },
-  { id: "acoustic", name: "Acoustic" },
-  { id: "electronic", name: "Electronic" },
-  { id: "ambient", name: "Ambient" },
-  { id: "rnb", name: "R&B" },
-];
-
-function GenreChip({ name, selected, onToggle }) {
+function Chip({ name, selected, onToggle }) {
   const [hovered, setHovered] = useState(false);
 
   const base = {
@@ -147,7 +149,9 @@ function GenreChip({ name, selected, onToggle }) {
 
   return (
     <button
+      type="button"
       onClick={onToggle}
+      aria-pressed={selected}
       style={selected ? activeStyle : inactiveStyle}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -157,74 +161,261 @@ function GenreChip({ name, selected, onToggle }) {
   );
 }
 
-function Step1({ selectedGenres, toggleGenre }) {
+function ChipGroup({ children }) {
   return (
-    <div>
-      <h1 style={headingStyle}>What's your venue's vibe?</h1>
-      <p style={subTextStyle}>We'll curate channels that fit your space.</p>
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>{children}</div>
+  );
+}
 
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 10,
-          marginBottom: 24,
-        }}
-      >
-        {GENRES.map((g) => (
-          <GenreChip
-            key={g.id}
-            name={g.name}
-            selected={selectedGenres.includes(g.id)}
-            onToggle={() => toggleGenre(g.id)}
-          />
-        ))}
-      </div>
+function Chevron() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{
+        position: "absolute",
+        right: 14,
+        top: "50%",
+        transform: "translateY(-50%)",
+        width: 14,
+        height: 14,
+        color: "rgba(255,255,255,.35)",
+        pointerEvents: "none",
+      }}
+    >
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
 
-      <p
-        style={{
-          fontFamily: "var(--ll-font-body)",
-          fontSize: 12,
-          color: "var(--ll-on-ink-3)",
-          marginBottom: 0,
-          marginTop: 0,
-        }}
+function Select({ value, onChange, placeholder, children }) {
+  return (
+    <div style={{ position: "relative" }}>
+      <select
+        value={value}
+        onChange={onChange}
+        style={selectStyle}
+        onFocus={focusIn}
+        onBlur={focusOut}
       >
-        {selectedGenres.length === 0
-          ? "Select at least one genre to continue"
-          : `${selectedGenres.length} genre${selectedGenres.length > 1 ? "s" : ""} selected`}
-      </p>
+        <option value="" disabled style={{ background: "#0F1419" }}>
+          {placeholder}
+        </option>
+        {children}
+      </select>
+      <Chevron />
     </div>
   );
 }
 
-// ─── Step 2 — Mood selection ──────────────────────────────────────────────────
+// ─── Step 1 — Your business ───────────────────────────────────────────────────
+
+const LOCATION_OPTIONS = [
+  { value: 1, label: "1" },
+  { value: 2, label: "2–3" },
+  { value: 4, label: "4–5" },
+  { value: 6, label: "6+" },
+];
+
+function Step1({ business, setBusiness }) {
+  const set = (key) => (value) => setBusiness((b) => ({ ...b, [key]: value }));
+  const isUS = business.country === "US";
+  const pinned = COUNTRIES.slice(0, PINNED_COUNTRY_COUNT);
+  const rest = COUNTRIES.slice(PINNED_COUNTRY_COUNT);
+
+  return (
+    <div>
+      <h1 style={headingStyle}>Tell us about your business</h1>
+      <p style={subTextStyle}>
+        We'll use this to set up your venue and keep your music licensed
+        where you play it.
+      </p>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+        <div>
+          <label style={labelStyle}>Business name</label>
+          <input
+            type="text"
+            placeholder="e.g. The Grand Café"
+            value={business.name}
+            onChange={(e) => set("name")(e.target.value)}
+            style={inputStyle}
+            onFocus={focusIn}
+            onBlur={focusOut}
+            autoFocus
+          />
+        </div>
+
+        <div
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}
+        >
+          <div>
+            <label style={labelStyle}>Country</label>
+            <Select
+              value={business.country}
+              placeholder="Select…"
+              onChange={(e) => {
+                set("country")(e.target.value);
+                set("region")(""); // region list changes with country
+              }}
+            >
+              {pinned.map((c) => (
+                <option key={c.code} value={c.code} style={{ background: "#0F1419" }}>
+                  {c.name}
+                </option>
+              ))}
+              <option disabled style={{ background: "#0F1419" }}>
+                ──────────
+              </option>
+              {rest.map((c) => (
+                <option key={c.code} value={c.code} style={{ background: "#0F1419" }}>
+                  {c.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          <div>
+            <label style={labelStyle}>{isUS ? "State" : "State / Region"}</label>
+            {isUS ? (
+              <Select
+                value={business.region}
+                placeholder="Select…"
+                onChange={(e) => set("region")(e.target.value)}
+              >
+                {US_STATES.map((s) => (
+                  <option key={s.code} value={s.code} style={{ background: "#0F1419" }}>
+                    {s.name}
+                  </option>
+                ))}
+              </Select>
+            ) : (
+              <input
+                type="text"
+                placeholder="e.g. Greater London"
+                value={business.region}
+                onChange={(e) => set("region")(e.target.value)}
+                style={inputStyle}
+                onFocus={focusIn}
+                onBlur={focusOut}
+              />
+            )}
+          </div>
+        </div>
+
+        <div>
+          <label style={labelStyle}>Locations you operate</label>
+          <ChipGroup>
+            {LOCATION_OPTIONS.map((o) => (
+              <Chip
+                key={o.value}
+                name={o.label}
+                selected={business.locationCount === o.value}
+                onToggle={() => set("locationCount")(o.value)}
+              />
+            ))}
+          </ChipGroup>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Step 2 — Your guests ─────────────────────────────────────────────────────
+
+const BUSINESS_TYPES = [
+  "Restaurant",
+  "Café",
+  "Bar & Lounge",
+  "Hotel",
+  "Retail",
+  "Spa & Wellness",
+  "Gym",
+  "Office",
+  "Other",
+];
+
+const GUEST_DEMOGRAPHICS = [
+  "Families",
+  "Young professionals",
+  "Tourists",
+  "Business travellers",
+  "Students",
+  "Regulars & locals",
+  "Mixed",
+];
+
+function Step2({ guests, setGuests }) {
+  const toggleDemographic = (d) =>
+    setGuests((g) => ({
+      ...g,
+      demographics: g.demographics.includes(d)
+        ? g.demographics.filter((x) => x !== d)
+        : [...g.demographics, d],
+    }));
+
+  return (
+    <div>
+      <h1 style={headingStyle}>Who walks through the door?</h1>
+      <p style={subTextStyle}>
+        Helps us suggest channels that suit your space and your guests.
+      </p>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
+        <div>
+          <label style={labelStyle}>Business type</label>
+          <ChipGroup>
+            {BUSINESS_TYPES.map((t) => (
+              <Chip
+                key={t}
+                name={t}
+                selected={guests.businessType === t}
+                onToggle={() => setGuests((g) => ({ ...g, businessType: t }))}
+              />
+            ))}
+          </ChipGroup>
+        </div>
+
+        <div>
+          <label style={labelStyle}>Guest demographic — pick all that apply</label>
+          <ChipGroup>
+            {GUEST_DEMOGRAPHICS.map((d) => (
+              <Chip
+                key={d}
+                name={d}
+                selected={guests.demographics.includes(d)}
+                onToggle={() => toggleDemographic(d)}
+              />
+            ))}
+          </ChipGroup>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Step 3 — Your sound ──────────────────────────────────────────────────────
+
+const GENRES = [
+  { id: "jazz", name: "Jazz" },
+  { id: "lo-fi", name: "Lo-Fi" },
+  { id: "classical", name: "Classical" },
+  { id: "pop", name: "Pop" },
+  { id: "acoustic", name: "Acoustic" },
+  { id: "electronic", name: "Electronic" },
+  { id: "ambient", name: "Ambient" },
+  { id: "rnb", name: "R&B" },
+];
 
 const MOODS = [
-  {
-    id: "relaxed",
-    name: "Relaxed",
-    emoji: "😌",
-    description: "Calm & unhurried",
-  },
-  {
-    id: "upbeat",
-    name: "Upbeat",
-    emoji: "⚡",
-    description: "Energetic & lively",
-  },
-  {
-    id: "elegant",
-    name: "Elegant",
-    emoji: "🎻",
-    description: "Refined & polished",
-  },
-  {
-    id: "focused",
-    name: "Focused",
-    emoji: "🎯",
-    description: "Productive & clear",
-  },
+  { id: "relaxed", name: "Relaxed", emoji: "😌", description: "Calm & unhurried" },
+  { id: "upbeat", name: "Upbeat", emoji: "⚡", description: "Energetic & lively" },
+  { id: "elegant", name: "Elegant", emoji: "🎻", description: "Refined & polished" },
+  { id: "focused", name: "Focused", emoji: "🎯", description: "Productive & clear" },
 ];
 
 function MoodCard({ mood, selected, onSelect }) {
@@ -232,13 +423,12 @@ function MoodCard({ mood, selected, onSelect }) {
 
   const style = {
     borderRadius: 14,
-    padding: "16px",
+    padding: "14px 16px",
     cursor: "pointer",
-    minHeight: 80,
     border: "1px solid",
     display: "flex",
-    flexDirection: "column",
-    gap: 6,
+    alignItems: "center",
+    gap: 12,
     transition: "background .2s, border-color .2s",
     background: selected
       ? "rgba(78,205,196,.10)"
@@ -255,164 +445,83 @@ function MoodCard({ mood, selected, onSelect }) {
 
   return (
     <button
+      type="button"
       onClick={onSelect}
+      aria-pressed={selected}
       style={style}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <span style={{ fontSize: 24, lineHeight: 1 }}>{mood.emoji}</span>
-      <span
-        style={{
-          fontFamily: "var(--ll-font-body)",
-          fontWeight: 700,
-          fontSize: 13,
-          color: "#fff",
-          lineHeight: 1.2,
-        }}
-      >
-        {mood.name}
-      </span>
-      <span
-        style={{
-          fontFamily: "var(--ll-font-body)",
-          fontSize: 11,
-          color: "var(--ll-on-ink-3)",
-          lineHeight: 1.3,
-        }}
-      >
-        {mood.description}
+      <span style={{ fontSize: 22, lineHeight: 1 }}>{mood.emoji}</span>
+      <span style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+        <span
+          style={{
+            fontFamily: "var(--ll-font-body)",
+            fontWeight: 700,
+            fontSize: 13,
+            color: "#fff",
+            lineHeight: 1.2,
+          }}
+        >
+          {mood.name}
+        </span>
+        <span
+          style={{
+            fontFamily: "var(--ll-font-body)",
+            fontSize: 11,
+            color: "var(--ll-on-ink-3)",
+            lineHeight: 1.3,
+          }}
+        >
+          {mood.description}
+        </span>
       </span>
     </button>
   );
 }
 
-function Step2({ selectedMood, setSelectedMood }) {
+function Step3({ sound, setSound }) {
+  const toggleGenre = (id) =>
+    setSound((s) => ({
+      ...s,
+      genres: s.genres.includes(id)
+        ? s.genres.filter((g) => g !== id)
+        : [...s.genres, id],
+    }));
+
   return (
     <div>
-      <h1 style={headingStyle}>Set the atmosphere</h1>
-      <p style={subTextStyle}>
-        This helps us match energy levels to your schedule.
-      </p>
+      <h1 style={headingStyle}>What's your venue's vibe?</h1>
+      <p style={subTextStyle}>We'll pick a starting channel that fits your space.</p>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 10,
-          marginBottom: 4,
-        }}
-      >
-        {MOODS.map((mood) => (
-          <MoodCard
-            key={mood.id}
-            mood={mood}
-            selected={selectedMood === mood.id}
-            onSelect={() => setSelectedMood(mood.id)}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ─── Step 3 — Preferences ────────────────────────────────────────────────────
-
-const BUSINESS_TYPES = [
-  "Restaurant",
-  "Café",
-  "Hotel Lobby",
-  "Retail Store",
-  "Spa & Wellness",
-  "Bar & Lounge",
-  "Other",
-];
-
-function Step3({ preferences, setPreferences }) {
-  return (
-    <div>
-      <h1 style={headingStyle}>Almost there!</h1>
-      <p style={subTextStyle}>
-        A few last details to personalize your experience.
-      </p>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-        {/* Venue Name */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
         <div>
-          <label style={labelStyle}>Venue Name</label>
-          <input
-            type="text"
-            placeholder="e.g. The Grand Café"
-            value={preferences.venueName}
-            onChange={(e) =>
-              setPreferences((p) => ({ ...p, venueName: e.target.value }))
-            }
-            style={inputStyle}
-            onFocus={(e) =>
-              (e.target.style.borderColor = "rgba(78,205,196,.6)")
-            }
-            onBlur={(e) =>
-              (e.target.style.borderColor = "rgba(255,255,255,.1)")
-            }
-          />
+          <label style={labelStyle}>Genres — pick at least one</label>
+          <ChipGroup>
+            {GENRES.map((g) => (
+              <Chip
+                key={g.id}
+                name={g.name}
+                selected={sound.genres.includes(g.id)}
+                onToggle={() => toggleGenre(g.id)}
+              />
+            ))}
+          </ChipGroup>
         </div>
 
-        {/* Business Type */}
         <div>
-          <label style={labelStyle}>Business Type</label>
-          <div style={{ position: "relative" }}>
-            <select
-              value={preferences.businessType}
-              onChange={(e) =>
-                setPreferences((p) => ({
-                  ...p,
-                  businessType: e.target.value,
-                }))
-              }
-              style={{
-                ...inputStyle,
-                appearance: "none",
-                WebkitAppearance: "none",
-                MozAppearance: "none",
-                paddingRight: 40,
-                cursor: "pointer",
-              }}
-              onFocus={(e) =>
-                (e.target.style.borderColor = "rgba(78,205,196,.6)")
-              }
-              onBlur={(e) =>
-                (e.target.style.borderColor = "rgba(255,255,255,.1)")
-              }
-            >
-              <option value="" disabled style={{ background: "#0F1419" }}>
-                Select a type…
-              </option>
-              {BUSINESS_TYPES.map((t) => (
-                <option key={t} value={t} style={{ background: "#0F1419" }}>
-                  {t}
-                </option>
-              ))}
-            </select>
-            {/* Chevron icon */}
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{
-                position: "absolute",
-                right: 14,
-                top: "50%",
-                transform: "translateY(-50%)",
-                width: 14,
-                height: 14,
-                color: "rgba(255,255,255,.35)",
-                pointerEvents: "none",
-              }}
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
+          <label style={labelStyle}>Mood</label>
+          <div
+            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}
+          >
+            {MOODS.map((mood) => (
+              <MoodCard
+                key={mood.id}
+                mood={mood}
+                selected={sound.mood === mood.id}
+                onSelect={() => setSound((s) => ({ ...s, mood: mood.id }))}
+              />
+            ))}
           </div>
         </div>
       </div>
@@ -422,27 +531,37 @@ function Step3({ preferences, setPreferences }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+const ONBOARDED_COOKIE = "ll-onboarded=true; path=/; max-age=31536000; SameSite=Lax";
+
 function MainComponent() {
   const { user } = useUser();
   const { isAuthenticated } = useConvexAuth();
   const saveProfile = useMutation(api.userProfiles.createOrUpdate);
+  // Existing profile — used to bounce users who already onboarded (on another
+  // browser, or before the cookie gate existed) straight to the dashboard.
+  const profile = useQuery(api.userProfiles.get, isAuthenticated ? {} : "skip");
+
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedGenres, setSelectedGenres] = useState([]);
-  const [selectedMood, setSelectedMood] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
-  const [preferences, setPreferences] = useState({
-    venueName: "",
-    businessType: "",
+
+  const [business, setBusiness] = useState({
+    name: "",
+    country: "",
+    region: "",
+    locationCount: null,
   });
+  const [guests, setGuests] = useState({ businessType: "", demographics: [] });
+  const [sound, setSound] = useState({ genres: [], mood: "" });
 
   const totalSteps = 3;
 
-  const toggleGenre = (id) => {
-    setSelectedGenres((prev) =>
-      prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]
-    );
-  };
+  useEffect(() => {
+    if (profile?.onboardingCompleted) {
+      document.cookie = ONBOARDED_COOKIE;
+      window.location.replace("/dashboard");
+    }
+  }, [profile]);
 
   const nextStep = () => {
     if (currentStep < totalSteps) setCurrentStep(currentStep + 1);
@@ -452,19 +571,34 @@ function MainComponent() {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const handleSubmit = async () => {
-    if (!isAuthenticated || !user) return;
+  // Everything is optional on the backend, so the same payload serves both
+  // "Finish" and "Skip for now" — blanks are simply left undefined.
+  const buildPayload = () => ({
+    displayName: user?.fullName || user?.firstName || "",
+    venueName: business.name || undefined,
+    country: business.country || undefined,
+    region: business.region || undefined,
+    locationCount: business.locationCount ?? undefined,
+    businessType: guests.businessType || undefined,
+    guestDemographics:
+      guests.demographics.length > 0 ? guests.demographics : undefined,
+    genres: sound.genres,
+    mood: sound.mood || undefined,
+    onboardingCompleted: true,
+  });
+
+  const finish = async () => {
+    if (!isAuthenticated || !user) {
+      // Convex auth lags Clerk by a moment on first load (it has to fetch a
+      // JWT); tell the user rather than swallowing the click.
+      setSaveError("Still connecting to your account — please try again in a moment.");
+      return;
+    }
     setSaving(true);
     setSaveError(null);
     try {
-      await saveProfile({
-        displayName: user.fullName || user.firstName || "",
-        venueName: preferences.venueName || undefined,
-        genres: selectedGenres,
-        mood: selectedMood,
-        onboardingCompleted: true,
-      });
-      document.cookie = "ll-onboarded=true; path=/; max-age=31536000";
+      await saveProfile(buildPayload());
+      document.cookie = ONBOARDED_COOKIE;
       window.location.href = "/dashboard";
     } catch (e) {
       console.error("Failed to save profile", e);
@@ -473,13 +607,12 @@ function MainComponent() {
     }
   };
 
-  // Determine whether Continue is enabled
   const canContinue =
     currentStep === 1
-      ? selectedGenres.length >= 1
+      ? business.name.trim().length > 0
       : currentStep === 2
-        ? selectedMood !== ""
-        : true;
+        ? guests.businessType !== ""
+        : sound.genres.length >= 1 && sound.mood !== "";
 
   // ── Shared button styles ──────────────────────────────────────────────────
 
@@ -517,32 +650,18 @@ function MainComponent() {
     transition: "color .2s",
   };
 
+  const hoverWhite = (e) => (e.currentTarget.style.color = "#fff");
+  const hoverDim = (e) => (e.currentTarget.style.color = "rgba(255,255,255,.4)");
+
   return (
     <AuthShell>
       <div style={cardStyle}>
         <StepIndicator currentStep={currentStep} totalSteps={totalSteps} />
 
-        {/* Step content */}
-        {currentStep === 1 && (
-          <Step1
-            selectedGenres={selectedGenres}
-            toggleGenre={toggleGenre}
-          />
-        )}
-        {currentStep === 2 && (
-          <Step2
-            selectedMood={selectedMood}
-            setSelectedMood={setSelectedMood}
-          />
-        )}
-        {currentStep === 3 && (
-          <Step3
-            preferences={preferences}
-            setPreferences={setPreferences}
-          />
-        )}
+        {currentStep === 1 && <Step1 business={business} setBusiness={setBusiness} />}
+        {currentStep === 2 && <Step2 guests={guests} setGuests={setGuests} />}
+        {currentStep === 3 && <Step3 sound={sound} setSound={setSound} />}
 
-        {/* Error message */}
         {saveError && (
           <p
             style={{
@@ -562,53 +681,61 @@ function MainComponent() {
         <div
           style={{
             display: "flex",
-            justifyContent: currentStep > 1 ? "space-between" : "flex-end",
+            justifyContent: "space-between",
             alignItems: "center",
             marginTop: 28,
+            gap: 16,
           }}
         >
-          {/* Back button — only steps 2 & 3 */}
-          {currentStep > 1 && (
+          <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+            {currentStep > 1 && (
+              <button
+                type="button"
+                onClick={prevStep}
+                style={ghostBtnStyle}
+                onMouseEnter={hoverWhite}
+                onMouseLeave={hoverDim}
+              >
+                ← Back
+              </button>
+            )}
+            {/* Zero-commitment path: account exists, preferences can wait. */}
             <button
-              onClick={prevStep}
+              type="button"
+              onClick={finish}
+              disabled={saving}
               style={ghostBtnStyle}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.color = "rgba(255,255,255,.4)")
-              }
+              onMouseEnter={hoverWhite}
+              onMouseLeave={hoverDim}
             >
-              ← Back
+              Skip for now
             </button>
-          )}
+          </div>
 
-          {/* Continue / Submit */}
           {currentStep < totalSteps ? (
             <button
+              type="button"
               onClick={nextStep}
               disabled={!canContinue}
               style={primaryBtnStyle}
               onMouseEnter={(e) => {
-                if (canContinue)
-                  e.currentTarget.style.transform = "translateY(-1px)";
+                if (canContinue) e.currentTarget.style.transform = "translateY(-1px)";
               }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "none";
-              }}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = "none")}
             >
               Continue
             </button>
           ) : (
             <button
-              onClick={handleSubmit}
-              disabled={saving}
+              type="button"
+              onClick={finish}
+              disabled={saving || !canContinue}
               style={primaryBtnStyle}
               onMouseEnter={(e) => {
-                if (!saving)
+                if (!saving && canContinue)
                   e.currentTarget.style.transform = "translateY(-1px)";
               }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "none";
-              }}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = "none")}
             >
               {saving ? "Saving…" : "Start Exploring →"}
             </button>

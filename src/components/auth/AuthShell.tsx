@@ -101,7 +101,7 @@ function NowPlayingChip() {
             whiteSpace: "nowrap",
           }}
         >
-          Now playing · Lounge Vibes
+          Now playing · Lounge &amp; Chill
         </b>
         <span
           style={{
@@ -112,7 +112,7 @@ function NowPlayingChip() {
             color: "var(--ll-on-ink-3)",
           }}
         >
-          Zone 1 — Main floor
+          Licensed channel · Lobby &amp; Lounge
         </span>
       </div>
     </div>

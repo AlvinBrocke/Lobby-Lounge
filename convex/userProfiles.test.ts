@@ -45,6 +45,42 @@ describe("userProfiles", () => {
     expect(profile?.displayName).toBe("Alvin");   // untouched
   });
 
+  it("round-trips the business details collected during onboarding", async () => {
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    const asUser = t.withIdentity({ subject: USER });
+    await asUser.mutation(api.userProfiles.createOrUpdate, {
+      venueName: "The Grand Café",
+      businessType: "Café",
+      country: "US",
+      region: "NY",
+      locationCount: 2,
+      guestDemographics: ["Young professionals", "Tourists"],
+      genres: ["jazz", "lo-fi"],
+      mood: "relaxed",
+      onboardingCompleted: true,
+    });
+    const profile = await asUser.query(api.userProfiles.get, {});
+    expect(profile?.businessType).toBe("Café");
+    expect(profile?.country).toBe("US");
+    expect(profile?.region).toBe("NY");
+    expect(profile?.locationCount).toBe(2);
+    expect(profile?.guestDemographics).toEqual(["Young professionals", "Tourists"]);
+    expect(profile?.onboardingCompleted).toBe(true);
+  });
+
+  it("supports 'Skip for now' — completing onboarding with no details", async () => {
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    const asUser = t.withIdentity({ subject: USER });
+    await asUser.mutation(api.userProfiles.createOrUpdate, {
+      onboardingCompleted: true,
+    });
+    const profile = await asUser.query(api.userProfiles.get, {});
+    expect(profile?.onboardingCompleted).toBe(true);
+    expect(profile?.genres).toEqual([]);
+    expect(profile?.businessType).toBeUndefined();
+    expect(profile?.plan).toBe("trial");
+  });
+
   it("does not create duplicate profiles for the same user", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
     const asUser = t.withIdentity({ subject: USER });
