@@ -130,9 +130,9 @@ GitHub Actions runs on every push and pull request to `main`:
 1. **Test** — runs both test suites
 2. **Type-check & Build** — `tsc --noEmit` then `next build` (only runs if tests pass)
 
-Deployment to Vercel triggers automatically after CI passes on `main`. Pull requests get a preview deployment with a URL posted as a PR comment.
+Deployment is handled by Vercel's own Git integration, not by GitHub Actions: pushes to `main` deploy to production and pull requests get a preview deployment, both reported back as the `Vercel` check.
 
-Required GitHub secrets: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CONVEX_URL`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`.
+Required GitHub secrets (used by the build job): `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CONVEX_URL`.
 
 ## Auth
 
