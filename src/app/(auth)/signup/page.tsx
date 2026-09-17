@@ -52,8 +52,10 @@ export default function SignupPage() {
   const { isLoaded, signUp, setActive } = useSignUp();
   const [step, setStep] = useState<"signup" | "verify">("signup");
 
+  // Already signed in? Hand off to the onboarding route — middleware forwards
+  // onboarded users to /dashboard, so this never fights the post-signup push.
   useEffect(() => {
-    if (isSignedIn) router.replace("/dashboard");
+    if (isSignedIn) router.replace("/signup/onboarding");
   }, [isSignedIn, router]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

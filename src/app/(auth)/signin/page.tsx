@@ -17,6 +17,15 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Middleware sends signed-out users here with ?redirect_url=<where they were
+  // going>. Read it lazily (not via useSearchParams, which would force a
+  // Suspense boundary) and only trust same-origin paths to avoid open redirects.
+  const afterSignInUrl = () => {
+    const target = new URLSearchParams(window.location.search).get("redirect_url");
+    if (target?.startsWith("/") && !target.startsWith("//")) return target;
+    return "/dashboard";
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isLoaded) return;
@@ -27,7 +36,7 @@ export default function LoginPage() {
       const result = await signIn.create({ identifier: email, password });
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
-        router.push("/dashboard");
+        router.push(afterSignInUrl());
       }
     } catch (err) {
       if (isClerkAPIResponseError(err)) {
@@ -45,7 +54,7 @@ export default function LoginPage() {
     await signIn.authenticateWithRedirect({
       strategy: "oauth_google",
       redirectUrl: "/sso-callback",
-      redirectUrlComplete: "/dashboard",
+      redirectUrlComplete: afterSignInUrl(),
     });
   };
 

@@ -16,7 +16,6 @@ import {
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { useTheme } from "@/components/theme-provider";
 import { PasswordCard } from "@/components/settings/PasswordCard";
-import { useRouter } from "next/navigation";
 
 interface SessionInfo {
   id: string;
@@ -47,7 +46,6 @@ export default function SettingsPage() {
   const { user, isLoaded: userLoaded } = useUser();
   const { session: currentSession } = useSession();
   const { signOut } = useClerk();
-  const router = useRouter();
 
   const { isAuthenticated } = useConvexAuth();
   const profile = useQuery(api.userProfiles.get, isAuthenticated ? {} : "skip");
@@ -97,6 +95,12 @@ export default function SettingsPage() {
   async function handleRevokeSession(sessionId: string) {
     setRevokingId(sessionId);
     try {
+      // Revoking our own session server-side would leave the client believing
+      // it's still signed in; signOut() revokes it *and* clears local state.
+      if (sessionId === currentSession?.id) {
+        await signOut({ sessionId, redirectUrl: "/signin" });
+        return;
+      }
       const target = sessionList.find((s) => s.id === sessionId);
       await target?.revoke();
       setSessionList((prev) => prev.filter((s) => s.id !== sessionId));
@@ -108,8 +112,14 @@ export default function SettingsPage() {
   async function handleSignOutAll() {
     setSigningOutAll(true);
     try {
-      await signOut();
-      router.push("/signin");
+      // signOut() only ends the session in *this* browser. Every other device
+      // has to be revoked explicitly, one session at a time.
+      await Promise.allSettled(
+        sessionList
+          .filter((s) => s.id !== currentSession?.id)
+          .map((s) => s.revoke()),
+      );
+      await signOut({ redirectUrl: "/signin" });
     } catch {
       setSigningOutAll(false);
     }

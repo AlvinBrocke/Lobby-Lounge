@@ -1,14 +1,14 @@
-"use client";
-
 import React from "react";
-import { AppLayout } from "@/components/layout/app-layout";
-import { useIdleTimeout } from "@/hooks/useIdleTimeout";
+import { verifySession } from "@/lib/session";
+import { MainShell } from "@/components/layout/MainShell";
 
-export default function MainLayout({
+// Layer 2 of auth: even if middleware were misconfigured, nothing under (main)
+// renders for a signed-out user. `verifySession` redirects to /signin.
+export default async function MainLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  useIdleTimeout();
-  return <AppLayout>{children}</AppLayout>;
+  await verifySession();
+  return <MainShell>{children}</MainShell>;
 }

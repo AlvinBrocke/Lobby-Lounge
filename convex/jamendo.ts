@@ -1,6 +1,6 @@
 import { v } from "convex/values";
-import { action } from "./_generated/server";
-import { api } from "./_generated/api";
+import { internalAction } from "./_generated/server";
+import { api, internal } from "./_generated/api";
 import { energyForCategory } from "./lib/energy";
 
 const JAMENDO_TRACKS_URL = "https://api.jamendo.com/v3.0/tracks/";
@@ -23,7 +23,7 @@ interface JamendoTrack {
   image: string;
 }
 
-export const syncChannel = action({
+export const syncChannel = internalAction({
   args: {
     channelId: v.id("channels"),
     tag: v.optional(v.string()),
@@ -69,7 +69,7 @@ export const syncChannel = action({
     let inserted = 0;
     for (const track of data.results) {
       if (existingNames.has(track.name)) continue;
-      await ctx.runMutation(api.tracks.create, {
+      await ctx.runMutation(internal.tracks.create, {
         name: track.name,
         artist: track.artist_name,
         duration: track.duration,
@@ -84,7 +84,7 @@ export const syncChannel = action({
 
     const firstTrack = data.results[0];
     if (firstTrack) {
-      await ctx.runMutation(api.channels.update, {
+      await ctx.runMutation(internal.channels.update, {
         id: args.channelId,
         audioUrl: firstTrack.audio,
         coverImage: channel.coverImage ?? firstTrack.image,
@@ -95,14 +95,14 @@ export const syncChannel = action({
   },
 });
 
-export const syncAllChannels = action({
+export const syncAllChannels = internalAction({
   args: {},
   handler: async (ctx): Promise<Record<string, number | string>> => {
     const channels = await ctx.runQuery(api.channels.list, {});
     const results: Record<string, number | string> = {};
     for (const channel of channels) {
       try {
-        results[channel.name] = await ctx.runAction(api.jamendo.syncChannel, {
+        results[channel.name] = await ctx.runAction(internal.jamendo.syncChannel, {
           channelId: channel._id,
         });
       } catch (err) {

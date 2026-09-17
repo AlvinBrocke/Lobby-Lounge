@@ -1,13 +1,19 @@
 "use client";
 
 import { useClerk, useUser } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
+/**
+ * Signs the user out after a period of no interaction in this tab.
+ *
+ * This is a UX courtesy, not a security boundary: it only runs while the tab is
+ * open. The real enforcement is Clerk's server-side session inactivity timeout
+ * and maximum lifetime (Dashboard → Configure → Sessions), which expire the
+ * session regardless of what the browser does.
+ */
 export function useIdleTimeout(timeoutMs = 30 * 60 * 1000) {
   const { signOut } = useClerk();
   const { isSignedIn } = useUser();
-  const router = useRouter();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -15,9 +21,8 @@ export function useIdleTimeout(timeoutMs = 30 * 60 * 1000) {
 
     function reset() {
       if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(async () => {
-        await signOut();
-        router.push("/signin");
+      timerRef.current = setTimeout(() => {
+        void signOut({ redirectUrl: "/signin" });
       }, timeoutMs);
     }
 
@@ -29,5 +34,5 @@ export function useIdleTimeout(timeoutMs = 30 * 60 * 1000) {
       if (timerRef.current) clearTimeout(timerRef.current);
       events.forEach((e) => window.removeEventListener(e, reset));
     };
-  }, [isSignedIn, timeoutMs, signOut, router]);
+  }, [isSignedIn, timeoutMs, signOut]);
 }

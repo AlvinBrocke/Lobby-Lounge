@@ -1,4 +1,4 @@
-import { mutation, query } from "./_generated/server";
+import { internalMutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { energyForCategory } from "./lib/energy";
 
@@ -24,7 +24,7 @@ export const get = query({
   },
 });
 
-export const create = mutation({
+export const create = internalMutation({
   args: {
     name: v.string(),
     artist: v.optional(v.string()),
@@ -40,7 +40,7 @@ export const create = mutation({
   },
 });
 
-export const update = mutation({
+export const update = internalMutation({
   args: {
     id: v.id("tracks"),
     name: v.optional(v.string()),
@@ -61,7 +61,7 @@ export const update = mutation({
   },
 });
 
-export const remove = mutation({
+export const remove = internalMutation({
   args: { id: v.id("tracks") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
@@ -79,7 +79,7 @@ export const remove = mutation({
  * a bounded read/write budget; call it repeatedly until `remaining` is 0:
  *   npx convex run tracks:backfillEnergy '{}'
  */
-export const backfillEnergy = mutation({
+export const backfillEnergy = internalMutation({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
     const limit = args.limit ?? 200;
@@ -107,7 +107,7 @@ export const backfillEnergy = mutation({
   },
 });
 
-export const seed = mutation({
+export const seed = internalMutation({
   args: {},
   handler: async (ctx) => {
     const existing = await ctx.db.query("tracks").first();

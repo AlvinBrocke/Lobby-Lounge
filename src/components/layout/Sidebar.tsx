@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 const navItems = [
   { name: "Channels", href: "/dashboard", icon: LayoutGrid },
@@ -27,7 +27,6 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const { theme, toggleTheme } = useTheme();
   const { user } = useUser();
   const { signOut } = useClerk();
@@ -42,8 +41,7 @@ export function Sidebar() {
     .slice(0, 2);
 
   const handleSignOut = async () => {
-    await signOut();
-    router.push("/signin");
+    await signOut({ redirectUrl: "/signin" });
   };
 
   return (

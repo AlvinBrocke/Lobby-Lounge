@@ -1,10 +1,21 @@
 "use client";
 export const dynamic = "force-dynamic";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import { useConvexAuth, useMutation } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { AuthShell } from "@/components/auth/AuthShell";
+import { completeOnboarding, syncOnboardingClaim } from "./actions";
+
+// Where to send the user once onboarding is done. Middleware passes the page
+// they originally asked for as ?redirect_url=; only trust same-origin paths.
+function nextUrl() {
+  const target = new URLSearchParams(window.location.search).get("redirect_url");
+  if (target && target.startsWith("/") && !target.startsWith("//")) {
+    return target;
+  }
+  return "/dashboard";
+}
 
 // ─── Shared style tokens ─────────────────────────────────────────────────────
 
@@ -425,7 +436,7 @@ function Step3({ preferences, setPreferences }) {
 function MainComponent() {
   const { user } = useUser();
   const { isAuthenticated } = useConvexAuth();
-  const saveProfile = useMutation(api.userProfiles.createOrUpdate);
+  const profile = useQuery(api.userProfiles.get, isAuthenticated ? {} : "skip");
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [selectedMood, setSelectedMood] = useState("");
@@ -437,6 +448,29 @@ function MainComponent() {
   });
 
   const totalSteps = 3;
+
+  // Users who finished onboarding before the JWT claim existed land here because
+  // middleware doesn't see the claim yet. Their Convex profile is the source of
+  // truth, so sync the claim and send them on without showing the wizard.
+  const alreadyOnboarded = profile?.onboardingCompleted === true;
+  useEffect(() => {
+    if (!alreadyOnboarded || !user) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await syncOnboardingClaim();
+        if (!res.ok) throw new Error(res.error);
+        await user.reload(); // pick up a fresh session JWT that carries the claim
+        if (!cancelled) window.location.assign(nextUrl());
+      } catch (e) {
+        console.error("Failed to sync onboarding claim", e);
+        if (!cancelled) setSaveError("Something went wrong. Please refresh.");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [alreadyOnboarded, user]);
 
   const toggleGenre = (id) => {
     setSelectedGenres((prev) =>
@@ -457,15 +491,18 @@ function MainComponent() {
     setSaving(true);
     setSaveError(null);
     try {
-      await saveProfile({
+      const res = await completeOnboarding({
         displayName: user.fullName || user.firstName || "",
-        venueName: preferences.venueName || undefined,
+        venueName: preferences.venueName,
         genres: selectedGenres,
         mood: selectedMood,
-        onboardingCompleted: true,
       });
-      document.cookie = "ll-onboarded=true; path=/; max-age=31536000";
-      window.location.href = "/dashboard";
+      if (!res.ok) throw new Error(res.error);
+      // The claim is only visible to middleware once Clerk mints a new session
+      // JWT; reload() forces that now instead of waiting for the ~60s refresh.
+      await user.reload();
+      // Hard navigation so the refreshed cookie is guaranteed to reach proxy.ts.
+      window.location.assign(nextUrl());
     } catch (e) {
       console.error("Failed to save profile", e);
       setSaveError(e.message || "Something went wrong. Please try again.");
@@ -516,6 +553,27 @@ function MainComponent() {
     padding: 0,
     transition: "color .2s",
   };
+
+  // Don't flash the wizard until we know whether this user has already onboarded.
+  if (profile === undefined || alreadyOnboarded) {
+    return (
+      <AuthShell>
+        <div style={cardStyle}>
+          <p
+            style={{
+              fontFamily: "var(--ll-font-body)",
+              fontSize: 14,
+              color: saveError ? "#f87171" : "rgba(255,255,255,.6)",
+              textAlign: "center",
+              margin: 0,
+            }}
+          >
+            {saveError ?? (alreadyOnboarded ? "Finishing up…" : "Loading…")}
+          </p>
+        </div>
+      </AuthShell>
+    );
+  }
 
   return (
     <AuthShell>
