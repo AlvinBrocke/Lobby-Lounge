@@ -14,8 +14,8 @@ const rows = [
     ),
   },
   {
-    title: "Zone control",
-    desc: "Lobby, bar, terrace, spa — give every area its own atmosphere, independently.",
+    title: "Daypart moods",
+    desc: "Morning coffee, happy hour, dinner service — set a different feel for each part of the day.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}>
         <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
@@ -24,8 +24,8 @@ const rows = [
     ),
   },
   {
-    title: "Announcements",
-    desc: "Schedule messages and promos that fade in over the music — no awkward silences.",
+    title: "Announcements (coming soon)",
+    desc: "Schedule messages and promos that play between songs — no awkward silences.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}>
         <path d="M3 11l18-5v12L3 14v-3z" /><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" />
@@ -34,7 +34,7 @@ const rows = [
   },
   {
     title: "Remote management",
-    desc: "Manage every venue from your phone. Hardware-compatible with Sonos, Axis and more.",
+    desc: "Manage your music from your phone or tablet. Pair to any Bluetooth speaker.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}>
         <path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01" />
@@ -46,7 +46,7 @@ const rows = [
 export const ControlSection = () => {
   return (
     <section
-      id="control"
+      id="how-it-works"
       style={{ position: "relative", padding: "120px 0", background: "var(--ll-ink-1)", color: "#fff" }}
     >
       <div style={{ width: "100%", maxWidth: 1240, margin: "0 auto", padding: "0 32px" }}>
@@ -70,7 +70,7 @@ export const ControlSection = () => {
               fontFamily: "var(--ll-font-body)", fontWeight: 600, fontSize: 12.5, color: "#fff",
             }}>
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--ll-accent)", boxShadow: "0 0 12px 2px var(--ll-accent)", flexShrink: 0 }} />
-              Zone 1 live · v2.4
+              Live now
             </div>
           </div>
 
@@ -78,13 +78,13 @@ export const ControlSection = () => {
           <div data-ll-reveal data-ll-delay="1">
             <span style={{ fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 12, textTransform: "uppercase" as const, letterSpacing: ".2em", color: "var(--ll-accent)", display: "inline-flex", alignItems: "center", gap: 10 }}>
               <span style={{ width: 26, height: 1, background: "var(--ll-accent)", opacity: .6 }} />
-              Take control
+              How it works
             </span>
             <h2 style={{ fontFamily: "var(--ll-font-display)", fontSize: "clamp(36px,5vw,60px)", fontWeight: 700, lineHeight: 1.02, letterSpacing: "-.02em", margin: "18px 0 0" }}>
-              One dashboard,<br />every zone
+              One dashboard,<br />your whole space
             </h2>
             <p style={{ marginTop: 20, fontFamily: "var(--ll-font-body)", fontSize: "clamp(17px,2vw,20px)", lineHeight: 1.6, color: "var(--ll-on-ink-2)" }}>
-              Schedule your music, plan announcements and tune each space from a single place. Use the web portal or the dedicated tablet app — anywhere, anytime.
+              Schedule your music and tune the mood of your space from a single place. Use the web portal or the tablet app — anywhere, anytime.
             </p>
 
             <div style={{ marginTop: 34, display: "grid", gap: 6 }}>

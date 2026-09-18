@@ -11,6 +11,7 @@ import { CallToAction } from "@/components/landing/CallToAction";
 import { Footer } from "@/components/landing/Footer";
 import { CatalogBand } from "@/components/landing/CatalogBand";
 import { PricingSection } from "@/components/landing/PricingSection";
+import { BusinessTypes } from "@/components/landing/BusinessTypes";
 
 export default function LandingPage() {
   // Mark <html> so reveal CSS activates, and run scroll-reveal + progress bar
@@ -74,6 +75,7 @@ export default function LandingPage() {
         <TrustSection />
         <FeatureGrid />
         <CatalogBand />
+        <BusinessTypes />
         <ControlSection />
         <StatsSection />
         <PricingSection />

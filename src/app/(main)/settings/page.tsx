@@ -318,9 +318,9 @@ export default function SettingsPage() {
         <Card className="bg-gradient-to-r from-primary to-primary/80 border-none text-primary-foreground shadow-lg">
           <CardContent className="p-8 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="space-y-2 text-center md:text-left">
-              <h3 className="text-2xl font-bold">Lobby Lounge Premium</h3>
+              <h3 className="text-2xl font-bold">L&amp;L Basic</h3>
               <p className="opacity-90 max-w-md">
-                Full B2B licensing, offline mode, and unlimited zones.
+                One location, curated channels, daypart scheduling. $20/month after your free trial.
               </p>
             </div>
             <Button

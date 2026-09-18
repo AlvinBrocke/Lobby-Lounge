@@ -29,10 +29,10 @@ const footerCols = [
   {
     title: "Product",
     links: [
-      { label: "Music catalog", href: "#music" },
-      { label: "Control", href: "#control" },
+      { label: "Licensing", href: "#licensing" },
+      { label: "How it works", href: "#how-it-works" },
+      { label: "Business types", href: "#business-types" },
       { label: "Pricing", href: "#pricing" },
-      { label: "Hardware", href: "#" },
     ],
   },
   {
@@ -40,16 +40,13 @@ const footerCols = [
     links: [
       { label: "About", href: "#" },
       { label: "Research", href: "#results" },
-      { label: "Careers", href: "#" },
-      { label: "Contact", href: "#" },
+      { label: "Talk to sales", href: "mailto:hello@lobbylounge.com" },
     ],
   },
   {
     title: "Resources",
     links: [
-      { label: "Help centre", href: "#" },
-      { label: "Licensing", href: "#" },
-      { label: "Blog", href: "#" },
+      { label: "Licensing", href: "#licensing" },
       { label: "Status", href: "#" },
     ],
   },
@@ -74,7 +71,7 @@ export const Footer = () => {
               />
             </a>
             <p style={{ margin: "18px 0 22px", maxWidth: 280, fontFamily: "var(--ll-font-body)", fontSize: 14, lineHeight: 1.6, color: "var(--ll-on-ink-3)" }}>
-              Fully licensed, expertly curated background music for hospitality. Set the perfect atmosphere across every space.
+              Expertly curated background music for hospitality. Set the perfect atmosphere in every space.
             </p>
             <div style={{ display: "flex", gap: 11 }}>
               {[

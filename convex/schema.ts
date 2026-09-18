@@ -6,7 +6,7 @@ export default defineSchema({
     clerkUserId: v.string(),
     displayName: v.optional(v.string()),
     venueName: v.optional(v.string()),
-    plan: v.string(), // 'trial' | 'pro' | etc.
+    plan: v.string(), // 'trial' | 'basic'
     genres: v.array(v.string()),
     mood: v.optional(v.string()),
     onboardingCompleted: v.boolean(),

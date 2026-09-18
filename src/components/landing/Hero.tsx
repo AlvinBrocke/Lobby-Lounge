@@ -109,7 +109,7 @@ export const Hero = () => {
               }}
             >
               <span style={{ width: 26, height: 1, background: "var(--ll-accent)", opacity: .6 }} />
-              Licensed music for hospitality
+              Background music for hospitality
             </span>
 
             <h1
@@ -150,7 +150,7 @@ export const Hero = () => {
                 color: "var(--ll-on-ink-2)",
               }}
             >
-              The complete music solution for hotels, cafés, restaurants and retail. Legal, expertly curated, and designed to set the perfect atmosphere.
+              The complete music solution for hotels, cafés, restaurants and retail. Expertly curated and designed to set the perfect atmosphere.
             </p>
 
             <div data-ll-reveal data-ll-delay="2" style={{ marginTop: 38, display: "flex", gap: 14, flexWrap: "wrap" }}>
@@ -170,7 +170,7 @@ export const Hero = () => {
                 Try it free <ArrowIcon />
               </a>
               <a
-                href="#music"
+                href="#how-it-works"
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 9,
                   fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 16,
@@ -186,7 +186,7 @@ export const Hero = () => {
             </div>
 
             <p data-ll-reveal data-ll-delay="3" style={{ marginTop: 22, display: "flex", alignItems: "center", gap: 9, fontFamily: "var(--ll-font-body)", fontWeight: 500, fontSize: 13.5, color: "var(--ll-on-ink-3)" }}>
-              <CheckIcon /> 14-day free trial · No credit card required
+              <CheckIcon /> 1-month free trial · No credit card required
             </p>
           </div>
 
@@ -210,6 +210,7 @@ export const Hero = () => {
             </div>
 
             {/* Card */}
+            {/* TODO: swap for the circular playlist graphic once the file arrives from the cofounder */}
             <div
               ref={cardRef}
               style={{
@@ -274,7 +275,7 @@ export const Hero = () => {
                   Now playing · Lounge Vibes
                 </b>
                 <span style={{ fontFamily: "var(--ll-font-body)", fontWeight: 500, fontSize: 11.5, lineHeight: 1.2, color: "var(--ll-on-ink-3)" }}>
-                  Zone 1 — Main floor
+                  Main floor
                 </span>
               </div>
             </div>

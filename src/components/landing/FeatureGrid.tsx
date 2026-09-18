@@ -4,8 +4,8 @@ import React from "react";
 
 const features = [
   {
-    title: "Legal & licensed",
-    desc: "Every track is fully cleared for commercial use. Play with total peace of mind — no royalties, no copyright strikes, no surprise invoices.",
+    title: "Cleared for business use",
+    desc: "Every track in the app is cleared for commercial playback. Play with peace of mind — no copyright strikes, no surprise invoices.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 25, height: 25 }}>
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -24,12 +24,11 @@ const features = [
     ),
   },
   {
-    title: "Multi-location",
-    desc: "One account, every venue. Sync soundtracks across sites or tune each zone independently, all from a single dashboard.",
+    title: "Announcements (coming soon)",
+    desc: "Schedule messages and promos that play between songs — welcome guests, push a special, no awkward silences.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 25, height: 25 }}>
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-        <path d="M9 22V12h6v10" />
+        <path d="M3 11l18-5v12L3 14v-3z" /><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" />
       </svg>
     ),
   },
@@ -38,7 +37,7 @@ const features = [
 export const FeatureGrid = () => {
   return (
     <section
-      id="music"
+      id="licensing"
       style={{
         position: "relative",
         padding: "120px 0",
@@ -64,7 +63,7 @@ export const FeatureGrid = () => {
           </h2>
           <div data-ll-reveal data-ll-delay="1">
             <p style={{ fontFamily: "var(--ll-font-body)", fontSize: "clamp(17px, 2vw, 20px)", lineHeight: 1.6, color: "var(--ll-on-ink-2)" }}>
-              Lobby &amp; Lounge gives you the power to control the atmosphere. With fully licensed music for business, we help you create the right vibe for guests and staff — so you can stop worrying about licensing and start building your brand sound.
+              Lobby &amp; Lounge gives you the power to control the atmosphere. Every track is cleared for commercial use today, and a fully licensed catalog from our music partner is on the way — so you can stop worrying about licensing and start building your brand sound.
             </p>
           </div>
         </div>

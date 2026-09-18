@@ -129,19 +129,20 @@ export function Sidebar() {
           className="text-[9px] font-bold tracking-[0.12em] text-primary mb-1 uppercase"
           style={{ fontFamily: "'Poppins', sans-serif" }}
         >
-          Premium Trial
+          L&amp;L Basic · Free trial
         </div>
         <div
           className="text-base font-bold text-foreground mb-0.5"
           style={{ fontFamily: "'Poppins', sans-serif" }}
         >
+          {/* TODO: read from a real trialEndsAt once trial tracking lands */}
           12 days left
         </div>
         <div className="text-xs font-medium text-muted-foreground mb-3">
-          Full catalog, scheduling &amp; analytics.
+          Curated channels &amp; scheduling for one location.
         </div>
         <button className="w-full py-2 bg-primary text-[#04201d] rounded-lg text-xs font-bold hover:opacity-90 transition-opacity">
-          Upgrade Plan
+          Add payment method
         </button>
       </div>
 

@@ -67,7 +67,7 @@ export const StatsSection = () => {
   }, []);
 
   const dwell = useCountUp(24, statVisible);
-  const bigStat = useCountUp(71, bigVisible);
+  const bigStat = useCountUp(79, bigVisible);
 
   return (
     <section id="results" style={{ position: "relative", padding: "120px 0", background: "var(--ll-ink-0)", color: "#fff" }}>
@@ -85,7 +85,7 @@ export const StatsSection = () => {
                   <BarChartIcon />
                 </div>
                 <div>
-                  <small style={{ display: "block", fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 13, color: "var(--ll-on-ink-3)", marginBottom: 6 }}>Customer dwell time</small>
+                  <small style={{ display: "block", fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 13, color: "var(--ll-on-ink-3)", marginBottom: 6 }}>Example venue · dwell time</small>
                   <b style={{ fontFamily: "var(--ll-font-display)", fontWeight: 800, fontSize: 26, lineHeight: 1 }}>+{dwell}%</b>
                 </div>
               </div>
@@ -133,13 +133,13 @@ export const StatsSection = () => {
               Stop manually curating playlists. Automation lets you set the perfect schedule for the entire year in minutes — and the right atmosphere keeps guests staying, and spending, longer.
             </p>
             <ul style={{ listStyle: "none", padding: 0, margin: "30px 0 0", display: "grid", gap: 14 }}>
-              {["AI-powered music selection", "Multi-location sync", "Remote management from any device"].map((item) => (
+              {["AI-powered music selection", "Daypart scheduling", "Remote management from any device"].map((item) => (
                 <li key={item} style={{ display: "flex", alignItems: "center", gap: 13, fontFamily: "var(--ll-font-body)", fontWeight: 600, fontSize: 16, lineHeight: 1.4, color: "var(--ll-on-ink-2)" }} className="ll-stat-li">
                   <CheckIcon /> {item}
                 </li>
               ))}
             </ul>
-            <a href="#control" style={{ display: "inline-flex", alignItems: "center", gap: 9, fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 15, padding: "16px 28px", borderRadius: 999, background: "transparent", color: "#fff", border: "1.5px solid rgba(255,255,255,.28)", transition: "transform .25s, border-color .25s, color .25s", marginTop: 34 }} className="ll-btn-ghost">
+            <a href="#how-it-works" style={{ display: "inline-flex", alignItems: "center", gap: 9, fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 15, padding: "16px 28px", borderRadius: 999, background: "transparent", color: "#fff", border: "1.5px solid rgba(255,255,255,.28)", transition: "transform .25s, border-color .25s, color .25s", marginTop: 34 }} className="ll-btn-ghost">
               See how it works
             </a>
           </div>
@@ -162,10 +162,10 @@ export const StatsSection = () => {
             {bigStat}%
           </h3>
           <p style={{ maxWidth: 640, margin: "26px auto 0", fontFamily: "var(--ll-font-body)", fontWeight: 500, fontSize: "clamp(18px,2.4vw,24px)", lineHeight: 1.5, color: "#fff" }}>
-            of businesses find that the right music helps staff start conversations with customers.
+            of people listen to the music playing in a business — your soundtrack is part of the experience.
           </p>
           <small style={{ display: "block", marginTop: 18, fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 12, textTransform: "uppercase" as const, letterSpacing: ".2em", color: "var(--ll-accent)" }}>
-            Lobby &amp; Lounge Research · 2025
+            Luminate × Soundtrack Your Brand · Background Music report
           </small>
         </div>
       </div>
