@@ -34,26 +34,9 @@ export const CatalogBand = () => {
             Sound great, all day
           </h2>
           <p style={{ marginTop: 18, maxWidth: 560, fontFamily: "var(--ll-font-body)", fontSize: "clamp(17px,2vw,20px)", lineHeight: 1.6, color: "var(--ll-on-ink-2)" }}>
-            Choose from hundreds of soundtracks updated weekly, or let our AI curate the perfect rotation for every part of the day.
+            Curated soundtracks for every part of the day, updated weekly — or let our AI build the rotation for you.
           </p>
         </div>
-        <a
-          href="#"
-          data-ll-reveal
-          data-ll-delay="1"
-          style={{
-            display: "inline-flex", alignItems: "center", gap: 9,
-            fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 15,
-            padding: "16px 28px", borderRadius: 999,
-            background: "transparent", color: "#fff",
-            border: "1.5px solid rgba(255,255,255,.28)",
-            transition: "transform .25s, border-color .25s, color .25s",
-            whiteSpace: "nowrap" as const,
-          }}
-          className="ll-btn-ghost"
-        >
-          View all genres
-        </a>
       </div>
 
       {/* Marquee band */}

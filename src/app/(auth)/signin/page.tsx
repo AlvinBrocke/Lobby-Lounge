@@ -58,7 +58,8 @@ export default function LoginPage() {
           border: "1px solid rgba(255,255,255,.1)",
           borderRadius: 24,
           padding: "40px 36px",
-          boxShadow: "0 40px 80px -20px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04)",
+          boxShadow:
+            "0 40px 80px -20px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04)",
         }}
       >
         {/* Header */}
@@ -87,7 +88,10 @@ export default function LoginPage() {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <form
+          onSubmit={handleLogin}
+          style={{ display: "flex", flexDirection: "column", gap: 16 }}
+        >
           <div>
             <label
               style={{
@@ -137,8 +141,12 @@ export default function LoginPage() {
                   boxSizing: "border-box",
                   transition: "border-color .2s",
                 }}
-                onFocus={(e) => (e.target.style.borderColor = "rgba(78,205,196,.6)")}
-                onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,.1)")}
+                onFocus={(e) =>
+                  (e.target.style.borderColor = "rgba(78,205,196,.6)")
+                }
+                onBlur={(e) =>
+                  (e.target.style.borderColor = "rgba(255,255,255,.1)")
+                }
               />
             </div>
           </div>
@@ -164,21 +172,6 @@ export default function LoginPage() {
               >
                 Password
               </label>
-              <Link
-                href="/forgot-password"
-                style={{
-                  fontFamily: "var(--ll-font-body)",
-                  fontSize: 12,
-                  color: "rgba(255,255,255,.4)",
-                  transition: "color .2s",
-                }}
-                onMouseEnter={(e) => ((e.target as HTMLElement).style.color = "#fff")}
-                onMouseLeave={(e) =>
-                  ((e.target as HTMLElement).style.color = "rgba(255,255,255,.4)")
-                }
-              >
-                Forgot password?
-              </Link>
             </div>
             <div style={{ position: "relative" }}>
               <Lock
@@ -214,9 +207,33 @@ export default function LoginPage() {
                   boxSizing: "border-box",
                   transition: "border-color .2s",
                 }}
-                onFocus={(e) => (e.target.style.borderColor = "rgba(78,205,196,.6)")}
-                onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,.1)")}
+                onFocus={(e) =>
+                  (e.target.style.borderColor = "rgba(78,205,196,.6)")
+                }
+                onBlur={(e) =>
+                  (e.target.style.borderColor = "rgba(255,255,255,.1)")
+                }
               />
+            </div>
+            <div>
+              <Link
+                href="/forgot-password"
+                style={{
+                  fontFamily: "var(--ll-font-body)",
+                  fontSize: 12,
+                  color: "rgba(255,255,255,.4)",
+                  transition: "color .2s",
+                }}
+                onMouseEnter={(e) =>
+                  ((e.target as HTMLElement).style.color = "#fff")
+                }
+                onMouseLeave={(e) =>
+                  ((e.target as HTMLElement).style.color =
+                    "rgba(255,255,255,.4)")
+                }
+              >
+                Forgot password?
+              </Link>
             </div>
           </div>
 
@@ -257,13 +274,25 @@ export default function LoginPage() {
               transition: "opacity .2s, transform .2s",
             }}
             onMouseEnter={(e) => {
-              if (!loading) (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
+              if (!loading)
+                (e.currentTarget as HTMLButtonElement).style.transform =
+                  "translateY(-1px)";
             }}
             onMouseLeave={(e) => {
               (e.currentTarget as HTMLButtonElement).style.transform = "none";
             }}
           >
-            {loading ? <Loader2 style={{ width: 18, height: 18, animation: "spin 1s linear infinite" }} /> : "Sign In"}
+            {loading ? (
+              <Loader2
+                style={{
+                  width: 18,
+                  height: 18,
+                  animation: "spin 1s linear infinite",
+                }}
+              />
+            ) : (
+              "Sign In"
+            )}
           </button>
         </form>
 
@@ -276,7 +305,9 @@ export default function LoginPage() {
             margin: "24px 0",
           }}
         >
-          <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,.08)" }} />
+          <div
+            style={{ flex: 1, height: 1, background: "rgba(255,255,255,.08)" }}
+          />
           <span
             style={{
               fontFamily: "var(--ll-font-body)",
@@ -289,7 +320,9 @@ export default function LoginPage() {
           >
             Or
           </span>
-          <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,.08)" }} />
+          <div
+            style={{ flex: 1, height: 1, background: "rgba(255,255,255,.08)" }}
+          />
         </div>
 
         {/* Google OAuth */}
@@ -313,12 +346,16 @@ export default function LoginPage() {
             color: "rgba(255,255,255,.8)",
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,.09)";
-            (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,.2)";
+            (e.currentTarget as HTMLButtonElement).style.background =
+              "rgba(255,255,255,.09)";
+            (e.currentTarget as HTMLButtonElement).style.borderColor =
+              "rgba(255,255,255,.2)";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,.05)";
-            (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,.1)";
+            (e.currentTarget as HTMLButtonElement).style.background =
+              "rgba(255,255,255,.05)";
+            (e.currentTarget as HTMLButtonElement).style.borderColor =
+              "rgba(255,255,255,.1)";
           }}
         >
           <img

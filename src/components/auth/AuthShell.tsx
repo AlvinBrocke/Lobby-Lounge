@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 const FEATURES = [
-  "Fully licensed music for commercial use",
+  "Music cleared for commercial use",
   "Curated channels for every venue type",
   "Smart scheduling — set it and forget it",
 ];
