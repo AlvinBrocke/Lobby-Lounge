@@ -268,6 +268,14 @@ export default function SignupPage() {
                   </>
                 )}
               </button>
+
+              {/* Terms §1: creating an account constitutes acceptance */}
+              <p style={{ margin: "-2px 0 0", textAlign: "center", fontFamily: "var(--ll-font-body)", fontSize: 12.5, lineHeight: 1.55, color: "rgba(255,255,255,.4)" }}>
+                By creating an account you agree to our{" "}
+                <Link href="/terms" style={{ color: "var(--ll-accent)", fontWeight: 600, textDecoration: "none" }}>Terms of Service</Link>
+                {" "}and{" "}
+                <Link href="/privacy" style={{ color: "var(--ll-accent)", fontWeight: 600, textDecoration: "none" }}>Privacy Policy</Link>.
+              </p>
             </form>
 
             {/* Divider */}
