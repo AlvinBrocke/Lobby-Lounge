@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 const TwitterIcon = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 17, height: 17 }}>
@@ -29,9 +30,9 @@ const footerCols = [
   {
     title: "Product",
     links: [
-      { label: "Music catalog", href: "#music" },
-      { label: "Control", href: "#control" },
-      { label: "Pricing", href: "#pricing" },
+      { label: "Music catalog", href: "/landing-page#music" },
+      { label: "Control", href: "/landing-page#control" },
+      { label: "Pricing", href: "/landing-page#pricing" },
       { label: "Hardware", href: "#" },
     ],
   },
@@ -39,7 +40,7 @@ const footerCols = [
     title: "Company",
     links: [
       { label: "About", href: "#" },
-      { label: "Research", href: "#results" },
+      { label: "Research", href: "/landing-page#results" },
       { label: "Careers", href: "#" },
       { label: "Contact", href: "#" },
     ],
@@ -53,6 +54,15 @@ const footerCols = [
       { label: "Status", href: "#" },
     ],
   },
+];
+
+// Bottom-row legal links. "Do Not Sell or Share" is required by the Privacy
+// Policy (§11.B.4) and Cookies Policy (§4); it deep-links to the opt-out toggle.
+const legalLinks = [
+  { label: "Privacy", href: "/privacy" },
+  { label: "Terms", href: "/terms" },
+  { label: "Cookies", href: "/cookies" },
+  { label: "Do Not Sell or Share My Personal Information", href: "/privacy#do-not-sell" },
 ];
 
 export const Footer = () => {
@@ -125,10 +135,12 @@ export const Footer = () => {
         {/* Bottom */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 18, flexWrap: "wrap", paddingTop: 28, fontFamily: "var(--ll-font-body)", fontWeight: 500, fontSize: 13, color: "var(--ll-on-ink-3)" }}>
           <span>© 2026 Lobby &amp; Lounge. All rights reserved.</span>
-          <span style={{ display: "flex", gap: 22 }}>
-            <a href="#" style={{ color: "var(--ll-on-ink-3)", transition: "color .2s" }} className="ll-foot-bot-link">Privacy</a>
-            <a href="#" style={{ color: "var(--ll-on-ink-3)", transition: "color .2s" }} className="ll-foot-bot-link">Terms</a>
-            <a href="#" style={{ color: "var(--ll-on-ink-3)", transition: "color .2s" }} className="ll-foot-bot-link">Cookies</a>
+          <span style={{ display: "flex", gap: 22, flexWrap: "wrap" }}>
+            {legalLinks.map(({ label, href }) => (
+              <Link key={href} href={href} style={{ color: "var(--ll-on-ink-3)", transition: "color .2s" }} className="ll-foot-bot-link">
+                {label}
+              </Link>
+            ))}
           </span>
         </div>
       </div>
