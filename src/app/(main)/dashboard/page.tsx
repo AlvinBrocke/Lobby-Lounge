@@ -1,13 +1,22 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Clock, Music, Plus, Zap } from "lucide-react";
+import { Clock, Music, Play, Plus, Zap } from "lucide-react";
 import { useState } from "react";
+import Link from "next/link";
 import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { Doc, Id } from "@convex/_generated/dataModel";
 import type { Energy } from "@convex/lib/energy";
 import usePlayerStore from "@/store/usePlayerStore";
+import { useNow } from "@/hooks/useNow";
+import {
+  blockStatus,
+  channelToPlayerTrack,
+  formatRange,
+  todayKey,
+  type BlockStatus,
+} from "@/lib/schedule";
 
 /* ── Normalised shapes used by this page ──────────────── */
 interface Channel {
@@ -20,9 +29,11 @@ interface Channel {
 }
 
 interface ScheduleItem {
+  id: Id<"scheduleBlocks">;
   name: string;
   time: string;
-  status: "done" | "now" | "upcoming";
+  status: BlockStatus;
+  channelId?: Id<"channels">;
 }
 
 interface TrackItem {
@@ -60,29 +71,17 @@ function normaliseChannel(ch: Doc<"channels">): Channel {
   };
 }
 
-function computeStatus(block: {
-  day: string;
-  startHour: number;
-  duration: number;
-}): "done" | "now" | "upcoming" {
-  const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const now = new Date();
-  const todayIdx = now.getDay();
-  const blockIdx = DAYS.indexOf(block.day);
-  const h = now.getHours();
-  if (blockIdx !== todayIdx) return blockIdx < todayIdx ? "done" : "upcoming";
-  if (h >= block.startHour && h < block.startHour + block.duration) return "now";
-  return h >= block.startHour + block.duration ? "done" : "upcoming";
-}
-
-function normaliseSchedule(block: Doc<"scheduleBlocks">): ScheduleItem {
-  const h = block.startHour;
-  const period = h >= 12 ? "PM" : "AM";
-  const display = h % 12 || 12;
+function normaliseSchedule(
+  block: Doc<"scheduleBlocks">,
+  channelName: string | undefined,
+  now: Date,
+): ScheduleItem {
   return {
-    name: block.title ?? "Untitled",
-    time: `${display}:00 ${period}`,
-    status: computeStatus(block),
+    id: block._id,
+    name: block.title ?? channelName ?? "Untitled",
+    time: formatRange(block.startHour, block.duration),
+    status: blockStatus(block, now),
+    channelId: block.channelId,
   };
 }
 
@@ -307,7 +306,7 @@ function ChannelTileSkeleton() {
   return <div className="aspect-square rounded-xl bg-muted animate-pulse" />;
 }
 
-function ScheduleRow({ item }: { item: ScheduleItem }) {
+function ScheduleRow({ item, onPlay }: { item: ScheduleItem; onPlay?: () => void }) {
   const isNow = item.status === "now";
   const isDone = item.status === "done";
   return (
@@ -348,6 +347,16 @@ function ScheduleRow({ item }: { item: ScheduleItem }) {
         <span className="text-[9px] font-bold tracking-[0.1em] text-primary bg-primary/14 px-2 py-0.5 rounded-full shrink-0">
           NOW
         </span>
+      )}
+      {isNow && onPlay && (
+        <button
+          onClick={onPlay}
+          aria-label={`Play ${item.name}`}
+          title="Play the scheduled channel — later blocks will switch automatically"
+          className="w-7 h-7 rounded-full bg-primary text-[#04201d] flex items-center justify-center shrink-0 hover:opacity-90 transition-opacity"
+        >
+          <Play className="w-3 h-3 fill-current" />
+        </button>
       )}
     </div>
   );
@@ -413,7 +422,14 @@ export default function Dashboard() {
 
   const channels = (rawChannels ?? []).map(normaliseChannel);
   const tracks = (rawTracks ?? []).slice(0, 5).map(normaliseTrack);
-  const schedule = (rawSchedule ?? []).map(normaliseSchedule);
+  const now = useNow();
+  const today = todayKey(now);
+  const schedule = (rawSchedule ?? [])
+    .filter((b) => b.day === today)
+    .sort((a, b) => a.startHour - b.startHour)
+    .map((b) =>
+      normaliseSchedule(b, rawChannels?.find((c) => c._id === b.channelId)?.name, now),
+    );
 
   const [activeChannel, setActiveChannel] = useState<Channel | null>(null);
   const activeDisplay = activeChannel ?? channels[0] ?? null;
@@ -426,6 +442,13 @@ export default function Dashboard() {
       image: ch.img,
       audioUrl: ch.audio_url ?? undefined,
     });
+  }
+
+  function playScheduled(item: ScheduleItem) {
+    const doc = rawChannels?.find((c) => c._id === item.channelId);
+    if (!doc) return;
+    setActiveChannel(channels.find((c) => c.id === doc._id) ?? null);
+    setCurrentTrack(channelToPlayerTrack(doc));
   }
 
   const channelsLoading = rawChannels === undefined;
@@ -508,10 +531,13 @@ export default function Dashboard() {
                 Automatic atmosphere changes
               </p>
             </div>
-            <button className="flex items-center gap-1 bg-primary text-[#04201d] rounded-lg px-2.5 py-[7px] text-[11px] font-bold shrink-0 hover:opacity-90 transition-opacity">
+            <Link
+              href="/schedule"
+              className="flex items-center gap-1 bg-primary text-[#04201d] rounded-lg px-2.5 py-[7px] text-[11px] font-bold shrink-0 hover:opacity-90 transition-opacity"
+            >
               <Plus className="w-3 h-3" />
               Add
-            </button>
+            </Link>
           </div>
           <div className="flex flex-col gap-0.5">
             {scheduleLoading ? (
@@ -522,11 +548,15 @@ export default function Dashboard() {
               </div>
             ) : schedule.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                No schedule entries yet.
+                Nothing scheduled today.
               </p>
             ) : (
-              schedule.map((item, i) => (
-                <ScheduleRow key={`${item.name}-${i}`} item={item} />
+              schedule.map((item) => (
+                <ScheduleRow
+                  key={item.id}
+                  item={item}
+                  onPlay={item.channelId ? () => playScheduled(item) : undefined}
+                />
               ))
             )}
           </div>

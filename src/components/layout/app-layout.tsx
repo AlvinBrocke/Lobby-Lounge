@@ -1,11 +1,15 @@
 "use client";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useScheduleAutoplay } from "@/hooks/useScheduleAutoplay";
 import { PlayerBar } from "./player-bar";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./topbar";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
+  // Lives here, not on /schedule, so the schedule runs on every app page.
+  useScheduleAutoplay();
+
   return (
     <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden">
       <div className="flex-1 flex overflow-hidden">
