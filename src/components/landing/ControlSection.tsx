@@ -45,7 +45,7 @@ const rows = [
 export const ControlSection = () => {
   return (
     <section
-      id="control"
+      id="how-it-works"
       style={{ position: "relative", padding: "120px 0", background: "var(--ll-ink-1)", color: "#fff" }}
     >
       <div style={{ width: "100%", maxWidth: 1240, margin: "0 auto", padding: "0 32px" }}>
@@ -77,10 +77,10 @@ export const ControlSection = () => {
           <div data-ll-reveal data-ll-delay="1">
             <span style={{ fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 12, textTransform: "uppercase" as const, letterSpacing: ".2em", color: "var(--ll-accent)", display: "inline-flex", alignItems: "center", gap: 10 }}>
               <span style={{ width: 26, height: 1, background: "var(--ll-accent)", opacity: .6 }} />
-              Take control
+              How it works
             </span>
             <h2 style={{ fontFamily: "var(--ll-font-display)", fontSize: "clamp(36px,5vw,60px)", fontWeight: 700, lineHeight: 1.02, letterSpacing: "-.02em", margin: "18px 0 0" }}>
-              One dashboard<br />for your whole day
+              One dashboard,<br />your whole space
             </h2>
             <p style={{ marginTop: 20, fontFamily: "var(--ll-font-body)", fontSize: "clamp(17px,2vw,20px)", lineHeight: 1.6, color: "var(--ll-on-ink-2)" }}>
               Pick a channel, build a playlist, or schedule the whole week — all from one place, on any device with a browser.

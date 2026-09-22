@@ -149,7 +149,7 @@ export const Hero = () => {
               }}
             >
               <span style={{ width: 26, height: 1, background: "var(--ll-accent)", opacity: .6 }} />
-              Licensed music for hospitality
+              Background music for hospitality
             </span>
 
             <h1
@@ -210,7 +210,7 @@ export const Hero = () => {
                 Try it free <ArrowIcon />
               </a>
               <a
-                href="#licensing"
+                href="#how-it-works"
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 9,
                   fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 16,
