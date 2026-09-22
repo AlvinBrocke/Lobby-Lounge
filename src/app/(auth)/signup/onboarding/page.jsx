@@ -1,11 +1,22 @@
 "use client";
 export const dynamic = "force-dynamic";
 import React, { useEffect, useState } from "react";
-import { useUser } from "@clerk/nextjs";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { useSession, useUser } from "@clerk/nextjs";
+import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { COUNTRIES, US_STATES, PINNED_COUNTRY_COUNT } from "@/lib/countries";
+import { completeOnboarding, syncOnboardingClaim } from "./actions";
+
+// Where to send the user once onboarding is done. Middleware passes the page
+// they originally asked for as ?redirect_url=; only trust same-origin paths.
+function nextUrl() {
+  const target = new URLSearchParams(window.location.search).get("redirect_url");
+  if (target && target.startsWith("/") && !target.startsWith("//")) {
+    return target;
+  }
+  return "/dashboard";
+}
 
 // ─── Shared style tokens ─────────────────────────────────────────────────────
 
@@ -531,14 +542,21 @@ function Step3({ sound, setSound }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-const ONBOARDED_COOKIE = "ll-onboarded=true; path=/; max-age=31536000; SameSite=Lax";
-
 function MainComponent() {
   const { user } = useUser();
+  const { session } = useSession();
+
+  // proxy.ts reads the onboarding claim from the session JWT cookie, which Clerk
+  // caches for ~60s. Once the server has set publicMetadata, mint a fresh token
+  // so the very next request carries the claim — otherwise middleware sees the
+  // stale token and bounces the user straight back here.
+  const refreshClaims = async () => {
+    await user.reload();
+    await session?.getToken({ skipCache: true });
+  };
   const { isAuthenticated } = useConvexAuth();
-  const saveProfile = useMutation(api.userProfiles.createOrUpdate);
   // Existing profile — used to bounce users who already onboarded (on another
-  // browser, or before the cookie gate existed) straight to the dashboard.
+  // browser, or before the JWT claim existed) straight on without the wizard.
   const profile = useQuery(api.userProfiles.get, isAuthenticated ? {} : "skip");
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -556,12 +574,29 @@ function MainComponent() {
 
   const totalSteps = 3;
 
+  // Users who finished onboarding before the JWT claim existed land here because
+  // middleware doesn't see the claim yet. Their Convex profile is the source of
+  // truth, so sync the claim and send them on without showing the wizard.
+  const alreadyOnboarded = profile?.onboardingCompleted === true;
   useEffect(() => {
-    if (profile?.onboardingCompleted) {
-      document.cookie = ONBOARDED_COOKIE;
-      window.location.replace("/dashboard");
-    }
-  }, [profile]);
+    if (!alreadyOnboarded || !user) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await syncOnboardingClaim();
+        if (!res.ok) throw new Error(res.error);
+        await refreshClaims();
+        if (!cancelled) window.location.assign(nextUrl());
+      } catch (e) {
+        console.error("Failed to sync onboarding claim", e);
+        if (!cancelled) setSaveError("Something went wrong. Please refresh.");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [alreadyOnboarded, user]);
+
 
   const nextStep = () => {
     if (currentStep < totalSteps) setCurrentStep(currentStep + 1);
@@ -597,9 +632,13 @@ function MainComponent() {
     setSaving(true);
     setSaveError(null);
     try {
-      await saveProfile(buildPayload());
-      document.cookie = ONBOARDED_COOKIE;
-      window.location.href = "/dashboard";
+      const res = await completeOnboarding(buildPayload());
+      if (!res.ok) throw new Error(res.error);
+      // The claim is only visible to middleware once Clerk mints a new session
+      // JWT; refreshClaims() forces that now instead of waiting for the ~60s refresh.
+      await refreshClaims();
+      // Hard navigation so the refreshed cookie is guaranteed to reach proxy.ts.
+      window.location.assign(nextUrl());
     } catch (e) {
       console.error("Failed to save profile", e);
       setSaveError(e.message || "Something went wrong. Please try again.");
@@ -652,6 +691,27 @@ function MainComponent() {
 
   const hoverWhite = (e) => (e.currentTarget.style.color = "#fff");
   const hoverDim = (e) => (e.currentTarget.style.color = "rgba(255,255,255,.4)");
+
+  // Don't flash the wizard until we know whether this user has already onboarded.
+  if (profile === undefined || alreadyOnboarded) {
+    return (
+      <AuthShell>
+        <div style={cardStyle}>
+          <p
+            style={{
+              fontFamily: "var(--ll-font-body)",
+              fontSize: 14,
+              color: saveError ? "#f87171" : "rgba(255,255,255,.6)",
+              textAlign: "center",
+              margin: 0,
+            }}
+          >
+            {saveError ?? (alreadyOnboarded ? "Finishing up…" : "Loading…")}
+          </p>
+        </div>
+      </AuthShell>
+    );
+  }
 
   return (
     <AuthShell>

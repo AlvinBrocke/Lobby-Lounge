@@ -1,6 +1,6 @@
 import { convexTest } from "convex-test";
 import { describe, it, expect } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import schema from "./schema";
 
 const USER = "user_test123";
@@ -60,7 +60,7 @@ describe("playlists", () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
     const asUser = t.withIdentity({ subject: USER });
     const playlistId = await asUser.mutation(api.playlists.create, { name: "Mix" });
-    const trackId = await t.mutation(api.tracks.create, { name: "Track A" });
+    const trackId = await t.mutation(internal.tracks.create, { name: "Track A" });
     await asUser.mutation(api.playlists.addTrack, { playlistId, trackId });
     const tracks = await asUser.query(api.playlists.getTracks, { playlistId });
     expect(tracks).toHaveLength(1);
@@ -71,7 +71,7 @@ describe("playlists", () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
     const asUser = t.withIdentity({ subject: USER });
     const playlistId = await asUser.mutation(api.playlists.create, { name: "Mix" });
-    const trackId = await t.mutation(api.tracks.create, { name: "Track A" });
+    const trackId = await t.mutation(internal.tracks.create, { name: "Track A" });
     await asUser.mutation(api.playlists.addTrack, { playlistId, trackId });
     await asUser.mutation(api.playlists.addTrack, { playlistId, trackId });
     const tracks = await asUser.query(api.playlists.getTracks, { playlistId });
@@ -82,7 +82,7 @@ describe("playlists", () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
     const asUser = t.withIdentity({ subject: USER });
     const playlistId = await asUser.mutation(api.playlists.create, { name: "Mix" });
-    const trackId = await t.mutation(api.tracks.create, { name: "Track A" });
+    const trackId = await t.mutation(internal.tracks.create, { name: "Track A" });
     const playlistTrackId = await asUser.mutation(api.playlists.addTrack, {
       playlistId,
       trackId,
@@ -96,7 +96,7 @@ describe("playlists", () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
     const asUser = t.withIdentity({ subject: USER });
     const playlistId = await asUser.mutation(api.playlists.create, { name: "Mix" });
-    const trackId = await t.mutation(api.tracks.create, { name: "Track A" });
+    const trackId = await t.mutation(internal.tracks.create, { name: "Track A" });
     await asUser.mutation(api.playlists.addTrack, { playlistId, trackId });
     await asUser.mutation(api.playlists.remove, { id: playlistId });
     // Playlist is gone
@@ -122,7 +122,7 @@ describe("playlists", () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
     const asUser = t.withIdentity({ subject: USER });
     const id = await asUser.mutation(api.playlists.create, { name: "Mine" });
-    const trackId = await t.mutation(api.tracks.create, { name: "Track A" });
+    const trackId = await t.mutation(internal.tracks.create, { name: "Track A" });
     const playlistTrackId = await asUser.mutation(api.playlists.addTrack, {
       playlistId: id,
       trackId,
@@ -176,7 +176,7 @@ describe("playlists", () => {
     const asUser = t.withIdentity({ subject: USER });
     const asOther = t.withIdentity({ subject: OTHER });
     const playlistId = await asUser.mutation(api.playlists.create, { name: "Mine" });
-    const trackId = await t.mutation(api.tracks.create, { name: "Track A" });
+    const trackId = await t.mutation(internal.tracks.create, { name: "Track A" });
     const playlistTrackId = await asUser.mutation(api.playlists.addTrack, {
       playlistId,
       trackId,
@@ -198,7 +198,7 @@ describe("playlists", () => {
     const asUser = t.withIdentity({ subject: USER });
     const asOther = t.withIdentity({ subject: OTHER });
     const id = await asUser.mutation(api.playlists.create, { name: "Secret" });
-    const trackId = await t.mutation(api.tracks.create, { name: "Track A" });
+    const trackId = await t.mutation(internal.tracks.create, { name: "Track A" });
     await asUser.mutation(api.playlists.addTrack, { playlistId: id, trackId });
 
     await expect(asOther.query(api.playlists.get, { id })).rejects.toThrow(
@@ -217,7 +217,7 @@ describe("playlists", () => {
       name: "Shared",
       isPublic: true,
     });
-    const trackId = await t.mutation(api.tracks.create, { name: "Track A" });
+    const trackId = await t.mutation(internal.tracks.create, { name: "Track A" });
     await asUser.mutation(api.playlists.addTrack, { playlistId: id, trackId });
 
     const playlist = await asOther.query(api.playlists.get, { id });
@@ -247,8 +247,8 @@ describe("playlists", () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
     const asUser = t.withIdentity({ subject: USER });
     const playlistId = await asUser.mutation(api.playlists.create, { name: "Mix" });
-    const a = await t.mutation(api.tracks.create, { name: "A", duration: 100 });
-    const b = await t.mutation(api.tracks.create, {
+    const a = await t.mutation(internal.tracks.create, { name: "A", duration: 100 });
+    const b = await t.mutation(internal.tracks.create, {
       name: "B",
       duration: 50,
       coverImage: "https://example.com/b.jpg",
@@ -266,11 +266,11 @@ describe("playlists", () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
     const asUser = t.withIdentity({ subject: USER });
     const playlistId = await asUser.mutation(api.playlists.create, { name: "Mix" });
-    const keep = await t.mutation(api.tracks.create, { name: "Keep" });
-    const gone = await t.mutation(api.tracks.create, { name: "Gone" });
+    const keep = await t.mutation(internal.tracks.create, { name: "Keep" });
+    const gone = await t.mutation(internal.tracks.create, { name: "Gone" });
     await asUser.mutation(api.playlists.addTrack, { playlistId, trackId: keep });
     await asUser.mutation(api.playlists.addTrack, { playlistId, trackId: gone });
-    await t.mutation(api.tracks.remove, { id: gone });
+    await t.mutation(internal.tracks.remove, { id: gone });
 
     const tracks = await asUser.query(api.playlists.getTracks, { playlistId });
     expect(tracks.map((tr) => tr.name)).toEqual(["Keep"]);
@@ -281,7 +281,7 @@ describe("playlists", () => {
     const asUser = t.withIdentity({ subject: USER });
     const playlistId = await asUser.mutation(api.playlists.create, { name: "Mix" });
     const [a, b, c] = await Promise.all(
-      ["A", "B", "C"].map((name) => t.mutation(api.tracks.create, { name })),
+      ["A", "B", "C"].map((name) => t.mutation(internal.tracks.create, { name })),
     );
     const ptA = await asUser.mutation(api.playlists.addTrack, { playlistId, trackId: a });
     await asUser.mutation(api.playlists.addTrack, { playlistId, trackId: b });

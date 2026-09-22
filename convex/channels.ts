@@ -1,4 +1,4 @@
-import { mutation, query } from "./_generated/server";
+import { internalMutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
 export const list = query({
@@ -15,7 +15,7 @@ export const get = query({
   },
 });
 
-export const create = mutation({
+export const create = internalMutation({
   args: {
     name: v.string(),
     description: v.optional(v.string()),
@@ -29,7 +29,7 @@ export const create = mutation({
   },
 });
 
-export const update = mutation({
+export const update = internalMutation({
   args: {
     id: v.id("channels"),
     name: v.optional(v.string()),
@@ -48,14 +48,14 @@ export const update = mutation({
   },
 });
 
-export const remove = mutation({
+export const remove = internalMutation({
   args: { id: v.id("channels") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
   },
 });
 
-export const seed = mutation({
+export const seed = internalMutation({
   args: {},
   handler: async (ctx) => {
     const existing = await ctx.db.query("channels").first();

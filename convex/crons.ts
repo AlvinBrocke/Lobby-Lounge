@@ -1,5 +1,5 @@
 import { cronJobs } from "convex/server";
-import { api } from "./_generated/api";
+import { internal } from "./_generated/api";
 
 const crons = cronJobs();
 
@@ -9,7 +9,7 @@ const crons = cronJobs();
 crons.weekly(
   "refresh jamendo catalogue",
   { dayOfWeek: "monday", hourUTC: 4, minuteUTC: 0 },
-  api.jamendo.syncAllChannels,
+  internal.jamendo.syncAllChannels,
   { limit: 50 },
 );
 

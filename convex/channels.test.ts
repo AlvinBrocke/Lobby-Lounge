@@ -1,6 +1,6 @@
 import { convexTest } from "convex-test";
 import { describe, it, expect, beforeEach } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import schema from "./schema";
 
 describe("channels", () => {
@@ -12,7 +12,7 @@ describe("channels", () => {
 
   it("create inserts a channel and list returns it", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    await t.mutation(api.channels.create, {
+    await t.mutation(internal.channels.create, {
       name: "Dinner Jazz",
       category: "Elegant",
       bpm: 74,
@@ -26,15 +26,15 @@ describe("channels", () => {
 
   it("get returns the channel by id", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    const id = await t.mutation(api.channels.create, { name: "Lounge & Chill" });
+    const id = await t.mutation(internal.channels.create, { name: "Lounge & Chill" });
     const channel = await t.query(api.channels.get, { id });
     expect(channel?.name).toBe("Lounge & Chill");
   });
 
   it("update patches only the provided fields", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    const id = await t.mutation(api.channels.create, { name: "Old Name", bpm: 80 });
-    await t.mutation(api.channels.update, { id, name: "New Name" });
+    const id = await t.mutation(internal.channels.create, { name: "Old Name", bpm: 80 });
+    await t.mutation(internal.channels.update, { id, name: "New Name" });
     const channel = await t.query(api.channels.get, { id });
     expect(channel?.name).toBe("New Name");
     expect(channel?.bpm).toBe(80); // unchanged
@@ -42,15 +42,15 @@ describe("channels", () => {
 
   it("remove deletes the channel", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    const id = await t.mutation(api.channels.create, { name: "To Delete" });
-    await t.mutation(api.channels.remove, { id });
+    const id = await t.mutation(internal.channels.create, { name: "To Delete" });
+    await t.mutation(internal.channels.remove, { id });
     const channel = await t.query(api.channels.get, { id });
     expect(channel).toBeNull();
   });
 
   it("seed populates 8 channels", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    const result = await t.mutation(api.channels.seed);
+    const result = await t.mutation(internal.channels.seed);
     expect(result).toBe("seeded");
     const channels = await t.query(api.channels.list);
     expect(channels).toHaveLength(8);
@@ -58,8 +58,8 @@ describe("channels", () => {
 
   it("seed is idempotent — calling twice does not duplicate", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    await t.mutation(api.channels.seed);
-    const result = await t.mutation(api.channels.seed);
+    await t.mutation(internal.channels.seed);
+    const result = await t.mutation(internal.channels.seed);
     expect(result).toBe("already seeded");
     const channels = await t.query(api.channels.list);
     expect(channels).toHaveLength(8);

@@ -51,13 +51,17 @@ npx convex run someModule:someFunction --prod
 
 After `npx convex deploy`, copy the printed production URL into Vercel's Production environment variables (`NEXT_PUBLIC_CONVEX_URL`, `NEXT_PUBLIC_CONVEX_SITE_URL`) — Vercel cannot reach `127.0.0.1`, so a Vercel-hosted deployment always needs a real cloud Convex deployment, never the anonymous local one.
 
-## Auth middleware
+## Auth & sessions
 
-The Clerk middleware lives at `src/proxy.ts` — **not** `middleware.ts`. This is intentional (Next.js 16 convention in this project). Do not rename it.
+Clerk issues the session JWT; the app never mints its own tokens. Authorization is layered:
 
-Protected routes: `/dashboard`, `/account`, `/explore`, `/schedule`, `/playlists`, `/library`, `/settings`.
+1. **Middleware** — `src/proxy.ts` (**not** `middleware.ts`; Next.js 16 convention, do not rename). Shallow check only: reads the session JWT, never the database. Protected routes: `/dashboard`, `/account`, `/explore`, `/schedule`, `/playlists`, `/library`, `/settings`.
+2. **Data Access Layer** — `src/lib/session.ts`. Any server code (Server Components, layouts, Server Actions) that needs the current user goes through `verifySession()` (redirects) or `getSession()` (nullable). `getConvexToken()` returns the Clerk JWT for calling Convex from the server with `fetchQuery`/`fetchMutation` from `convex/nextjs`. `src/app/(main)/layout.tsx` calls `verifySession()` so nothing under `(main)` renders signed-out.
+3. **Convex** — `requireUser()` / `assertOwner()` in `convex/lib/auth.ts` on every user-scoped function. Shared-catalog writes (`channels.*`, `tracks.*` create/update/remove/seed, `jamendo.*`) are `internalMutation` / `internalAction` — callable only from other Convex functions or `npx convex run`, never from the browser.
 
-Onboarding gate: enforced via the `ll-onboarded` cookie. Users without this cookie are redirected to `/signup/onboarding`.
+**Onboarding gate:** `src/proxy.ts` reads `sessionClaims.metadata.onboardingComplete`, a custom session-token claim mirroring Clerk `publicMetadata.onboardingComplete`. It is set **only** by the `completeOnboarding` Server Action in `src/app/(auth)/signup/onboarding/actions.ts` (after the Convex profile write succeeds). Un-onboarded users on protected routes are sent to `/signup/onboarding`; onboarded users hitting that page are sent to `/dashboard`. `syncOnboardingClaim` backfills the claim for accounts whose Convex profile was completed before the claim existed. The claim's type lives in `types/globals.d.ts`. There is no `ll-onboarded` cookie any more.
+
+This requires one manual Clerk Dashboard setting on **every** instance (dev and prod), or every user loops back to onboarding: Configure → Sessions → Customize session token → `{ "metadata": "{{user.public_metadata}}" }`. Session inactivity timeout / maximum lifetime are also configured there — the client-side `useIdleTimeout` hook is UX only.
 
 ## Environment variables
 
@@ -83,7 +87,7 @@ NEXT_PUBLIC_STRIPE_PREMIUM_PAYMENT_LINK   # https://buy.stripe.com/... — Premi
 
 Billing is a Stripe **Payment Link** (a plain URL created in the Stripe Dashboard) — there is no Stripe SDK, secret key, or webhook in this repo. If the variable is unset, the Premium button falls back to `/signup`. After a customer pays, `userProfiles.plan` must be updated manually (e.g. `npx convex run userProfiles:...` or the Convex dashboard).
 
-`JAMENDO_CLIENT_ID` is **not** a Next.js env var — it's read by the Convex action in `convex/jamendo.ts`, so it must be set via the Convex CLI (`npx convex env set JAMENDO_CLIENT_ID <value>`, add `--prod` for production), not in `.env.local`.
+`JAMENDO_CLIENT_ID` and `CLERK_JWT_ISSUER_DOMAIN` are **not** Next.js env vars — they're read Convex-side (`convex/jamendo.ts` and `convex/auth.config.ts`), so they must be set via the Convex CLI (`npx convex env set JAMENDO_CLIENT_ID <value>`, add `--prod` for production), not in `.env.local`.
 
 The landing page claims "1,000+ tracks". A fresh deployment starts with ~120 (15 per channel), so after seeding channels run `npx convex run jamendo:syncAllChannels '{"limit":150}'` (add `--prod` for production) to bring the catalogue above 1,000. The weekly cron tops it up from there.
 
@@ -98,9 +102,12 @@ The landing page claims "1,000+ tracks". A fresh deployment starts with ~120 (15
 ```
 src/app/(auth)/     — sign-in, sign-up, onboarding routes
 src/app/(main)/     — protected app routes (dashboard, settings, etc.)
-src/proxy.ts        — Clerk middleware
+src/proxy.ts        — Clerk middleware (layer 1)
+src/lib/session.ts  — server-side session DAL (layer 2)
+types/globals.d.ts  — Clerk session-token claim types
 convex/             — Convex schema, queries, mutations
-convex/jamendo.ts   — action that syncs real streamable tracks/audio from the Jamendo API into `channels`/`tracks`
+convex/lib/auth.ts  — requireUser / assertOwner (layer 3)
+convex/jamendo.ts   — internal action that syncs real streamable tracks/audio from the Jamendo API into `channels`/`tracks` (`npx convex run jamendo:syncAllChannels`)
 convex/crons.ts     — weekly cron that re-runs `jamendo:syncAllChannels` (backs the "Curated weekly" claim on the landing page)
 ```
 
