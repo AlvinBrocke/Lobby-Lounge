@@ -66,6 +66,13 @@ export const syncChannel = internalAction({
     });
     const existingNames = new Set(existingTracks.map((t) => t.name));
 
+    // Visible in `npx convex logs` and inline with `npx convex run`. Lets us tell a
+    // short Jamendo response apart from a response that was all duplicates.
+    console.log(
+      `syncChannel "${channel.name}": tag=${tag} requested=${args.limit ?? 15} ` +
+        `returned=${data.results.length} existing=${existingNames.size}`,
+    );
+
     let inserted = 0;
     for (const track of data.results) {
       if (existingNames.has(track.name)) continue;
