@@ -123,4 +123,17 @@ describe("tracks", () => {
     expect(result).toBe("already seeded");
     expect(await t.query(api.tracks.list, {})).toHaveLength(10);
   });
+
+  it("search matches track names and caps results", async () => {
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    await t.mutation(api.tracks.create, { name: "Blue Bossa" });
+    await t.mutation(api.tracks.create, { name: "Autumn Leaves" });
+    await t.mutation(api.tracks.create, { name: "Blue Monk" });
+
+    const blue = await t.query(api.tracks.search, { term: "blue" });
+    expect(blue.map((tr) => tr.name).sort()).toEqual(["Blue Bossa", "Blue Monk"]);
+
+    const firstPage = await t.query(api.tracks.search, { term: "  ", limit: 2 });
+    expect(firstPage).toHaveLength(2);
+  });
 });

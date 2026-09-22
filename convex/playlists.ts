@@ -21,6 +21,28 @@ async function readablePlaylist(
   return playlist;
 }
 
+const MAX_NAME = 80;
+const MAX_DESCRIPTION = 300;
+
+/** Trims and bounds a playlist name; throws on empty/oversized input. */
+function cleanName(name: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) throw new Error("Playlist name is required");
+  if (trimmed.length > MAX_NAME) {
+    throw new Error(`Playlist name must be ${MAX_NAME} characters or fewer`);
+  }
+  return trimmed;
+}
+
+function cleanDescription(description: string | undefined): string | undefined {
+  if (description === undefined) return undefined;
+  const trimmed = description.trim();
+  if (trimmed.length > MAX_DESCRIPTION) {
+    throw new Error(`Description must be ${MAX_DESCRIPTION} characters or fewer`);
+  }
+  return trimmed;
+}
+
 /** Loads a playlist and throws unless the caller owns it. */
 async function ownedPlaylist(
   ctx: MutationCtx,
@@ -36,10 +58,36 @@ export const listByUser = query({
   args: {},
   handler: async (ctx) => {
     const clerkUserId = await requireUser(ctx);
-    return await ctx.db
+    const playlists = await ctx.db
       .query("playlists")
       .withIndex("by_clerk_user", (q) => q.eq("clerkUserId", clerkUserId))
       .collect();
+
+    // Enrich each playlist with the stats its card shows, so the grid needs one
+    // query instead of one per playlist.
+    const enriched = await Promise.all(
+      playlists.map(async (playlist) => {
+        const entries = await ctx.db
+          .query("playlistTracks")
+          .withIndex("by_playlist", (q) => q.eq("playlistId", playlist._id))
+          .collect();
+        entries.sort((a, b) => a.position - b.position);
+        const tracks = (
+          await Promise.all(entries.map((e) => ctx.db.get(e.trackId)))
+        ).filter((t): t is Doc<"tracks"> => t !== null);
+
+        return {
+          ...playlist,
+          trackCount: tracks.length,
+          totalDuration: tracks.reduce((sum, t) => sum + (t.duration ?? 0), 0),
+          coverImage:
+            playlist.coverImage ?? tracks.find((t) => t.coverImage)?.coverImage,
+        };
+      }),
+    );
+
+    // Newest first.
+    return enriched.sort((a, b) => b._creationTime - a._creationTime);
   },
 });
 
@@ -62,8 +110,8 @@ export const create = mutation({
     const clerkUserId = await requireUser(ctx);
     return await ctx.db.insert("playlists", {
       clerkUserId,
-      name: args.name,
-      description: args.description,
+      name: cleanName(args.name),
+      description: cleanDescription(args.description),
       coverImage: args.coverImage,
       isPublic: args.isPublic ?? false,
     });
@@ -83,6 +131,9 @@ export const update = mutation({
     const { id, ...fields } = args;
 
     await ownedPlaylist(ctx, id, clerkUserId);
+
+    if (fields.name !== undefined) fields.name = cleanName(fields.name);
+    fields.description = cleanDescription(fields.description);
 
     const patch = Object.fromEntries(
       Object.entries(fields).filter(([, v]) => v !== undefined),
@@ -128,15 +179,22 @@ export const addTrack = mutation({
       .unique();
     if (existing) return existing._id;
 
-    const tracks = await ctx.db
+    const track = await ctx.db.get(args.trackId);
+    if (!track) throw new Error("Track not found");
+
+    const entries = await ctx.db
       .query("playlistTracks")
       .withIndex("by_playlist", (q) => q.eq("playlistId", args.playlistId))
       .collect();
+    // Append after the highest position, not at `entries.length`: after a
+    // removal the count is lower than the last position, which would collide.
+    const nextPosition =
+      entries.reduce((max, e) => Math.max(max, e.position), -1) + 1;
 
     return await ctx.db.insert("playlistTracks", {
       playlistId: args.playlistId,
       trackId: args.trackId,
-      position: args.position ?? tracks.length,
+      position: args.position ?? nextPosition,
     });
   },
 });
@@ -171,10 +229,13 @@ export const getTracks = query({
     const tracks = await Promise.all(
       playlistTracks.map(async (pt) => {
         const track = await ctx.db.get(pt.trackId);
+        // A track can vanish from the catalogue (e.g. a Jamendo resync). Drop
+        // it here — spreading `null` would yield a truthy half-empty object.
+        if (!track) return null;
         return { ...track, playlistTrackId: pt._id, position: pt.position };
       }),
     );
 
-    return tracks.filter(Boolean);
+    return tracks.filter((t) => t !== null);
   },
 });

@@ -37,7 +37,9 @@ export default defineSchema({
     audioUrl: v.optional(v.string()),
     coverImage: v.optional(v.string()),
     channelId: v.optional(v.id("channels")),
-  }).index("by_channel", ["channelId"]),
+  })
+    .index("by_channel", ["channelId"])
+    .searchIndex("search_name", { searchField: "name" }),
 
   playlists: defineTable({
     clerkUserId: v.string(),
