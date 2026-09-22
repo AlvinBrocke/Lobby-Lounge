@@ -148,7 +148,7 @@ export const StatsSection = () => {
                 </li>
               ))}
             </ul>
-            <a href="#control" style={{ display: "inline-flex", alignItems: "center", gap: 9, fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 15, padding: "16px 28px", borderRadius: 999, background: "transparent", color: "#fff", border: "1.5px solid rgba(255,255,255,.28)", transition: "transform .25s, border-color .25s, color .25s", marginTop: 34 }} className="ll-btn-ghost">
+            <a href="#how-it-works" style={{ display: "inline-flex", alignItems: "center", gap: 9, fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 15, padding: "16px 28px", borderRadius: 999, background: "transparent", color: "#fff", border: "1.5px solid rgba(255,255,255,.28)", transition: "transform .25s, border-color .25s, color .25s", marginTop: 34 }} className="ll-btn-ghost">
               See how it works
             </a>
           </div>

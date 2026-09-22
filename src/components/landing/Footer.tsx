@@ -30,10 +30,10 @@ const footerCols = [
   {
     title: "Product",
     links: [
-      { label: "Music catalog", href: "/landing-page#licensing" },
-      { label: "Control", href: "/landing-page#control" },
+      { label: "Licensing", href: "/landing-page#licensing" },
+      { label: "How it works", href: "/landing-page#how-it-works" },
+      { label: "Business types", href: "/landing-page#business-types" },
       { label: "Pricing", href: "/landing-page#pricing" },
-      { label: "Hardware", href: "#" },
     ],
   },
   {
@@ -41,16 +41,13 @@ const footerCols = [
     links: [
       { label: "About", href: "#" },
       { label: "Research", href: "/landing-page#results" },
-      { label: "Careers", href: "#" },
-      { label: "Contact", href: "#" },
+      { label: "Talk to sales", href: "mailto:hello@lobbylounge.com" },
     ],
   },
   {
     title: "Resources",
     links: [
-      { label: "Help centre", href: "#" },
-      { label: "Licensing", href: "#" },
-      { label: "Blog", href: "#" },
+      { label: "Licensing", href: "/landing-page#licensing" },
       { label: "Status", href: "#" },
     ],
   },

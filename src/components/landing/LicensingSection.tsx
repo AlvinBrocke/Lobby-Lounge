@@ -59,7 +59,7 @@ export const LicensingSection = () => {
               margin: 0,
             }}
           >
-            Licensed music,<br />zero paperwork
+            Excellent music<br />for every space
           </h2>
           <div data-ll-reveal data-ll-delay="1">
             <p style={{ fontFamily: "var(--ll-font-body)", fontSize: "clamp(17px, 2vw, 20px)", lineHeight: 1.6, color: "var(--ll-on-ink-2)", margin: 0 }}>
