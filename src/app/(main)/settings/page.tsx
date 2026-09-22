@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useClerk, useSession, useUser } from "@clerk/nextjs";
 import { useConvexAuth, useQuery, useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
@@ -60,6 +60,7 @@ export default function SettingsPage() {
   const [sessionsLoaded, setSessionsLoaded] = useState(false);
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [signingOutAll, setSigningOutAll] = useState(false);
+  const [sessionError, setSessionError] = useState<string | null>(null);
 
   // Sync venue name from Convex once loaded
   useEffect(() => {
@@ -69,14 +70,32 @@ export default function SettingsPage() {
     }
   }, [profile, venueNameInitialised]);
 
-  useEffect(() => {
+  // `getSessions()` is a one-off fetch, not a live subscription, so re-run it
+  // whenever the list could have changed: after a revoke, or when the user comes
+  // back to this tab (they may have signed in or out on another device meanwhile).
+  const loadSessions = useCallback(async () => {
     if (!user) return;
-    user
-      .getSessions()
-      .then((s) => setSessionList(s as unknown as SessionInfo[]))
-      .catch(() => {})
-      .finally(() => setSessionsLoaded(true));
+    try {
+      setSessionList((await user.getSessions()) as unknown as SessionInfo[]);
+    } catch {
+      // keep showing the last list we had
+    } finally {
+      setSessionsLoaded(true);
+    }
   }, [user]);
+
+  useEffect(() => {
+    void loadSessions();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void loadSessions();
+    };
+    window.addEventListener("focus", onVisible);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("focus", onVisible);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [loadSessions]);
 
   async function handleSaveVenueName() {
     if (!isAuthenticated) return;
@@ -94,6 +113,7 @@ export default function SettingsPage() {
 
   async function handleRevokeSession(sessionId: string) {
     setRevokingId(sessionId);
+    setSessionError(null);
     try {
       // Revoking our own session server-side would leave the client believing
       // it's still signed in; signOut() revokes it *and* clears local state.
@@ -104,7 +124,10 @@ export default function SettingsPage() {
       const target = sessionList.find((s) => s.id === sessionId);
       await target?.revoke();
       setSessionList((prev) => prev.filter((s) => s.id !== sessionId));
+    } catch {
+      setSessionError("Couldn't sign out that device. Please try again.");
     } finally {
+      void loadSessions();
       setRevokingId(null);
     }
   }
@@ -122,6 +145,8 @@ export default function SettingsPage() {
       await signOut({ redirectUrl: "/signin" });
     } catch {
       setSigningOutAll(false);
+      setSessionError("Couldn't sign out of every device. Please try again.");
+      void loadSessions();
     }
   }
 
@@ -244,7 +269,7 @@ export default function SettingsPage() {
             </CardTitle>
             <CardDescription className="text-muted-foreground">
               Active sessions across your devices. You&apos;ll be signed out after 30
-              minutes of inactivity.
+              minutes of inactivity while no music is playing.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -308,6 +333,12 @@ export default function SettingsPage() {
                   </div>
                 );
               })
+            )}
+
+            {sessionError && (
+              <p role="alert" className="text-sm text-destructive">
+                {sessionError}
+              </p>
             )}
 
             {sessionsLoaded && activeSessions.length > 0 && (
