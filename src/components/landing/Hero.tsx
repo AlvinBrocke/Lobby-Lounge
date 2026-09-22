@@ -24,6 +24,13 @@ const MusicIcon = () => (
   </svg>
 );
 
+// Deterministic so server and client render identical markup.
+const EQ_BARS = Array.from({ length: 28 }, (_, i) => ({
+  h: `${30 + ((i * 37) % 60)}%`,
+  dur: 1.1 + ((i * 13) % 7) / 10,
+  delay: `-${((i * 29) % 11) / 10}s`,
+}));
+
 export const Hero = () => {
   const heroRef = useRef<HTMLElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -70,7 +77,7 @@ export const Hero = () => {
         overflow: "hidden",
         background: "var(--ll-ink-1)",
         color: "#fff",
-        padding: "168px 0 110px",
+        padding: "168px 0 150px",
       }}
     >
       {/* BG gradient */}
@@ -81,13 +88,46 @@ export const Hero = () => {
           radial-gradient(90% 80% at 0% 100%, rgba(21,31,108,.55) 0%, transparent 60%),
           linear-gradient(160deg, #0F1419 0%, #0c1322 45%, #0A0E12 100%)`,
       }} />
-      {/* Soundwave texture */}
-      <div style={{
-        position: "absolute", inset: 0, zIndex: 0,
-        backgroundImage: "url('/images/LL soundwave3.png')",
-        backgroundSize: "cover", backgroundPosition: "center",
-        opacity: .16, mixBlendMode: "screen", pointerEvents: "none",
-      }} />
+      {/* Soundwave — brand asset, slowly drifting behind the copy */}
+      <div
+        className="ll-hero-wave"
+        aria-hidden
+        style={{
+          position: "absolute", inset: "-6%", zIndex: 0,
+          backgroundImage: "url('/images/LL soundwave3.png')",
+          backgroundSize: "cover", backgroundPosition: "center",
+          opacity: .26, mixBlendMode: "screen", pointerEvents: "none",
+          WebkitMaskImage: "radial-gradient(80% 70% at 60% 45%, #000 30%, transparent 100%)",
+          maskImage: "radial-gradient(80% 70% at 60% 45%, #000 30%, transparent 100%)",
+          animation: "ll-wave-drift 40s ease-in-out infinite",
+          willChange: "transform",
+        }}
+      />
+      {/* Equaliser along the bottom edge */}
+      <div
+        className="ll-hero-eq"
+        aria-hidden
+        style={{
+          position: "absolute", left: 0, right: 0, bottom: 0, zIndex: 1,
+          height: 72, display: "flex", alignItems: "flex-end", gap: 6,
+          padding: "0 32px", pointerEvents: "none",
+          WebkitMaskImage: "linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)",
+          maskImage: "linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)",
+        }}
+      >
+        {EQ_BARS.map((b, i) => (
+          <span
+            key={i}
+            style={{
+              flex: 1, height: b.h, borderRadius: "3px 3px 0 0",
+              background: "linear-gradient(180deg, rgba(78,205,196,.55), rgba(78,205,196,.05))",
+              transformOrigin: "bottom",
+              animation: `ll-eq ${b.dur}s ease-in-out infinite`,
+              animationDelay: b.delay,
+            }}
+          />
+        ))}
+      </div>
 
       <div style={{ width: "100%", maxWidth: 1240, margin: "0 auto", padding: "0 32px", position: "relative", zIndex: 2 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1.05fr .95fr", gap: 56, alignItems: "center" }} className="hero-grid">
@@ -109,7 +149,7 @@ export const Hero = () => {
               }}
             >
               <span style={{ width: 26, height: 1, background: "var(--ll-accent)", opacity: .6 }} />
-              Licensed music for hospitality
+              Background music for hospitality
             </span>
 
             <h1
@@ -170,7 +210,7 @@ export const Hero = () => {
                 Try it free <ArrowIcon />
               </a>
               <a
-                href="#music"
+                href="#how-it-works"
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 9,
                   fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 16,
@@ -186,7 +226,7 @@ export const Hero = () => {
             </div>
 
             <p data-ll-reveal data-ll-delay="3" style={{ marginTop: 22, display: "flex", alignItems: "center", gap: 9, fontFamily: "var(--ll-font-body)", fontWeight: 500, fontSize: 13.5, color: "var(--ll-on-ink-3)" }}>
-              <CheckIcon /> 14-day free trial · No credit card required
+              <CheckIcon /> Free for your first month · No credit card required
             </p>
           </div>
 
@@ -271,10 +311,10 @@ export const Hero = () => {
                   ))}
                 </div>
                 <b style={{ display: "block", fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 13, lineHeight: 1.2, color: "#fff", whiteSpace: "nowrap" }}>
-                  Now playing · Lounge Vibes
+                  Now playing · Lounge &amp; Chill
                 </b>
                 <span style={{ fontFamily: "var(--ll-font-body)", fontWeight: 500, fontSize: 11.5, lineHeight: 1.2, color: "var(--ll-on-ink-3)" }}>
-                  Zone 1 — Main floor
+                  Lobby &amp; Lounge · Licensed channel
                 </span>
               </div>
             </div>

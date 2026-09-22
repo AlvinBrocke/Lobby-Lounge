@@ -5,12 +5,45 @@ import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 import { getSession, getConvexToken } from "@/lib/session";
 
+// Every field is optional so "Skip for now" can submit a mostly blank payload.
 type OnboardingInput = {
   displayName?: string;
   venueName?: string;
-  genres: string[];
-  mood: string;
+  country?: string;
+  region?: string;
+  locationCount?: number;
+  businessType?: string;
+  guestDemographics?: string[];
+  genres?: string[];
+  mood?: string;
 };
+
+const isOptionalString = (v: unknown, max = 200) =>
+  v === undefined || (typeof v === "string" && v.length <= max);
+const isOptionalStringArray = (v: unknown, max = 20) =>
+  v === undefined ||
+  (Array.isArray(v) &&
+    v.length <= max &&
+    v.every((x) => typeof x === "string" && x.length <= 100));
+
+// Server Actions are public endpoints — the browser can send anything, so
+// check shapes and sizes here rather than trusting the form.
+function isValidInput(input: OnboardingInput) {
+  return (
+    isOptionalString(input.displayName) &&
+    isOptionalString(input.venueName) &&
+    isOptionalString(input.country) &&
+    isOptionalString(input.region) &&
+    isOptionalString(input.businessType) &&
+    isOptionalString(input.mood) &&
+    isOptionalStringArray(input.guestDemographics) &&
+    isOptionalStringArray(input.genres) &&
+    (input.locationCount === undefined ||
+      (Number.isInteger(input.locationCount) &&
+        input.locationCount >= 0 &&
+        input.locationCount <= 100_000))
+  );
+}
 
 export type OnboardingResult = { ok: true } | { ok: false; error: string };
 
@@ -32,15 +65,8 @@ export async function completeOnboarding(
   const session = await getSession();
   if (!session) return { ok: false, error: "Not signed in" };
 
-  if (
-    !Array.isArray(input.genres) ||
-    input.genres.length === 0 ||
-    input.genres.length > 20
-  ) {
-    return { ok: false, error: "Pick at least one genre" };
-  }
-  if (typeof input.mood !== "string" || !input.mood) {
-    return { ok: false, error: "Pick a mood" };
+  if (!input || !isValidInput(input)) {
+    return { ok: false, error: "Some of your answers look invalid. Please try again." };
   }
 
   try {
@@ -52,6 +78,11 @@ export async function completeOnboarding(
       {
         displayName: input.displayName,
         venueName: input.venueName || undefined,
+        country: input.country,
+        region: input.region,
+        locationCount: input.locationCount,
+        businessType: input.businessType,
+        guestDemographics: input.guestDemographics,
         genres: input.genres,
         mood: input.mood,
         onboardingCompleted: true,

@@ -4,6 +4,13 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
+const links = [
+  { label: "Licensing", href: "/landing-page#licensing" },
+  { label: "How it works", href: "/landing-page#how-it-works" },
+  { label: "Business types", href: "/landing-page#business-types" },
+  { label: "Pricing", href: "/landing-page#pricing" },
+];
+
 export const Navigation = () => {
   const [stuck, setStuck] = useState(false);
 
@@ -54,8 +61,7 @@ export const Navigation = () => {
 
         {/* Nav links */}
         <nav style={{ display: "flex", alignItems: "center", gap: 36 }} className="hidden md:flex">
-          {["#music", "#control", "#results", "#pricing"].map((href, i) => {
-            const labels = ["Music", "Control", "Results", "Pricing"];
+          {links.map(({ label, href }) => {
             return (
               <a
                 key={href}
@@ -71,7 +77,7 @@ export const Navigation = () => {
                 }}
                 className="ll-nav-link"
               >
-                {labels[i]}
+                {label}
               </a>
             );
           })}

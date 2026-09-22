@@ -3,14 +3,15 @@
 import React, { useEffect } from "react";
 import { Hero } from "@/components/landing/Hero";
 import { Navigation } from "@/components/landing/Navigation";
-import { FeatureGrid } from "@/components/landing/FeatureGrid";
-import { TrustSection } from "@/components/landing/TrustSection";
+import { LicensingSection } from "@/components/landing/LicensingSection";
 import { ControlSection } from "@/components/landing/ControlSection";
 import { StatsSection } from "@/components/landing/StatsSection";
 import { CallToAction } from "@/components/landing/CallToAction";
 import { Footer } from "@/components/landing/Footer";
 import { CatalogBand } from "@/components/landing/CatalogBand";
 import { PricingSection } from "@/components/landing/PricingSection";
+import { TrustSection } from "@/components/landing/TrustSection";
+import { BusinessTypes } from "@/components/landing/BusinessTypes";
 
 export default function LandingPage() {
   // Mark <html> so reveal CSS activates, and run scroll-reveal + progress bar
@@ -72,8 +73,9 @@ export default function LandingPage() {
       <main>
         <Hero />
         <TrustSection />
-        <FeatureGrid />
+        <LicensingSection />
         <CatalogBand />
+        <BusinessTypes />
         <ControlSection />
         <StatsSection />
         <PricingSection />

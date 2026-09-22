@@ -4,14 +4,6 @@ import React from "react";
 
 const items = [
   {
-    label: "Fully licensed",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 18, height: 18 }}>
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      </svg>
-    ),
-  },
-  {
     label: "Curated weekly",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 18, height: 18 }}>
@@ -20,20 +12,26 @@ const items = [
     ),
   },
   {
-    label: "Multi-zone",
+    label: "No credit card to start",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 18, height: 18 }}>
-        <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
-        <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
+        <rect x="2" y="5" width="20" height="14" rx="2" /><path d="M2 10h20" />
       </svg>
     ),
   },
   {
-    label: "Global catalog",
+    label: "Cancel anytime",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 18, height: 18 }}>
-        <circle cx="12" cy="12" r="10" />
-        <path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z" />
+        <circle cx="12" cy="12" r="10" /><path d="m9 12 2 2 4-4" />
+      </svg>
+    ),
+  },
+  {
+    label: "Built for hospitality",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 18, height: 18 }}>
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       </svg>
     ),
   },
@@ -50,7 +48,7 @@ export const TrustSection = () => {
     }}>
       <div style={{ width: "100%", maxWidth: 1240, margin: "0 auto", padding: "0 32px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 28, flexWrap: "wrap" }}>
         <span style={{ fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 11.5, textTransform: "uppercase" as const, letterSpacing: ".18em", color: "var(--ll-on-ink-3)", whiteSpace: "nowrap" as const }}>
-          Trusted across hospitality
+          Made for hospitality
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: 34, flexWrap: "wrap" as const }}>
           {items.map((item) => (

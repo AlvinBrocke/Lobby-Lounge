@@ -1,30 +1,36 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useSignIn } from "@clerk/nextjs";
-import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth, useSignIn } from "@clerk/nextjs";
 import { Loader2, Mail, Lock } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
+import {
+  describeClerkError,
+  isSessionExistsError,
+  safeRedirectPath,
+} from "@/lib/clerkErrors";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { isSignedIn } = useAuth();
   const { isLoaded, signIn, setActive } = useSignIn();
+
+  // `proxy.ts` appends ?redirect_url=… when it bounces a guest off a protected route.
+  const afterSignInUrl = safeRedirectPath(searchParams.get("redirect_url"), "/dashboard");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Middleware sends signed-out users here with ?redirect_url=<where they were
-  // going>. Read it lazily (not via useSearchParams, which would force a
-  // Suspense boundary) and only trust same-origin paths to avoid open redirects.
-  const afterSignInUrl = () => {
-    const target = new URLSearchParams(window.location.search).get("redirect_url");
-    if (target?.startsWith("/") && !target.startsWith("//")) return target;
-    return "/dashboard";
-  };
+  // Clerk refuses to start a new sign-in while a session is active, so never let an
+  // already-signed-in user sit on this page.
+  useEffect(() => {
+    if (isSignedIn) router.replace(afterSignInUrl);
+  }, [isSignedIn, afterSignInUrl, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,14 +42,17 @@ export default function LoginPage() {
       const result = await signIn.create({ identifier: email, password });
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
-        router.push(afterSignInUrl());
+        router.push(afterSignInUrl);
+      } else {
+        // e.g. needs_second_factor / needs_new_password — not handled by this UI yet.
+        setError("Additional verification is required to finish signing in.");
       }
     } catch (err) {
-      if (isClerkAPIResponseError(err)) {
-        setError(err.errors[0].longMessage ?? err.errors[0].message);
-      } else {
-        setError("Something went wrong. Please try again.");
+      if (isSessionExistsError(err)) {
+        router.replace(afterSignInUrl);
+        return;
       }
+      setError(describeClerkError(err));
     } finally {
       setLoading(false);
     }
@@ -51,11 +60,21 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     if (!isLoaded) return;
-    await signIn.authenticateWithRedirect({
-      strategy: "oauth_google",
-      redirectUrl: "/sso-callback",
-      redirectUrlComplete: afterSignInUrl(),
-    });
+    setError(null);
+
+    try {
+      await signIn.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: "/sso-callback",
+        redirectUrlComplete: afterSignInUrl,
+      });
+    } catch (err) {
+      if (isSessionExistsError(err)) {
+        router.replace(afterSignInUrl);
+        return;
+      }
+      setError(describeClerkError(err));
+    }
   };
 
   return (
@@ -362,5 +381,15 @@ export default function LoginPage() {
         </p>
       </div>
     </AuthShell>
+  );
+}
+
+// `useSearchParams` opts a client component out of prerendering unless it sits inside
+// a Suspense boundary, so keep the form as a child and export the wrapper as the page.
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<AuthShell>{null}</AuthShell>}>
+      <LoginForm />
+    </Suspense>
   );
 }

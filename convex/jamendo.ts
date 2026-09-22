@@ -11,7 +11,7 @@ const CATEGORY_TAGS: Record<string, string> = {
   Upbeat: "pop",
   Productivity: "instrumental",
   Elegant: "jazz",
-  Energetic: "electronic",
+  Energetic: "electronica", // Jamendo has no "electronic" tag — returns 0 results
   Wellness: "ambient",
 };
 
@@ -96,14 +96,15 @@ export const syncChannel = internalAction({
 });
 
 export const syncAllChannels = internalAction({
-  args: {},
-  handler: async (ctx): Promise<Record<string, number | string>> => {
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args): Promise<Record<string, number | string>> => {
     const channels = await ctx.runQuery(api.channels.list, {});
     const results: Record<string, number | string> = {};
     for (const channel of channels) {
       try {
         results[channel.name] = await ctx.runAction(internal.jamendo.syncChannel, {
           channelId: channel._id,
+          limit: args.limit,
         });
       } catch (err) {
         results[channel.name] = `error: ${err instanceof Error ? err.message : String(err)}`;

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, useSignUp } from "@clerk/nextjs";
-import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
+import { describeClerkError, isSessionExistsError } from "@/lib/clerkErrors";
 import { Loader2, Mail, Lock, KeyRound, ChevronRight } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
 
@@ -79,11 +79,11 @@ export default function SignupPage() {
         setStep("verify");
       }
     } catch (err) {
-      if (isClerkAPIResponseError(err)) {
-        setError(err.errors[0].longMessage ?? err.errors[0].message);
-      } else {
-        setError("Something went wrong. Please try again.");
+      if (isSessionExistsError(err)) {
+        router.replace("/dashboard");
+        return;
       }
+      setError(describeClerkError(err));
     } finally {
       setLoading(false);
     }
@@ -102,11 +102,11 @@ export default function SignupPage() {
         router.push("/signup/onboarding");
       }
     } catch (err) {
-      if (isClerkAPIResponseError(err)) {
-        setError(err.errors[0].longMessage ?? err.errors[0].message);
-      } else {
-        setError("Something went wrong. Please try again.");
+      if (isSessionExistsError(err)) {
+        router.replace("/dashboard");
+        return;
       }
+      setError(describeClerkError(err));
     } finally {
       setLoading(false);
     }
@@ -114,11 +114,21 @@ export default function SignupPage() {
 
   const handleOAuth = async (strategy: "oauth_google" | "oauth_apple") => {
     if (!isLoaded) return;
-    await signUp.authenticateWithRedirect({
-      strategy,
-      redirectUrl: "/sso-callback",
-      redirectUrlComplete: "/signup/onboarding",
-    });
+    setError(null);
+
+    try {
+      await signUp.authenticateWithRedirect({
+        strategy,
+        redirectUrl: "/sso-callback",
+        redirectUrlComplete: "/signup/onboarding",
+      });
+    } catch (err) {
+      if (isSessionExistsError(err)) {
+        router.replace("/dashboard");
+        return;
+      }
+      setError(describeClerkError(err));
+    }
   };
 
   const primaryBtn: React.CSSProperties = {
@@ -171,7 +181,7 @@ export default function SignupPage() {
                 Create your account
               </h1>
               <p style={{ fontFamily: "var(--ll-font-body)", fontSize: 14, color: "var(--ll-on-ink-3)" }}>
-                Start your 14-day free business trial
+                Free for your first month. No credit card required.
               </p>
             </>
           ) : (
@@ -270,6 +280,14 @@ export default function SignupPage() {
                   </>
                 )}
               </button>
+
+              {/* Terms §1: creating an account constitutes acceptance */}
+              <p style={{ margin: "-2px 0 0", textAlign: "center", fontFamily: "var(--ll-font-body)", fontSize: 12.5, lineHeight: 1.55, color: "rgba(255,255,255,.4)" }}>
+                By creating an account you agree to our{" "}
+                <Link href="/terms" style={{ color: "var(--ll-accent)", fontWeight: 600, textDecoration: "none" }}>Terms of Service</Link>
+                {" "}and{" "}
+                <Link href="/privacy" style={{ color: "var(--ll-accent)", fontWeight: 600, textDecoration: "none" }}>Privacy Policy</Link>.
+              </p>
             </form>
 
             {/* Divider */}

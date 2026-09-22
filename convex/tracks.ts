@@ -17,6 +17,24 @@ export const list = query({
   },
 });
 
+/**
+ * Catalogue search for the "Add songs" dialog. Uses the `search_name` full-text
+ * index so we never ship the whole 1,000+ track catalogue to the browser.
+ * An empty term returns the first page of tracks so the dialog isn't blank.
+ */
+export const search = query({
+  args: { term: v.string(), limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const limit = Math.min(args.limit ?? 25, 50);
+    const term = args.term.trim();
+    if (!term) return await ctx.db.query("tracks").take(limit);
+    return await ctx.db
+      .query("tracks")
+      .withSearchIndex("search_name", (q) => q.search("name", term))
+      .take(limit);
+  },
+});
+
 export const get = query({
   args: { id: v.id("tracks") },
   handler: async (ctx, args) => {

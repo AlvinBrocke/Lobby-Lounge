@@ -79,7 +79,17 @@ NEXT_PUBLIC_CONVEX_URL
 NEXT_PUBLIC_CONVEX_SITE_URL
 ```
 
+Optional:
+
+```
+NEXT_PUBLIC_STRIPE_PREMIUM_PAYMENT_LINK   # https://buy.stripe.com/... — Premium plan CTA on the landing page
+```
+
+Billing is a Stripe **Payment Link** (a plain URL created in the Stripe Dashboard) — there is no Stripe SDK, secret key, or webhook in this repo. If the variable is unset, the Premium button falls back to `/signup`. After a customer pays, `userProfiles.plan` must be updated manually (e.g. `npx convex run userProfiles:...` or the Convex dashboard).
+
 `JAMENDO_CLIENT_ID` and `CLERK_JWT_ISSUER_DOMAIN` are **not** Next.js env vars — they're read Convex-side (`convex/jamendo.ts` and `convex/auth.config.ts`), so they must be set via the Convex CLI (`npx convex env set JAMENDO_CLIENT_ID <value>`, add `--prod` for production), not in `.env.local`.
+
+The landing page claims "1,000+ tracks". A fresh deployment starts with ~120 (15 per channel), so after seeding channels run `npx convex run jamendo:syncAllChannels '{"limit":150}'` (add `--prod` for production) to bring the catalogue above 1,000. The weekly cron tops it up from there.
 
 ## Git workflow
 
@@ -98,6 +108,7 @@ types/globals.d.ts  — Clerk session-token claim types
 convex/             — Convex schema, queries, mutations
 convex/lib/auth.ts  — requireUser / assertOwner (layer 3)
 convex/jamendo.ts   — internal action that syncs real streamable tracks/audio from the Jamendo API into `channels`/`tracks` (`npx convex run jamendo:syncAllChannels`)
+convex/crons.ts     — weekly cron that re-runs `jamendo:syncAllChannels` (backs the "Curated weekly" claim on the landing page)
 ```
 
 Route groups use parentheses `(auth)` / `(main)` — these do not appear in URLs.

@@ -41,6 +41,8 @@ export function Sidebar() {
     .slice(0, 2);
 
   const handleSignOut = async () => {
+    // Let Clerk own the redirect: it clears the session cookie *then* navigates, so
+    // middleware never sees a stale session and bounce us back into the app.
     await signOut({ redirectUrl: "/signin" });
   };
 

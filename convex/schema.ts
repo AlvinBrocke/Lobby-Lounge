@@ -10,6 +10,13 @@ export default defineSchema({
     genres: v.array(v.string()),
     mood: v.optional(v.string()),
     onboardingCompleted: v.boolean(),
+    // Business details collected during onboarding (all optional so that
+    // "Skip for now" and pre-existing rows stay valid).
+    businessType: v.optional(v.string()),
+    country: v.optional(v.string()), // ISO 3166-1 alpha-2, e.g. "US"
+    region: v.optional(v.string()), // state / province / free text
+    locationCount: v.optional(v.number()),
+    guestDemographics: v.optional(v.array(v.string())),
   }).index("by_clerk_user", ["clerkUserId"]),
 
   channels: defineTable({
@@ -30,7 +37,9 @@ export default defineSchema({
     audioUrl: v.optional(v.string()),
     coverImage: v.optional(v.string()),
     channelId: v.optional(v.id("channels")),
-  }).index("by_channel", ["channelId"]),
+  })
+    .index("by_channel", ["channelId"])
+    .searchIndex("search_name", { searchField: "name" }),
 
   playlists: defineTable({
     clerkUserId: v.string(),

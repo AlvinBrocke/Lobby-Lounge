@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { cn } from "./utils";
+import { cn, formatDuration, formatTotalDuration } from "./utils";
 
 describe("cn", () => {
   it("returns a single class unchanged", () => {
@@ -25,5 +25,25 @@ describe("cn", () => {
 
   it("returns empty string when no classes given", () => {
     expect(cn()).toBe("");
+  });
+});
+
+describe("formatDuration", () => {
+  it("formats seconds as m:ss", () => {
+    expect(formatDuration(262)).toBe("4:22");
+    expect(formatDuration(65)).toBe("1:05");
+  });
+
+  it("shows a placeholder for missing durations", () => {
+    expect(formatDuration(undefined)).toBe("—:——");
+    expect(formatDuration(0)).toBe("—:——");
+  });
+});
+
+describe("formatTotalDuration", () => {
+  it("uses minutes under an hour and h/m above", () => {
+    expect(formatTotalDuration(0)).toBe("0m");
+    expect(formatTotalDuration(58 * 60)).toBe("58m");
+    expect(formatTotalDuration(72 * 60)).toBe("1h 12m");
   });
 });
