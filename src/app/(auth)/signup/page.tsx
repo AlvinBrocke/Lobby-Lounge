@@ -179,7 +179,7 @@ export default function SignupPage() {
                 Create your account
               </h1>
               <p style={{ fontFamily: "var(--ll-font-body)", fontSize: 14, color: "var(--ll-on-ink-3)" }}>
-                Start your 14-day free business trial
+                Free for your first month. No credit card required.
               </p>
             </>
           ) : (
