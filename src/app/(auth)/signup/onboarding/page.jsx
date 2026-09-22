@@ -1,7 +1,7 @@
 "use client";
 export const dynamic = "force-dynamic";
 import React, { useEffect, useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useSession, useUser } from "@clerk/nextjs";
 import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { AuthShell } from "@/components/auth/AuthShell";
@@ -544,6 +544,16 @@ function Step3({ sound, setSound }) {
 
 function MainComponent() {
   const { user } = useUser();
+  const { session } = useSession();
+
+  // proxy.ts reads the onboarding claim from the session JWT cookie, which Clerk
+  // caches for ~60s. Once the server has set publicMetadata, mint a fresh token
+  // so the very next request carries the claim — otherwise middleware sees the
+  // stale token and bounces the user straight back here.
+  const refreshClaims = async () => {
+    await user.reload();
+    await session?.getToken({ skipCache: true });
+  };
   const { isAuthenticated } = useConvexAuth();
   // Existing profile — used to bounce users who already onboarded (on another
   // browser, or before the JWT claim existed) straight on without the wizard.
@@ -575,7 +585,7 @@ function MainComponent() {
       try {
         const res = await syncOnboardingClaim();
         if (!res.ok) throw new Error(res.error);
-        await user.reload(); // pick up a fresh session JWT that carries the claim
+        await refreshClaims();
         if (!cancelled) window.location.assign(nextUrl());
       } catch (e) {
         console.error("Failed to sync onboarding claim", e);
@@ -625,8 +635,8 @@ function MainComponent() {
       const res = await completeOnboarding(buildPayload());
       if (!res.ok) throw new Error(res.error);
       // The claim is only visible to middleware once Clerk mints a new session
-      // JWT; reload() forces that now instead of waiting for the ~60s refresh.
-      await user.reload();
+      // JWT; refreshClaims() forces that now instead of waiting for the ~60s refresh.
+      await refreshClaims();
       // Hard navigation so the refreshed cookie is guaranteed to reach proxy.ts.
       window.location.assign(nextUrl());
     } catch (e) {
