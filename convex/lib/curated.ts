@@ -3,8 +3,7 @@ import type { MutationCtx } from "../_generated/server";
 
 /**
  * The curated catalogue playlists that ship with the app (formerly "channels").
- * Used by `playlists.seedCurated` on a fresh deployment and by the channel
- * migration to place each existing channel in a section.
+ * Used by `playlists.seedCurated` on a fresh deployment.
  */
 export const CURATED_PLAYLISTS: {
   name: string;
@@ -78,12 +77,6 @@ export const CURATED_PLAYLISTS: {
       "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop",
   },
 ];
-
-/** Section for a curated playlist name, falling back to daytime. */
-export function sectionFor(name: string): "daytime" | "evening" {
-  return CURATED_PLAYLISTS.find((p) => p.name === name)?.section ?? "daytime";
-}
-
 
 /** Appends tracks to the end of a playlist, skipping ones already in it. */
 export async function appendTracksTo(

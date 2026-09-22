@@ -8,13 +8,11 @@
  * @module
  */
 
-import type * as channels from "../channels.js";
 import type * as crons from "../crons.js";
 import type * as jamendo from "../jamendo.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_curated from "../lib/curated.js";
 import type * as lib_energy from "../lib/energy.js";
-import type * as migrations from "../migrations.js";
 import type * as playlists from "../playlists.js";
 import type * as scheduleBlocks from "../scheduleBlocks.js";
 import type * as tracks from "../tracks.js";
@@ -27,13 +25,11 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  channels: typeof channels;
   crons: typeof crons;
   jamendo: typeof jamendo;
   "lib/auth": typeof lib_auth;
   "lib/curated": typeof lib_curated;
   "lib/energy": typeof lib_energy;
-  migrations: typeof migrations;
   playlists: typeof playlists;
   scheduleBlocks: typeof scheduleBlocks;
   tracks: typeof tracks;
