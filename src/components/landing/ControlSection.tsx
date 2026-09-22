@@ -5,8 +5,8 @@ import Image from "next/image";
 
 const rows = [
   {
-    title: "Channels for every daypart",
-    desc: "Lounge & Chill, Dinner Jazz, Morning Boost, Late Night Vibes — pick a channel that fits the hour and press play.",
+    title: "Playlists for every daypart",
+    desc: "Lounge & Chill, Dinner Jazz, Morning Boost, Late Night Vibes — pick a playlist that fits the hour and press play.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}>
         <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
@@ -15,7 +15,7 @@ const rows = [
   },
   {
     title: "Weekly scheduling",
-    desc: "Assign a channel to any hour of any day. Breakfast calm, lunch energy, evening wind-down — set once, runs every week.",
+    desc: "Assign a playlist to any hour of any day. Breakfast calm, lunch energy, evening wind-down — set once, runs every week.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}>
         <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" />
@@ -83,7 +83,7 @@ export const ControlSection = () => {
               One dashboard,<br />your whole space
             </h2>
             <p style={{ marginTop: 20, fontFamily: "var(--ll-font-body)", fontSize: "clamp(17px,2vw,20px)", lineHeight: 1.6, color: "var(--ll-on-ink-2)" }}>
-              Pick a channel, build a playlist, or schedule the whole week — all from one place, on any device with a browser.
+              Pick a curated playlist, build your own, or schedule the whole week — all from one place, on any device with a browser.
             </p>
 
             <div style={{ marginTop: 34, display: "grid", gap: 6 }}>

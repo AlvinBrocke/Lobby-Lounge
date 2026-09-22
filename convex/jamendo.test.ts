@@ -26,7 +26,7 @@ function stubJamendo(byTag: Record<string, string[]>) {
   return requestedTags;
 }
 
-describe("jamendo.syncChannel", () => {
+describe("jamendo.syncPlaylist", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.unstubAllEnvs();
@@ -35,42 +35,63 @@ describe("jamendo.syncChannel", () => {
   async function setup(category: string) {
     vi.stubEnv("JAMENDO_CLIENT_ID", "test-client");
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    const channelId = await t.mutation(internal.channels.create, {
-      name: "Morning Boost",
-      category,
-    });
-    return { t, channelId };
+    const playlistId = await t.run((ctx) =>
+      ctx.db.insert("playlists", {
+        name: "Morning Boost",
+        category,
+        curated: true,
+        isPublic: true,
+      }),
+    );
+    return { t, playlistId };
   }
 
   it("falls back to the next tag when Jamendo returns nothing", async () => {
-    const { t, channelId } = await setup("Energetic");
+    const { t, playlistId } = await setup("Energetic");
     const requested = stubJamendo({ electronica: [], dance: ["A", "B"] });
 
-    const inserted = await t.action(internal.jamendo.syncChannel, { channelId });
+    const inserted = await t.action(internal.jamendo.syncPlaylist, { playlistId });
 
     expect(inserted).toBe(2);
     expect(requested).toEqual(["electronica", "dance"]);
-    const tracks = await t.query(api.tracks.list, { channelId });
-    expect(tracks.map((x) => x.name).sort()).toEqual(["A", "B"]);
+    const tracks = await t
+      .withIdentity({ subject: "user_x" })
+      .query(api.playlists.getTracks, { playlistId });
+    // Linked into the playlist in Jamendo's order, tagged with its category.
+    expect(tracks.map((x) => x.name)).toEqual(["A", "B"]);
+    expect(tracks[0].category).toBe("Energetic");
   });
 
   it("stops at the first tag that returns tracks", async () => {
-    const { t, channelId } = await setup("Energetic");
+    const { t, playlistId } = await setup("Energetic");
     const requested = stubJamendo({ electronica: ["A"], dance: ["B"] });
 
-    await t.action(internal.jamendo.syncChannel, { channelId });
+    await t.action(internal.jamendo.syncPlaylist, { playlistId });
 
     expect(requested).toEqual(["electronica"]);
   });
 
-  it("skips tracks the channel already has", async () => {
-    const { t, channelId } = await setup("Elegant");
+  it("skips tracks the playlist already has", async () => {
+    const { t, playlistId } = await setup("Elegant");
     stubJamendo({ jazz: ["A", "B"] });
-    await t.action(internal.jamendo.syncChannel, { channelId });
+    await t.action(internal.jamendo.syncPlaylist, { playlistId });
 
     stubJamendo({ jazz: ["A", "B", "C"] });
-    const inserted = await t.action(internal.jamendo.syncChannel, { channelId });
+    const inserted = await t.action(internal.jamendo.syncPlaylist, { playlistId });
 
     expect(inserted).toBe(1);
+  });
+
+  it("syncAllCurated syncs every curated playlist and reports errors per playlist", async () => {
+    vi.stubEnv("JAMENDO_CLIENT_ID", "test-client");
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    await t.mutation(internal.playlists.seedCurated, {});
+    stubJamendo({ chillout: ["A"], jazz: ["B", "C"] });
+
+    const results = await t.action(internal.jamendo.syncAllCurated, {});
+
+    expect(results["Dinner Jazz"]).toBe(2);
+    expect(results["Lounge & Chill"]).toBe(1);
+    expect(Object.keys(results)).toHaveLength(8);
   });
 });

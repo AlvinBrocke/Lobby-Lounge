@@ -13,8 +13,11 @@ export async function requireUser(ctx: QueryCtx | MutationCtx): Promise<string> 
   return identity.subject;
 }
 
-/** Throws unless `doc` exists and belongs to `userId`. */
-export function assertOwner<T extends { clerkUserId: string }>(
+/**
+ * Throws unless `doc` exists and belongs to `userId`. Ownerless docs (curated
+ * playlists) always fail, so users can never modify them.
+ */
+export function assertOwner<T extends { clerkUserId?: string }>(
   doc: T | null,
   userId: string,
   what: string,

@@ -1,5 +1,3 @@
-import type { Channel } from "@/types";
-
 /**
  * Pure helpers for the weekly schedule. A schedule block is a recurring
  * weekly slot: a day, a start hour and a length in whole hours. The rules
@@ -58,24 +56,4 @@ export function blockStatus(block: BlockSlot, now: Date): BlockStatus {
   const h = now.getHours();
   if (h < block.startHour) return "upcoming";
   return h < block.startHour + block.duration ? "now" : "done";
-}
-
-export const DEFAULT_CHANNEL_COVER =
-  "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=600&h=600&fit=crop";
-
-/** The shape the player store expects for a channel. */
-export function channelToPlayerTrack(channel: {
-  _id: string;
-  name: string;
-  coverImage?: string;
-  audioUrl?: string;
-  category?: string;
-}): Channel {
-  return {
-    id: channel._id,
-    name: channel.name,
-    image: channel.coverImage ?? DEFAULT_CHANNEL_COVER,
-    audioUrl: channel.audioUrl,
-    category: channel.category,
-  };
 }

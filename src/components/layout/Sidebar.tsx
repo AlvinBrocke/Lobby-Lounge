@@ -5,7 +5,6 @@ import { useTheme } from "@/components/theme-provider";
 import { useUser, useClerk } from "@clerk/nextjs";
 import {
   Calendar,
-  LayoutGrid,
   Library,
   ListMusic,
   LogOut,
@@ -18,10 +17,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { name: "Channels", href: "/dashboard", icon: LayoutGrid },
-  { name: "Schedule", href: "/schedule", icon: Calendar },
   { name: "Library", href: "/library", icon: Library },
-  { name: "My Playlists", href: "/playlists", icon: ListMusic },
+  { name: "Schedule", href: "/schedule", icon: Calendar },
+  { name: "Playlists", href: "/playlists", icon: ListMusic },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
@@ -101,7 +99,8 @@ export function Sidebar() {
         </div>
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href;
+          // Prefix match so /playlists/[id] keeps "Playlists" highlighted.
+          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <Link
               key={item.href}

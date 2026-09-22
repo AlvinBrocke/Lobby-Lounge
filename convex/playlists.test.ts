@@ -292,4 +292,84 @@ describe("playlists", () => {
     expect(tracks.map((tr) => tr.name)).toEqual(["B", "C"]);
     expect(new Set(tracks.map((tr) => tr.position)).size).toBe(2);
   });
+
+  describe("curated", () => {
+    it("seedCurated creates 8 curated playlists across both sections, once", async () => {
+      const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+      expect(await t.mutation(internal.playlists.seedCurated, {})).toBe("seeded");
+      expect(await t.mutation(internal.playlists.seedCurated, {})).toBe("already seeded");
+
+      const curated = await t.withIdentity({ subject: USER }).query(api.playlists.listCurated, {});
+      expect(curated).toHaveLength(8);
+      expect(curated.filter((p) => p.section === "daytime")).toHaveLength(4);
+      expect(curated.filter((p) => p.section === "evening")).toHaveLength(4);
+      expect(curated.find((p) => p.name === "Dinner Jazz")?.energy).toBe("low");
+    });
+
+    it("curated playlists don't show up in a user's own list", async () => {
+      const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+      await t.mutation(internal.playlists.seedCurated, {});
+      const mine = await t.withIdentity({ subject: USER }).query(api.playlists.listByUser, {});
+      expect(mine).toEqual([]);
+    });
+
+    it("listCurated requires a signed-in user", async () => {
+      const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+      await expect(t.query(api.playlists.listCurated, {})).rejects.toThrow(/Not authenticated/);
+    });
+
+    it("any user can read a curated playlist but nobody can modify it", async () => {
+      const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+      const id = await t.run((ctx) =>
+        ctx.db.insert("playlists", { name: "Dinner Jazz", curated: true, isPublic: true }),
+      );
+      const trackId = await t.mutation(internal.tracks.create, { name: "So What" });
+      await t.mutation(internal.playlists.appendTracks, { playlistId: id, trackIds: [trackId] });
+
+      const asUser = t.withIdentity({ subject: USER });
+      expect((await asUser.query(api.playlists.get, { id }))?.name).toBe("Dinner Jazz");
+      expect(await asUser.query(api.playlists.getTracks, { playlistId: id })).toHaveLength(1);
+
+      await expect(asUser.mutation(api.playlists.update, { id, name: "Mine" })).rejects.toThrow(
+        /Not authorized/,
+      );
+      await expect(asUser.mutation(api.playlists.remove, { id })).rejects.toThrow(/Not authorized/);
+      await expect(
+        asUser.mutation(api.playlists.addTrack, { playlistId: id, trackId }),
+      ).rejects.toThrow(/Not authorized/);
+    });
+
+    it("appendTracks keeps order and skips tracks already in the playlist", async () => {
+      const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+      const playlistId = await t.run((ctx) =>
+        ctx.db.insert("playlists", { name: "Spa", curated: true, isPublic: true }),
+      );
+      const [a, b, c] = await Promise.all(
+        ["A", "B", "C"].map((name) => t.mutation(internal.tracks.create, { name })),
+      );
+      await t.mutation(internal.playlists.appendTracks, { playlistId, trackIds: [a, b] });
+      const added = await t.mutation(internal.playlists.appendTracks, {
+        playlistId,
+        trackIds: [b, c],
+      });
+
+      expect(added).toBe(1);
+      const tracks = await t
+        .withIdentity({ subject: USER })
+        .query(api.playlists.getTracks, { playlistId });
+      expect(tracks.map((tr) => tr.name)).toEqual(["A", "B", "C"]);
+    });
+
+    it("a user playlist's energy is its most common track energy", async () => {
+      const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+      const asUser = t.withIdentity({ subject: USER });
+      const playlistId = await asUser.mutation(api.playlists.create, { name: "Mix" });
+      for (const energy of ["high", "high", "low"]) {
+        const trackId = await t.mutation(internal.tracks.create, { name: energy, energy });
+        await asUser.mutation(api.playlists.addTrack, { playlistId, trackId });
+      }
+      const [mix] = await asUser.query(api.playlists.listByUser, {});
+      expect(mix.energy).toBe("high");
+    });
+  });
 });

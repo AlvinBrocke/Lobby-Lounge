@@ -6,11 +6,13 @@ import schema from "./schema";
 const USER = "user_sched789";
 const OTHER = "user_other";
 
-/** Fresh test backend with one channel to schedule. */
+/** Fresh test backend with one curated playlist to schedule. */
 async function setup() {
   const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-  const channelId = await t.run((ctx) => ctx.db.insert("channels", { name: "Lounge" }));
-  return { t, channelId };
+  const playlistId = await t.run((ctx) =>
+    ctx.db.insert("playlists", { name: "Lounge", curated: true, isPublic: true }),
+  );
+  return { t, playlistId };
 }
 
 describe("scheduleBlocks", () => {
@@ -22,10 +24,10 @@ describe("scheduleBlocks", () => {
   });
 
   it("create adds a block visible via listByUser", async () => {
-    const { t, channelId } = await setup();
+    const { t, playlistId } = await setup();
     const asUser = t.withIdentity({ subject: USER });
     await asUser.mutation(api.scheduleBlocks.create, {
-      channelId,
+      playlistId,
       day: "Mon",
       startHour: 9,
       duration: 2,
@@ -40,10 +42,10 @@ describe("scheduleBlocks", () => {
   });
 
   it("update patches provided fields only", async () => {
-    const { t, channelId } = await setup();
+    const { t, playlistId } = await setup();
     const asUser = t.withIdentity({ subject: USER });
     const id = await asUser.mutation(api.scheduleBlocks.create, {
-      channelId,
+      playlistId,
       day: "Tue",
       startHour: 10,
       duration: 1,
@@ -60,10 +62,10 @@ describe("scheduleBlocks", () => {
   });
 
   it("remove deletes the block", async () => {
-    const { t, channelId } = await setup();
+    const { t, playlistId } = await setup();
     const asUser = t.withIdentity({ subject: USER });
     const id = await asUser.mutation(api.scheduleBlocks.create, {
-      channelId,
+      playlistId,
       day: "Wed",
       startHour: 8,
       duration: 3,
@@ -74,15 +76,15 @@ describe("scheduleBlocks", () => {
   });
 
   it("listByUser is scoped — other users' blocks are not returned", async () => {
-    const { t, channelId } = await setup();
+    const { t, playlistId } = await setup();
     await t.withIdentity({ subject: USER }).mutation(api.scheduleBlocks.create, {
-      channelId,
+      playlistId,
       day: "Thu",
       startHour: 12,
       duration: 1,
     });
     await t.withIdentity({ subject: OTHER }).mutation(api.scheduleBlocks.create, {
-      channelId,
+      playlistId,
       day: "Thu",
       startHour: 14,
       duration: 2,
@@ -95,13 +97,13 @@ describe("scheduleBlocks", () => {
   });
 
   it("rejects unauthenticated calls", async () => {
-    const { t, channelId } = await setup();
+    const { t, playlistId } = await setup();
     await expect(t.query(api.scheduleBlocks.listByUser, {})).rejects.toThrow(
       /Not authenticated/,
     );
     await expect(
       t.mutation(api.scheduleBlocks.create, {
-      channelId,
+      playlistId,
         day: "Mon",
         startHour: 9,
         duration: 1,
@@ -111,7 +113,7 @@ describe("scheduleBlocks", () => {
     const id = await t
       .withIdentity({ subject: USER })
       .mutation(api.scheduleBlocks.create, {
-      channelId,
+      playlistId,
         day: "Mon",
         startHour: 9,
         duration: 1,
@@ -125,11 +127,11 @@ describe("scheduleBlocks", () => {
   });
 
   it("another user cannot update or remove someone else's block", async () => {
-    const { t, channelId } = await setup();
+    const { t, playlistId } = await setup();
     const id = await t
       .withIdentity({ subject: USER })
       .mutation(api.scheduleBlocks.create, {
-      channelId,
+      playlistId,
         day: "Fri",
         startHour: 18,
         duration: 4,
@@ -154,9 +156,9 @@ describe("scheduleBlocks", () => {
 
   describe("validation", () => {
     it("rejects out-of-range hours and durations", async () => {
-      const { t, channelId } = await setup();
+      const { t, playlistId } = await setup();
       const asUser = t.withIdentity({ subject: USER });
-      const base = { channelId, day: "Mon" as const };
+      const base = { playlistId, day: "Mon" as const };
       await expect(
         asUser.mutation(api.scheduleBlocks.create, { ...base, startHour: 24, duration: 1 }),
       ).rejects.toThrow(/between 0 and 23/);
@@ -169,10 +171,10 @@ describe("scheduleBlocks", () => {
     });
 
     it("rejects blocks that run past midnight", async () => {
-      const { t, channelId } = await setup();
+      const { t, playlistId } = await setup();
       await expect(
         t.withIdentity({ subject: USER }).mutation(api.scheduleBlocks.create, {
-          channelId,
+          playlistId,
           day: "Sat",
           startHour: 22,
           duration: 3,
@@ -181,10 +183,10 @@ describe("scheduleBlocks", () => {
     });
 
     it("rejects an unknown day", async () => {
-      const { t, channelId } = await setup();
+      const { t, playlistId } = await setup();
       await expect(
         t.withIdentity({ subject: USER }).mutation(api.scheduleBlocks.create, {
-          channelId,
+          playlistId,
           // @ts-expect-error — deliberately invalid
           day: "Funday",
           startHour: 9,
@@ -193,12 +195,27 @@ describe("scheduleBlocks", () => {
       ).rejects.toThrow();
     });
 
-    it("rejects a channel that no longer exists", async () => {
-      const { t, channelId } = await setup();
-      await t.run((ctx) => ctx.db.delete(channelId));
+    it("rejects another user's private playlist", async () => {
+      const { t } = await setup();
+      const privateId = await t
+        .withIdentity({ subject: OTHER })
+        .mutation(api.playlists.create, { name: "Secret" });
       await expect(
         t.withIdentity({ subject: USER }).mutation(api.scheduleBlocks.create, {
-          channelId,
+          playlistId: privateId,
+          day: "Mon",
+          startHour: 9,
+          duration: 1,
+        }),
+      ).rejects.toThrow(/no longer exists/);
+    });
+
+    it("rejects a playlist that no longer exists", async () => {
+      const { t, playlistId } = await setup();
+      await t.run((ctx) => ctx.db.delete(playlistId));
+      await expect(
+        t.withIdentity({ subject: USER }).mutation(api.scheduleBlocks.create, {
+          playlistId,
           day: "Mon",
           startHour: 9,
           duration: 1,
@@ -207,10 +224,10 @@ describe("scheduleBlocks", () => {
     });
 
     it("rejects overlapping blocks on create but allows adjacent ones", async () => {
-      const { t, channelId } = await setup();
+      const { t, playlistId } = await setup();
       const asUser = t.withIdentity({ subject: USER });
       await asUser.mutation(api.scheduleBlocks.create, {
-        channelId,
+        playlistId,
         day: "Tue",
         startHour: 12,
         duration: 2,
@@ -218,7 +235,7 @@ describe("scheduleBlocks", () => {
       });
       await expect(
         asUser.mutation(api.scheduleBlocks.create, {
-          channelId,
+          playlistId,
           day: "Tue",
           startHour: 13,
           duration: 2,
@@ -227,13 +244,13 @@ describe("scheduleBlocks", () => {
 
       // Touching edges (12–14 then 14–16) and other days are fine.
       await asUser.mutation(api.scheduleBlocks.create, {
-        channelId,
+        playlistId,
         day: "Tue",
         startHour: 14,
         duration: 2,
       });
       await asUser.mutation(api.scheduleBlocks.create, {
-        channelId,
+        playlistId,
         day: "Wed",
         startHour: 12,
         duration: 2,
@@ -242,23 +259,23 @@ describe("scheduleBlocks", () => {
     });
 
     it("does not count another user's blocks as overlaps", async () => {
-      const { t, channelId } = await setup();
-      const block = { channelId, day: "Thu" as const, startHour: 9, duration: 3 };
+      const { t, playlistId } = await setup();
+      const block = { playlistId, day: "Thu" as const, startHour: 9, duration: 3 };
       await t.withIdentity({ subject: OTHER }).mutation(api.scheduleBlocks.create, block);
       await t.withIdentity({ subject: USER }).mutation(api.scheduleBlocks.create, block);
     });
 
     it("rejects overlapping blocks on update, but not with itself", async () => {
-      const { t, channelId } = await setup();
+      const { t, playlistId } = await setup();
       const asUser = t.withIdentity({ subject: USER });
       const morning = await asUser.mutation(api.scheduleBlocks.create, {
-        channelId,
+        playlistId,
         day: "Fri",
         startHour: 8,
         duration: 3,
       });
       await asUser.mutation(api.scheduleBlocks.create, {
-        channelId,
+        playlistId,
         day: "Fri",
         startHour: 12,
         duration: 2,
@@ -274,10 +291,10 @@ describe("scheduleBlocks", () => {
     });
 
     it("trims titles and clears empty ones", async () => {
-      const { t, channelId } = await setup();
+      const { t, playlistId } = await setup();
       const asUser = t.withIdentity({ subject: USER });
       const id = await asUser.mutation(api.scheduleBlocks.create, {
-        channelId,
+        playlistId,
         day: "Sun",
         startHour: 10,
         duration: 2,

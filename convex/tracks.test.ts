@@ -4,22 +4,12 @@ import { api, internal } from "./_generated/api";
 import schema from "./schema";
 
 describe("tracks", () => {
-  it("list returns all tracks when no channelId filter", async () => {
+  it("list returns all tracks", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
     await t.mutation(internal.tracks.create, { name: "Track A" });
     await t.mutation(internal.tracks.create, { name: "Track B" });
     const tracks = await t.query(api.tracks.list, {});
     expect(tracks).toHaveLength(2);
-  });
-
-  it("list filters by channelId", async () => {
-    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    const channelId = await t.mutation(internal.channels.create, { name: "Jazz" });
-    await t.mutation(internal.tracks.create, { name: "On Channel", channelId });
-    await t.mutation(internal.tracks.create, { name: "No Channel" });
-    const filtered = await t.query(api.tracks.list, { channelId });
-    expect(filtered).toHaveLength(1);
-    expect(filtered[0].name).toBe("On Channel");
   });
 
   it("get returns track by id", async () => {
@@ -47,30 +37,20 @@ describe("tracks", () => {
     expect(track).toBeNull();
   });
 
-  it("backfillEnergy fills missing energy from the channel category", async () => {
+  it("backfillEnergy fills missing energy from the track category", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    const channelId = await t.mutation(internal.channels.create, {
-      name: "Morning Boost",
-      category: "Upbeat",
-    });
-    await t.mutation(internal.tracks.create, { name: "No Energy", channelId });
+    const id = await t.mutation(internal.tracks.create, { name: "No Energy", category: "Upbeat" });
 
     const result = await t.mutation(internal.tracks.backfillEnergy, {});
     expect(result).toMatchObject({ scanned: 1, patched: 1, remaining: 0 });
-
-    const [track] = await t.query(api.tracks.list, { channelId });
-    expect(track.energy).toBe("high");
+    expect((await t.query(api.tracks.get, { id }))?.energy).toBe("high");
   });
 
   it("backfillEnergy leaves already-set energy alone", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    const channelId = await t.mutation(internal.channels.create, {
-      name: "Morning Boost",
-      category: "Upbeat",
-    });
     const id = await t.mutation(internal.tracks.create, {
       name: "Hand Tagged",
-      channelId,
+      category: "Upbeat",
       energy: "low",
     });
 
@@ -81,11 +61,7 @@ describe("tracks", () => {
 
   it("backfillEnergy defaults unknown categories to mid", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    const channelId = await t.mutation(internal.channels.create, {
-      name: "Mystery",
-      category: "Polka",
-    });
-    const id = await t.mutation(internal.tracks.create, { name: "Unmapped", channelId });
+    const id = await t.mutation(internal.tracks.create, { name: "Unmapped", category: "Polka" });
 
     await t.mutation(internal.tracks.backfillEnergy, {});
     expect((await t.query(api.tracks.get, { id }))?.energy).toBe("mid");
@@ -93,12 +69,8 @@ describe("tracks", () => {
 
   it("backfillEnergy honours the limit and reports what is left", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
-    const channelId = await t.mutation(internal.channels.create, {
-      name: "Spa",
-      category: "Wellness",
-    });
     for (const name of ["A", "B", "C"]) {
-      await t.mutation(internal.tracks.create, { name, channelId });
+      await t.mutation(internal.tracks.create, { name, category: "Wellness" });
     }
 
     const first = await t.mutation(internal.tracks.backfillEnergy, { limit: 2 });

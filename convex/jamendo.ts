@@ -1,11 +1,11 @@
 import { v } from "convex/values";
 import { internalAction } from "./_generated/server";
-import { api, internal } from "./_generated/api";
+import { internal } from "./_generated/api";
 import { energyForCategory } from "./lib/energy";
 
 const JAMENDO_TRACKS_URL = "https://api.jamendo.com/v3.0/tracks/";
 
-// Maps this app's channel categories to Jamendo's genre/mood tags, best first.
+// Maps this app's curated playlist categories to Jamendo's genre/mood tags, best first.
 // Jamendo's tag search is intermittently flaky: a tag that returns 150 tracks one
 // hour can return 0 the next (seen with "electronic", "electronica" and "jazz").
 // So each category lists fallbacks, and we move to the next one on an empty result.
@@ -26,9 +26,9 @@ interface JamendoTrack {
   image: string;
 }
 
-export const syncChannel = internalAction({
+export const syncPlaylist = internalAction({
   args: {
-    channelId: v.id("channels"),
+    playlistId: v.id("playlists"),
     tag: v.optional(v.string()),
     limit: v.optional(v.number()),
   },
@@ -40,12 +40,12 @@ export const syncChannel = internalAction({
       );
     }
 
-    const channel = await ctx.runQuery(api.channels.get, { id: args.channelId });
-    if (!channel) throw new Error("Channel not found");
+    const playlist = await ctx.runQuery(internal.playlists.getCurated, { id: args.playlistId });
+    if (!playlist) throw new Error("Curated playlist not found");
 
     const tags = args.tag
       ? [args.tag]
-      : (CATEGORY_TAGS[channel.category ?? ""] ?? ["lounge"]);
+      : (CATEGORY_TAGS[playlist.category ?? ""] ?? ["lounge"]);
 
     let tag = tags[0];
     let results: JamendoTrack[] = [];
@@ -71,67 +71,64 @@ export const syncChannel = internalAction({
       // Jamendo's `headers` block carries its own status/warnings — useful if an
       // empty result ever turns out to be something other than search flakiness.
       console.warn(
-        `syncChannel "${channel.name}": tag=${tag} returned 0 tracks`,
+        `syncPlaylist "${playlist.name}": tag=${tag} returned 0 tracks`,
         JSON.stringify(data.headers),
       );
     }
 
-    const energy = energyForCategory(channel.category);
+    const energy = energyForCategory(playlist.category);
 
-    const existingTracks = await ctx.runQuery(api.tracks.list, {
-      channelId: args.channelId,
-    });
-    const existingNames = new Set(existingTracks.map((t) => t.name));
+    const existingNames = new Set(
+      await ctx.runQuery(internal.playlists.curatedTrackNames, { playlistId: args.playlistId }),
+    );
 
     // Visible in `npx convex logs` and inline with `npx convex run`. Lets us tell a
     // short Jamendo response apart from a response that was all duplicates.
     console.log(
-      `syncChannel "${channel.name}": tag=${tag} requested=${args.limit ?? 15} ` +
+      `syncPlaylist "${playlist.name}": tag=${tag} requested=${args.limit ?? 15} ` +
         `returned=${results.length} existing=${existingNames.size}`,
     );
 
-    let inserted = 0;
+    const trackIds = [];
     for (const track of results) {
       if (existingNames.has(track.name)) continue;
-      await ctx.runMutation(internal.tracks.create, {
-        name: track.name,
-        artist: track.artist_name,
-        duration: track.duration,
-        audioUrl: track.audio,
-        coverImage: track.image,
-        category: channel.category,
-        energy,
-        channelId: args.channelId,
-      });
-      inserted++;
+      existingNames.add(track.name);
+      trackIds.push(
+        await ctx.runMutation(internal.tracks.create, {
+          name: track.name,
+          artist: track.artist_name,
+          duration: track.duration,
+          audioUrl: track.audio,
+          coverImage: track.image,
+          category: playlist.category,
+          energy,
+        }),
+      );
     }
 
-    const firstTrack = results[0];
-    if (firstTrack) {
-      await ctx.runMutation(internal.channels.update, {
-        id: args.channelId,
-        audioUrl: firstTrack.audio,
-        coverImage: channel.coverImage ?? firstTrack.image,
-      });
-    }
+    // One mutation for the whole batch, so positions are assigned in order.
+    await ctx.runMutation(internal.playlists.appendTracks, {
+      playlistId: args.playlistId,
+      trackIds,
+    });
 
-    return inserted;
+    return trackIds.length;
   },
 });
 
-export const syncAllChannels = internalAction({
+export const syncAllCurated = internalAction({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args): Promise<Record<string, number | string>> => {
-    const channels = await ctx.runQuery(api.channels.list, {});
+    const playlists = await ctx.runQuery(internal.playlists.listCuratedInternal, {});
     const results: Record<string, number | string> = {};
-    for (const channel of channels) {
+    for (const playlist of playlists) {
       try {
-        results[channel.name] = await ctx.runAction(internal.jamendo.syncChannel, {
-          channelId: channel._id,
+        results[playlist.name] = await ctx.runAction(internal.jamendo.syncPlaylist, {
+          playlistId: playlist._id,
           limit: args.limit,
         });
       } catch (err) {
-        results[channel.name] = `error: ${err instanceof Error ? err.message : String(err)}`;
+        results[playlist.name] = `error: ${err instanceof Error ? err.message : String(err)}`;
       }
     }
     return results;

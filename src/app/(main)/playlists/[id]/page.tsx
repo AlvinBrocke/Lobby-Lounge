@@ -11,7 +11,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import type { FunctionReturnType } from "convex/server";
 import { cn, formatDuration, formatTotalDuration } from "@/lib/utils";
 import usePlayerStore from "@/store/usePlayerStore";
-import type { Track } from "@/types";
+import { toPlayerQueue } from "@/lib/playlists";
 import { AddSongsDialog } from "@/components/playlists/AddSongsDialog";
 import { ConfirmDialog } from "@/components/playlists/ConfirmDialog";
 import { PlaylistCover } from "@/components/playlists/PlaylistCover";
@@ -24,17 +24,6 @@ const ENERGY_STYLES: Record<string, string> = {
   mid: "text-emerald-400 bg-emerald-400/12",
   high: "text-amber-400 bg-amber-400/12",
 };
-
-/** Convex track → the shape the global player store expects. */
-function toPlayerTrack(track: PlaylistTrack): Track {
-  return {
-    id: track._id,
-    name: track.name,
-    image: track.coverImage ?? "",
-    audioUrl: track.audioUrl,
-    category: track.category,
-  };
-}
 
 function TrackRow({
   track,
@@ -126,9 +115,7 @@ export default function PlaylistDetailPage() {
   const removePlaylist = useMutation(api.playlists.remove);
   const removeTrack = useMutation(api.playlists.removeTrack);
 
-  const setCurrentTrack = usePlayerStore((s) => s.setCurrentTrack);
-  const clearQueue = usePlayerStore((s) => s.clearQueue);
-  const addToQueue = usePlayerStore((s) => s.addToQueue);
+  const playQueue = usePlayerStore((s) => s.playQueue);
   const currentTrackId = usePlayerStore((s) => s.currentTrack?.id);
 
   const [modal, setModal] = useState<"edit" | "delete" | "add" | null>(null);
@@ -157,23 +144,20 @@ export default function PlaylistDetailPage() {
         <p className="text-lg font-bold text-foreground mb-2">Playlist not found</p>
         <p className="text-sm text-muted-foreground mb-6">It may have been deleted.</p>
         <Link href="/playlists" className="text-sm font-semibold text-primary hover:underline">
-          Back to My Playlists
+          Back to Playlists
         </Link>
       </div>
     );
   }
 
-  // `get` also returns public playlists owned by others; only the owner edits.
+  // `get` also returns public and curated playlists; only the owner edits.
+  // Curated ones have no owner at all, so they're always read-only.
   const canEdit = !!userId && playlist.clerkUserId === userId;
   const totalDuration = tracks.reduce((sum, t) => sum + (t.duration ?? 0), 0);
   const cover = playlist.coverImage ?? tracks.find((t) => t.coverImage)?.coverImage;
 
   function playFrom(index: number) {
-    const [first, ...rest] = tracks.slice(index);
-    if (!first) return;
-    clearQueue();
-    setCurrentTrack(toPlayerTrack(first));
-    rest.forEach((t) => addToQueue(toPlayerTrack(t)));
+    playQueue(toPlayerQueue(tracks.slice(index)), playlistId);
   }
 
   async function handleEdit({ name, description }: PlaylistFormValues) {
@@ -199,7 +183,7 @@ export default function PlaylistDetailPage() {
         className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors w-fit"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
-        My Playlists
+        Playlists
       </Link>
 
       {/* Header */}
@@ -212,7 +196,7 @@ export default function PlaylistDetailPage() {
         />
         <div className="flex-1 min-w-0">
           <span className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">
-            Playlist
+            {playlist.curated ? "Curated playlist" : "Playlist"}
           </span>
           <h1
             className="text-3xl font-bold tracking-tight text-foreground mt-1 break-words"
@@ -287,7 +271,9 @@ export default function PlaylistDetailPage() {
               <ListMusic className="w-5 h-5 text-primary" />
             </div>
             <p className="text-sm font-semibold text-foreground mb-1">This playlist is empty</p>
-            <p className="text-xs text-muted-foreground mb-5">Search the catalogue to add songs.</p>
+            <p className="text-xs text-muted-foreground mb-5">
+              {canEdit ? "Search the catalogue to add songs." : "No tracks have been added yet."}
+            </p>
             {canEdit && (
               <button
                 onClick={() => setModal("add")}

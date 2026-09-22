@@ -15,7 +15,7 @@ const features = [
   },
   {
     title: "Curated weekly",
-    desc: "Every channel is refreshed with new tracks each week, so your regulars — and your staff — never hear the same rotation on repeat.",
+    desc: "Every curated playlist is refreshed with new tracks each week, so your regulars — and your staff — never hear the same rotation on repeat.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 25, height: 25 }}>
         <polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9 12 2" />

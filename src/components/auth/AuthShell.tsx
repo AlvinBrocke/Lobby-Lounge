@@ -5,7 +5,7 @@ import Link from "next/link";
 
 const FEATURES = [
   "Fully licensed music for commercial use",
-  "Curated channels for every venue type",
+  "Curated playlists for every venue type",
   "Smart scheduling — set it and forget it",
 ];
 
@@ -112,7 +112,7 @@ function NowPlayingChip() {
             color: "var(--ll-on-ink-3)",
           }}
         >
-          Licensed channel · Lobby &amp; Lounge
+          Licensed playlist · Lobby &amp; Lounge
         </span>
       </div>
     </div>

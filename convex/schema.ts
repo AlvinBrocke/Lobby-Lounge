@@ -42,12 +42,23 @@ export default defineSchema({
     .searchIndex("search_name", { searchField: "name" }),
 
   playlists: defineTable({
-    clerkUserId: v.string(),
+    // Absent on curated playlists, which ship with the app and have no owner.
+    clerkUserId: v.optional(v.string()),
     name: v.string(),
     description: v.optional(v.string()),
     coverImage: v.optional(v.string()),
     isPublic: v.boolean(),
-  }).index("by_clerk_user", ["clerkUserId"]),
+    // Curated catalogue playlists (the former "channels"). Readable by every
+    // signed-in user, writable only from internal functions.
+    curated: v.optional(v.boolean()),
+    category: v.optional(v.string()),
+    section: v.optional(v.union(v.literal("daytime"), v.literal("evening"))),
+    // Temporary: the channel a curated playlist was migrated from. Makes
+    // `migrations:channelsToPlaylists` safe to re-run. Removed once migrated.
+    legacyChannelId: v.optional(v.string()),
+  })
+    .index("by_clerk_user", ["clerkUserId"])
+    .index("by_curated", ["curated"]),
 
   playlistTracks: defineTable({
     playlistId: v.id("playlists"),
@@ -62,7 +73,8 @@ export default defineSchema({
     day: v.string(), // 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun'
     startHour: v.number(), // 0-23
     duration: v.number(), // hours
-    channelId: v.optional(v.id("channels")),
+    playlistId: v.optional(v.id("playlists")),
+    channelId: v.optional(v.id("channels")), // legacy — migrated to playlistId
     title: v.optional(v.string()),
   }).index("by_clerk_user", ["clerkUserId"]),
 });

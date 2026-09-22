@@ -3,16 +3,8 @@ import { v } from "convex/values";
 import { energyForCategory } from "./lib/energy";
 
 export const list = query({
-  args: {
-    channelId: v.optional(v.id("channels")),
-  },
-  handler: async (ctx, args) => {
-    if (args.channelId) {
-      return await ctx.db
-        .query("tracks")
-        .withIndex("by_channel", (q) => q.eq("channelId", args.channelId))
-        .collect();
-    }
+  args: {},
+  handler: async (ctx) => {
     return await ctx.db.query("tracks").collect();
   },
 });
@@ -51,7 +43,6 @@ export const create = internalMutation({
     energy: v.optional(v.string()),
     audioUrl: v.optional(v.string()),
     coverImage: v.optional(v.string()),
-    channelId: v.optional(v.id("channels")),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("tracks", args);
@@ -68,7 +59,6 @@ export const update = internalMutation({
     energy: v.optional(v.string()),
     audioUrl: v.optional(v.string()),
     coverImage: v.optional(v.string()),
-    channelId: v.optional(v.id("channels")),
   },
   handler: async (ctx, args) => {
     const { id, ...fields } = args;
@@ -89,7 +79,7 @@ export const remove = internalMutation({
 /**
  * Fills in `energy` on tracks that predate the field.
  *
- * `jamendo.syncChannel` only sets `energy` on newly inserted tracks, and it
+ * `jamendo.syncPlaylist` only sets `energy` on newly inserted tracks, and it
  * skips tracks it has already synced — so rows written before the field existed
  * would otherwise stay unset forever.
  *
@@ -106,14 +96,7 @@ export const backfillEnergy = internalMutation({
 
     let patched = 0;
     for (const track of missing.slice(0, limit)) {
-      // Tracks carry the channel's category at insert time, but fall back to
-      // the channel itself for rows created before that was true.
-      let category = track.category;
-      if (!category && track.channelId) {
-        const channel = await ctx.db.get(track.channelId);
-        category = channel?.category;
-      }
-      await ctx.db.patch(track._id, { energy: energyForCategory(category) });
+      await ctx.db.patch(track._id, { energy: energyForCategory(track.category) });
       patched++;
     }
 

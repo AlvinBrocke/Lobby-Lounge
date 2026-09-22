@@ -26,7 +26,7 @@ const ROW_HEIGHT = 64; // px per hour
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const SCROLL_TO_HOUR = 7; // most venues open in the morning
 
-// Colour is picked from the channel's category so the same kind of music
+// Colour is picked from the playlist's category so the same kind of music
 // always looks the same across the week.
 const PALETTE = [
   "bg-blue-500/10 text-blue-500 border-blue-500/40",
@@ -55,29 +55,30 @@ export default function SchedulePage() {
 
   // "skip" until Clerk's token reaches Convex — otherwise `requireUser` throws.
   const blocks = useQuery(api.scheduleBlocks.listByUser, isAuthenticated ? {} : "skip");
-  const channels = useQuery(api.channels.list);
+  const curated = useQuery(api.playlists.listCurated, isAuthenticated ? {} : "skip");
+  const mine = useQuery(api.playlists.listByUser, isAuthenticated ? {} : "skip");
   const createBlock = useMutation(api.scheduleBlocks.create);
   const updateBlock = useMutation(api.scheduleBlocks.update);
   const removeBlock = useMutation(api.scheduleBlocks.remove);
 
   const [modal, setModal] = useState<ModalState>(null);
 
-  const channelById = useMemo(
-    () => new Map((channels ?? []).map((c) => [c._id, c])),
-    [channels],
+  const playlistById = useMemo(
+    () => new Map([...(curated ?? []), ...(mine ?? [])].map((p) => [p._id, p])),
+    [curated, mine],
   );
   const current = blocks ? activeBlock(blocks, now) : null;
 
   // Start the grid scrolled to the morning instead of midnight.
   // Runs again once data arrives, because the loading state can be shorter.
   const scrollRef = useRef<HTMLDivElement>(null);
-  const loading = blocks === undefined || channels === undefined;
+  const loading = blocks === undefined || curated === undefined || mine === undefined;
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = SCROLL_TO_HOUR * ROW_HEIGHT;
   }, [loading]);
 
   function blockLabel(block: Doc<"scheduleBlocks">) {
-    return block.title ?? channelById.get(block.channelId)?.name ?? "Untitled";
+    return block.title ?? playlistById.get(block.playlistId)?.name ?? "Untitled";
   }
 
   /** First free hour today from now on, so "New Block" opens on a usable slot. */
@@ -109,7 +110,7 @@ export default function SchedulePage() {
   return (
     <PageWrapper
       title="Schedule"
-      description="Set a channel for every hour of the week — it repeats automatically."
+      description="Set a playlist for every hour of the week — it repeats automatically."
       action={
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex items-center gap-2 bg-muted/50 rounded-full px-3 py-1.5 text-xs text-muted-foreground">
@@ -209,7 +210,7 @@ export default function SchedulePage() {
                       {(blocks ?? [])
                         .filter((b) => b.day === day)
                         .map((block) => {
-                          const channel = channelById.get(block.channelId);
+                          const playlist = playlistById.get(block.playlistId);
                           const isNow = current?._id === block._id;
                           const compact = block.duration === 1;
                           return (
@@ -220,7 +221,7 @@ export default function SchedulePage() {
                               className={cn(
                                 "absolute left-1 right-1 rounded-xl border border-l-4 bg-card pointer-events-auto text-left text-xs font-bold overflow-hidden shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-200 z-10",
                                 compact ? "px-2 py-1" : "p-2.5",
-                                colourFor(channel?.category ?? channel?.name ?? ""),
+                                colourFor(playlist?.category ?? playlist?.name ?? ""),
                                 isNow && "ring-2 ring-primary/50",
                               )}
                               style={{
@@ -240,9 +241,9 @@ export default function SchedulePage() {
                                 {!compact && <Clock className="w-3 h-3 mr-1 shrink-0" />}
                                 {formatRange(block.startHour, block.duration)}
                               </div>
-                              {!compact && block.title && channel && (
+                              {!compact && block.title && playlist && (
                                 <div className="opacity-60 font-medium mt-0.5 truncate">
-                                  {channel.name}
+                                  {playlist.name}
                                 </div>
                               )}
                             </button>
@@ -259,18 +260,18 @@ export default function SchedulePage() {
 
       {blocks?.length === 0 && (
         <p className="text-sm text-muted-foreground text-center mt-4">
-          No blocks yet — click any hour in the grid to schedule a channel. It will repeat every
+          No blocks yet — click any hour in the grid to schedule a playlist. It will repeat every
           week.
         </p>
       )}
 
-      {modal && channels && blocks && (
+      {modal && curated && mine && blocks && (
         <ScheduleBlockModal
           mode={modal.mode}
           initial={
             modal.mode === "edit"
               ? {
-                  channelId: modal.block.channelId,
+                  playlistId: modal.block.playlistId,
                   day: modal.block.day as Day,
                   startHour: modal.block.startHour,
                   duration: modal.block.duration,
@@ -279,7 +280,8 @@ export default function SchedulePage() {
               : { day: modal.day, startHour: modal.startHour }
           }
           editingId={modal.mode === "edit" ? modal.block._id : undefined}
-          channels={channels}
+          curated={curated}
+          mine={mine}
           blocks={blocks}
           onClose={() => setModal(null)}
           onSubmit={handleSubmit}
