@@ -16,7 +16,6 @@ import {
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { useTheme } from "@/components/theme-provider";
 import { PasswordCard } from "@/components/settings/PasswordCard";
-import { useRouter } from "next/navigation";
 
 interface SessionInfo {
   id: string;
@@ -47,7 +46,6 @@ export default function SettingsPage() {
   const { user, isLoaded: userLoaded } = useUser();
   const { session: currentSession } = useSession();
   const { signOut } = useClerk();
-  const router = useRouter();
 
   const { isAuthenticated } = useConvexAuth();
   const profile = useQuery(api.userProfiles.get, isAuthenticated ? {} : "skip");
@@ -108,8 +106,7 @@ export default function SettingsPage() {
   async function handleSignOutAll() {
     setSigningOutAll(true);
     try {
-      await signOut();
-      router.push("/signin");
+      await signOut({ redirectUrl: "/signin" });
     } catch {
       setSigningOutAll(false);
     }
