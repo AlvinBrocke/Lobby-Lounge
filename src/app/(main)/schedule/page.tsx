@@ -1,162 +1,291 @@
 "use client";
 
-import React from "react";
-import { Plus, ChevronLeft, ChevronRight, Clock, Settings } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { CalendarClock, Clock, Plus } from "lucide-react";
+import { api } from "@convex/_generated/api";
+import type { Doc, Id } from "@convex/_generated/dataModel";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageWrapper } from "@/components/layout/page-wrapper";
+import {
+  ScheduleBlockModal,
+  type ScheduleBlockValues,
+} from "@/components/schedule/ScheduleBlockModal";
+import { useNow } from "@/hooks/useNow";
+import { cn } from "@/lib/utils";
+import {
+  DAYS,
+  activeBlock,
+  formatHour,
+  formatRange,
+  todayKey,
+  type Day,
+} from "@/lib/schedule";
 
-const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const hours = Array.from({ length: 15 }, (_, i) => i + 8); // 8 AM to 10 PM
+const ROW_HEIGHT = 64; // px per hour
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const SCROLL_TO_HOUR = 7; // most venues open in the morning
 
-const dummyEvents = [
-  {
-    day: "Mon",
-    start: 8,
-    duration: 4,
-    title: "Breakfast Chill",
-    color: "bg-blue-500/10 text-blue-500 border-blue-200 dark:border-blue-900",
-  },
-  {
-    day: "Mon",
-    start: 12,
-    duration: 5,
-    title: "Lunch Energy",
-    color:
-      "bg-amber-500/10 text-amber-500 border-amber-200 dark:border-amber-900",
-  },
-  {
-    day: "Wed",
-    start: 17,
-    duration: 4,
-    title: "After Work Mix",
-    color:
-      "bg-purple-500/10 text-purple-500 border-purple-200 dark:border-purple-900",
-  },
-  {
-    day: "Fri",
-    start: 18,
-    duration: 5,
-    title: "Weekend Launch",
-    color: "bg-rose-500/10 text-rose-500 border-rose-200 dark:border-rose-900",
-  },
+// Colour is picked from the channel's category so the same kind of music
+// always looks the same across the week.
+const PALETTE = [
+  "bg-blue-500/10 text-blue-500 border-blue-500/40",
+  "bg-amber-500/10 text-amber-500 border-amber-500/40",
+  "bg-purple-500/10 text-purple-500 border-purple-500/40",
+  "bg-rose-500/10 text-rose-500 border-rose-500/40",
+  "bg-emerald-500/10 text-emerald-500 border-emerald-500/40",
+  "bg-cyan-500/10 text-cyan-500 border-cyan-500/40",
 ];
 
+function colourFor(key: string): string {
+  let hash = 0;
+  for (const ch of key) hash = (hash * 31 + ch.charCodeAt(0)) | 0;
+  return PALETTE[Math.abs(hash) % PALETTE.length];
+}
+
+type ModalState =
+  | { mode: "create"; day: Day; startHour: number }
+  | { mode: "edit"; block: Doc<"scheduleBlocks"> }
+  | null;
+
 export default function SchedulePage() {
+  const { isAuthenticated } = useConvexAuth();
+  const now = useNow(60_000);
+  const today = todayKey(now);
+
+  // "skip" until Clerk's token reaches Convex — otherwise `requireUser` throws.
+  const blocks = useQuery(api.scheduleBlocks.listByUser, isAuthenticated ? {} : "skip");
+  const channels = useQuery(api.channels.list);
+  const createBlock = useMutation(api.scheduleBlocks.create);
+  const updateBlock = useMutation(api.scheduleBlocks.update);
+  const removeBlock = useMutation(api.scheduleBlocks.remove);
+
+  const [modal, setModal] = useState<ModalState>(null);
+
+  const channelById = useMemo(
+    () => new Map((channels ?? []).map((c) => [c._id, c])),
+    [channels],
+  );
+  const current = blocks ? activeBlock(blocks, now) : null;
+
+  // Start the grid scrolled to the morning instead of midnight.
+  // Runs again once data arrives, because the loading state can be shorter.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const loading = blocks === undefined || channels === undefined;
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = SCROLL_TO_HOUR * ROW_HEIGHT;
+  }, [loading]);
+
+  function blockLabel(block: Doc<"scheduleBlocks">) {
+    return block.title ?? channelById.get(block.channelId)?.name ?? "Untitled";
+  }
+
+  /** First free hour today from now on, so "New Block" opens on a usable slot. */
+  function openNewBlock() {
+    const taken = new Set(
+      (blocks ?? [])
+        .filter((b) => b.day === today)
+        .flatMap((b) => Array.from({ length: b.duration }, (_, i) => b.startHour + i)),
+    );
+    const free = HOURS.find((h) => h >= now.getHours() && !taken.has(h));
+    setModal({ mode: "create", day: today, startHour: free ?? 9 });
+  }
+
+  async function handleSubmit(values: ScheduleBlockValues) {
+    if (modal?.mode === "edit") {
+      // An empty title is sent as "" (not omitted) so the server clears it.
+      await updateBlock({ id: modal.block._id, ...values });
+    } else {
+      await createBlock({ ...values, title: values.title || undefined });
+    }
+    setModal(null);
+  }
+
+  async function handleDelete(id: Id<"scheduleBlocks">) {
+    await removeBlock({ id });
+    setModal(null);
+  }
+
   return (
     <PageWrapper
       title="Schedule"
-      description="Automate your venue's atmosphere."
+      description="Set a channel for every hour of the week — it repeats automatically."
       action={
-        <div className="flex items-center space-x-3">
-          <div className="flex bg-muted/50 rounded-md p-1">
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 hover:bg-background"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 hover:bg-background"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-2 bg-muted/50 rounded-full px-3 py-1.5 text-xs text-muted-foreground">
+            {current ? (
+              <>
+                <span className="w-2 h-2 rounded-full bg-primary live-dot" />
+                On now:{" "}
+                <span className="font-semibold text-foreground">{blockLabel(current)}</span>
+              </>
+            ) : (
+              <>
+                <CalendarClock className="w-3.5 h-3.5" />
+                Nothing scheduled right now
+              </>
+            )}
           </div>
-          <Button className="rounded-full">
-            <Plus className="w-4 h-4 mr-2" />
+          <button
+            onClick={openNewBlock}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-40"
+          >
+            <Plus className="w-4 h-4" />
             New Block
-          </Button>
+          </button>
         </div>
       }
     >
       <Card className="bg-card border-border shadow-xl rounded-2xl overflow-hidden">
         <CardContent className="p-0">
-          <div className="grid grid-cols-[80px_1fr] border-b border-border sticky top-0 bg-card z-10">
-            <div className="p-4 border-r border-border flex items-center justify-center">
-              <Clock className="w-5 h-5 text-muted-foreground" />
+          <div ref={scrollRef} className="max-h-[calc(100vh-280px)] min-h-[400px] overflow-y-auto">
+            {/* Day headers */}
+            <div className="grid grid-cols-[72px_1fr] border-b border-border sticky top-0 bg-card z-30">
+              <div className="p-4 border-r border-border flex items-center justify-center">
+                <Clock className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div className="grid grid-cols-7">
+                {DAYS.map((day) => (
+                  <div
+                    key={day}
+                    className={cn(
+                      "p-4 text-center font-bold border-r border-border last:border-r-0 text-xs tracking-widest uppercase",
+                      day === today ? "text-primary" : "text-muted-foreground",
+                    )}
+                  >
+                    {day}
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="grid grid-cols-7">
-              {days.map((day) => (
+
+            <div className="relative">
+              {/* Hour rows — empty cells open the create modal */}
+              {HOURS.map((hour) => (
                 <div
-                  key={day}
-                  className="p-4 text-center font-bold border-r border-border last:border-r-0 text-xs tracking-widest uppercase text-muted-foreground"
+                  key={hour}
+                  className="grid grid-cols-[72px_1fr] border-b border-border last:border-b-0"
+                  style={{ height: ROW_HEIGHT }}
                 >
-                  {day}
+                  <div className="text-[11px] text-muted-foreground pr-3 font-mono font-bold flex items-start justify-end pt-1.5 uppercase tracking-tighter">
+                    {formatHour(hour)}
+                  </div>
+                  <div className="grid grid-cols-7">
+                    {DAYS.map((day) => (
+                      <button
+                        key={`${day}-${hour}`}
+                        type="button"
+                        disabled={loading}
+                        aria-label={`Add block on ${day} at ${formatHour(hour)}`}
+                        onClick={() => setModal({ mode: "create", day, startHour: hour })}
+                        className={cn(
+                          "border-r border-border last:border-r-0 hover:bg-muted/30 transition-colors group/cell relative",
+                          day === today && "bg-primary/[0.03]",
+                        )}
+                      >
+                        <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                          <Plus className="w-4 h-4 text-muted-foreground/50" />
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               ))}
-            </div>
-          </div>
 
-          <div className="relative">
-            {/* Time Rows */}
-            {hours.map((hour) => (
-              <div
-                key={hour}
-                className="grid grid-cols-[80px_1fr] border-b border-border h-20 group"
-              >
-                <div className="p-2 text-[11px] text-muted-foreground text-right pr-4 font-mono font-bold flex items-center justify-end uppercase tracking-tighter">
-                  {hour % 12 === 0 ? 12 : hour % 12} {hour >= 12 ? "pm" : "am"}
-                </div>
-                <div className="grid grid-cols-7">
-                  {days.map((day) => (
-                    <div
-                      key={`${day}-${hour}`}
-                      className="border-r border-border last:border-r-0 hover:bg-muted/30 transition-colors cursor-pointer group/cell relative"
-                    >
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/cell:opacity-100 transition-opacity">
-                        <Plus className="w-4 h-4 text-muted-foreground/50" />
-                      </div>
+              {/* Blocks, absolutely positioned over the grid */}
+              <div className="absolute top-0 left-[72px] right-0 bottom-0 pointer-events-none">
+                <div className="grid grid-cols-7 h-full">
+                  {DAYS.map((day) => (
+                    <div key={`blocks-${day}`} className="relative h-full">
+                      {day === today && (
+                        <div
+                          className="absolute left-0 right-0 h-0.5 bg-primary z-20"
+                          style={{ top: (now.getHours() + now.getMinutes() / 60) * ROW_HEIGHT }}
+                        >
+                          <span className="absolute -left-1 -top-[3px] w-2 h-2 rounded-full bg-primary" />
+                        </div>
+                      )}
+                      {(blocks ?? [])
+                        .filter((b) => b.day === day)
+                        .map((block) => {
+                          const channel = channelById.get(block.channelId);
+                          const isNow = current?._id === block._id;
+                          const compact = block.duration === 1;
+                          return (
+                            <button
+                              key={block._id}
+                              type="button"
+                              onClick={() => setModal({ mode: "edit", block })}
+                              className={cn(
+                                "absolute left-1 right-1 rounded-xl border border-l-4 bg-card pointer-events-auto text-left text-xs font-bold overflow-hidden shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-200 z-10",
+                                compact ? "px-2 py-1" : "p-2.5",
+                                colourFor(channel?.category ?? channel?.name ?? ""),
+                                isNow && "ring-2 ring-primary/50",
+                              )}
+                              style={{
+                                top: block.startHour * ROW_HEIGHT + 3,
+                                height: block.duration * ROW_HEIGHT - 6,
+                              }}
+                            >
+                              <div className="flex items-center gap-1.5">
+                                {isNow && (
+                                  <span className="w-1.5 h-1.5 rounded-full bg-primary live-dot shrink-0" />
+                                )}
+                                <span className="truncate text-[13px] tracking-tight">
+                                  {blockLabel(block)}
+                                </span>
+                              </div>
+                              <div className="flex items-center opacity-70 font-medium mt-0.5 truncate">
+                                {!compact && <Clock className="w-3 h-3 mr-1 shrink-0" />}
+                                {formatRange(block.startHour, block.duration)}
+                              </div>
+                              {!compact && block.title && channel && (
+                                <div className="opacity-60 font-medium mt-0.5 truncate">
+                                  {channel.name}
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
                     </div>
                   ))}
                 </div>
-              </div>
-            ))}
-
-            {/* Absolute Events */}
-            <div className="absolute top-0 left-[80px] right-0 bottom-0 pointer-events-none">
-              <div className="grid grid-cols-7 h-full">
-                {days.map((day) => (
-                  // The borders here are visual guides, actual borders are on the grid cells
-                  <div
-                    key={`events-${day}`}
-                    className="relative h-full border-r border-transparent last:border-r-0"
-                  >
-                    {dummyEvents
-                      .filter((e) => e.day === day)
-                      .map((event) => (
-                        <div
-                          key={`${day}-${event.start}`}
-                          className={`absolute left-1.5 right-1.5 rounded-xl border-l-4 p-3 text-xs font-bold ${event.color} bg-card pointer-events-auto cursor-pointer flex flex-col justify-between shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-200 z-20 group/event border-y border-r`}
-                          style={{
-                            top: `${(event.start - 8) * 80 + 4}px`,
-                            height: `${event.duration * 80 - 8}px`,
-                          }}
-                        >
-                          <div className="space-y-1">
-                            <div className="truncate text-sm tracking-tight font-bold">
-                              {event.title}
-                            </div>
-                            <div className="flex items-center opacity-70 font-medium">
-                              <Clock className="w-3 h-3 mr-1" />
-                              {event.start}:00 - {event.start + event.duration}
-                              :00
-                            </div>
-                          </div>
-                          <button className="opacity-0 group-hover/event:opacity-100 transition-opacity self-end bg-background/50 hover:bg-background p-1 rounded-md">
-                            <Settings className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
-                  </div>
-                ))}
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {blocks?.length === 0 && (
+        <p className="text-sm text-muted-foreground text-center mt-4">
+          No blocks yet — click any hour in the grid to schedule a channel. It will repeat every
+          week.
+        </p>
+      )}
+
+      {modal && channels && blocks && (
+        <ScheduleBlockModal
+          mode={modal.mode}
+          initial={
+            modal.mode === "edit"
+              ? {
+                  channelId: modal.block.channelId,
+                  day: modal.block.day as Day,
+                  startHour: modal.block.startHour,
+                  duration: modal.block.duration,
+                  title: modal.block.title,
+                }
+              : { day: modal.day, startHour: modal.startHour }
+          }
+          editingId={modal.mode === "edit" ? modal.block._id : undefined}
+          channels={channels}
+          blocks={blocks}
+          onClose={() => setModal(null)}
+          onSubmit={handleSubmit}
+          onDelete={modal.mode === "edit" ? () => handleDelete(modal.block._id) : undefined}
+        />
+      )}
     </PageWrapper>
   );
 }
