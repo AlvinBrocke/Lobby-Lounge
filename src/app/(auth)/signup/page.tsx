@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, useSignUp } from "@clerk/nextjs";
-import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
+import { describeClerkError, isSessionExistsError } from "@/lib/clerkErrors";
 import { Loader2, Mail, Lock, KeyRound, ChevronRight } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
 
@@ -77,11 +77,11 @@ export default function SignupPage() {
         setStep("verify");
       }
     } catch (err) {
-      if (isClerkAPIResponseError(err)) {
-        setError(err.errors[0].longMessage ?? err.errors[0].message);
-      } else {
-        setError("Something went wrong. Please try again.");
+      if (isSessionExistsError(err)) {
+        router.replace("/dashboard");
+        return;
       }
+      setError(describeClerkError(err));
     } finally {
       setLoading(false);
     }
@@ -100,11 +100,11 @@ export default function SignupPage() {
         router.push("/signup/onboarding");
       }
     } catch (err) {
-      if (isClerkAPIResponseError(err)) {
-        setError(err.errors[0].longMessage ?? err.errors[0].message);
-      } else {
-        setError("Something went wrong. Please try again.");
+      if (isSessionExistsError(err)) {
+        router.replace("/dashboard");
+        return;
       }
+      setError(describeClerkError(err));
     } finally {
       setLoading(false);
     }
@@ -112,11 +112,21 @@ export default function SignupPage() {
 
   const handleOAuth = async (strategy: "oauth_google" | "oauth_apple") => {
     if (!isLoaded) return;
-    await signUp.authenticateWithRedirect({
-      strategy,
-      redirectUrl: "/sso-callback",
-      redirectUrlComplete: "/signup/onboarding",
-    });
+    setError(null);
+
+    try {
+      await signUp.authenticateWithRedirect({
+        strategy,
+        redirectUrl: "/sso-callback",
+        redirectUrlComplete: "/signup/onboarding",
+      });
+    } catch (err) {
+      if (isSessionExistsError(err)) {
+        router.replace("/dashboard");
+        return;
+      }
+      setError(describeClerkError(err));
+    }
   };
 
   const primaryBtn: React.CSSProperties = {
