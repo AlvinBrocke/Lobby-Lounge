@@ -314,7 +314,7 @@ export const Hero = () => {
                   Now playing · Lounge &amp; Chill
                 </b>
                 <span style={{ fontFamily: "var(--ll-font-body)", fontWeight: 500, fontSize: 11.5, lineHeight: 1.2, color: "var(--ll-on-ink-3)" }}>
-                  Lobby &amp; Lounge · Licensed channel
+                  Lobby &amp; Lounge · Licensed playlist
                 </span>
               </div>
             </div>

@@ -5,6 +5,7 @@ import { useScheduleAutoplay } from "@/hooks/useScheduleAutoplay";
 import { PlayerBar } from "./player-bar";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./topbar";
+import { TrialBanner } from "./TrialBanner";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   // Lives here, not on /schedule, so the schedule runs on every app page.
@@ -16,6 +17,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <Sidebar />
 
         <main className="flex-1 flex flex-col overflow-hidden min-w-0">
+          <TrialBanner />
           <Topbar />
           <ScrollArea className="flex-1 h-full w-full">
             <div className="p-6 md:p-7 max-w-[1600px] mx-auto w-full pb-8">

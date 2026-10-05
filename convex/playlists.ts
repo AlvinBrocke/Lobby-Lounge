@@ -1,11 +1,14 @@
-import { mutation, query } from "./_generated/server";
+import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
-import { assertOwner, requireUser } from "./lib/auth";
+import { assertOwner, canPlay, requireUser } from "./lib/auth";
+import { energyForCategory, type Energy } from "./lib/energy";
+import { CURATED_PLAYLISTS, appendTracksTo } from "./lib/curated";
 
 /**
- * Read access to a playlist: the owner, or anyone when it is marked public.
+ * Read access to a playlist: the owner, anyone when it is marked public, and
+ * everyone for curated playlists.
  * Returns null for a genuinely missing id; throws when access is denied.
  */
 async function readablePlaylist(
@@ -15,7 +18,7 @@ async function readablePlaylist(
 ): Promise<Doc<"playlists"> | null> {
   const playlist = await ctx.db.get(id);
   if (!playlist) return null;
-  if (playlist.clerkUserId !== clerkUserId && !playlist.isPublic) {
+  if (playlist.clerkUserId !== clerkUserId && !playlist.isPublic && !playlist.curated) {
     throw new Error("Not authorized");
   }
   return playlist;
@@ -54,6 +57,48 @@ async function ownedPlaylist(
   return playlist;
 }
 
+/** Tracks of a playlist in play order, skipping any that left the catalogue. */
+async function orderedTracks(
+  ctx: QueryCtx | MutationCtx,
+  playlistId: Id<"playlists">,
+): Promise<Doc<"tracks">[]> {
+  const entries = await ctx.db
+    .query("playlistTracks")
+    .withIndex("by_playlist", (q) => q.eq("playlistId", playlistId))
+    .collect();
+  entries.sort((a, b) => a.position - b.position);
+  return (await Promise.all(entries.map((e) => ctx.db.get(e.trackId)))).filter(
+    (t): t is Doc<"tracks"> => t !== null,
+  );
+}
+
+/** The most common track energy, or "mid" for an empty playlist. */
+function dominantEnergy(tracks: Doc<"tracks">[]): Energy {
+  const counts: Record<Energy, number> = { low: 0, mid: 0, high: 0 };
+  for (const t of tracks) {
+    if (t.energy === "low" || t.energy === "mid" || t.energy === "high") counts[t.energy]++;
+  }
+  const top = (Object.keys(counts) as Energy[]).sort((a, b) => counts[b] - counts[a])[0];
+  return counts[top] > 0 ? top : "mid";
+}
+
+/**
+ * A playlist plus the stats its row/card shows, so list pages need one query
+ * instead of one per playlist.
+ */
+async function summarise(ctx: QueryCtx, playlist: Doc<"playlists">) {
+  const tracks = await orderedTracks(ctx, playlist._id);
+  return {
+    ...playlist,
+    trackCount: tracks.length,
+    totalDuration: tracks.reduce((sum, t) => sum + (t.duration ?? 0), 0),
+    coverImage: playlist.coverImage ?? tracks.find((t) => t.coverImage)?.coverImage,
+    // Curated playlists have a category that fixes their energy; a user's
+    // playlist is whatever its tracks mostly are.
+    energy: playlist.curated ? energyForCategory(playlist.category) : dominantEnergy(tracks),
+  };
+}
+
 export const listByUser = query({
   args: {},
   handler: async (ctx) => {
@@ -63,31 +108,22 @@ export const listByUser = query({
       .withIndex("by_clerk_user", (q) => q.eq("clerkUserId", clerkUserId))
       .collect();
 
-    // Enrich each playlist with the stats its card shows, so the grid needs one
-    // query instead of one per playlist.
-    const enriched = await Promise.all(
-      playlists.map(async (playlist) => {
-        const entries = await ctx.db
-          .query("playlistTracks")
-          .withIndex("by_playlist", (q) => q.eq("playlistId", playlist._id))
-          .collect();
-        entries.sort((a, b) => a.position - b.position);
-        const tracks = (
-          await Promise.all(entries.map((e) => ctx.db.get(e.trackId)))
-        ).filter((t): t is Doc<"tracks"> => t !== null);
-
-        return {
-          ...playlist,
-          trackCount: tracks.length,
-          totalDuration: tracks.reduce((sum, t) => sum + (t.duration ?? 0), 0),
-          coverImage:
-            playlist.coverImage ?? tracks.find((t) => t.coverImage)?.coverImage,
-        };
-      }),
-    );
-
+    const enriched = await Promise.all(playlists.map((p) => summarise(ctx, p)));
     // Newest first.
     return enriched.sort((a, b) => b._creationTime - a._creationTime);
+  },
+});
+
+/** The curated catalogue playlists, in the order they were seeded. */
+export const listCurated = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireUser(ctx);
+    const playlists = await ctx.db
+      .query("playlists")
+      .withIndex("by_curated", (q) => q.eq("curated", true))
+      .collect();
+    return await Promise.all(playlists.map((p) => summarise(ctx, p)));
   },
 });
 
@@ -226,16 +262,87 @@ export const getTracks = query({
 
     playlistTracks.sort((a, b) => a.position - b.position);
 
+    // Expired trials can still browse, but get no audio to play.
+    const playable = await canPlay(ctx, clerkUserId);
+
     const tracks = await Promise.all(
       playlistTracks.map(async (pt) => {
         const track = await ctx.db.get(pt.trackId);
         // A track can vanish from the catalogue (e.g. a Jamendo resync). Drop
         // it here — spreading `null` would yield a truthy half-empty object.
         if (!track) return null;
-        return { ...track, playlistTrackId: pt._id, position: pt.position };
+        return {
+          ...track,
+          audioUrl: playable ? track.audioUrl : undefined,
+          playlistTrackId: pt._id,
+          position: pt.position,
+        };
       }),
     );
 
     return tracks.filter((t) => t !== null);
+  },
+});
+
+/* ── Curated catalogue (internal only) ───────────────────────────────────── */
+
+/**
+ * Catalogue-side append used by the Jamendo sync. Internal, so it skips the
+ * ownership check that `addTrack` does — curated playlists have no owner.
+ */
+export const appendTracks = internalMutation({
+  args: { playlistId: v.id("playlists"), trackIds: v.array(v.id("tracks")) },
+  handler: async (ctx, args) => {
+    return await appendTracksTo(ctx, args.playlistId, args.trackIds);
+  },
+});
+
+/** Curated playlist by id, for internal actions (actions can't read the db). */
+export const getCurated = internalQuery({
+  args: { id: v.id("playlists") },
+  handler: async (ctx, args) => {
+    const playlist = await ctx.db.get(args.id);
+    return playlist?.curated ? playlist : null;
+  },
+});
+
+/** Curated playlists without the auth check, for the weekly sync cron. */
+export const listCuratedInternal = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db
+      .query("playlists")
+      .withIndex("by_curated", (q) => q.eq("curated", true))
+      .collect();
+  },
+});
+
+/** Track names already in a curated playlist, so a resync can skip them. */
+export const curatedTrackNames = internalQuery({
+  args: { playlistId: v.id("playlists") },
+  handler: async (ctx, args) => {
+    const playlist = await ctx.db.get(args.playlistId);
+    if (!playlist?.curated) return [];
+    return (await orderedTracks(ctx, args.playlistId)).map((t) => t.name);
+  },
+});
+
+/**
+ * Creates the curated playlists on a fresh deployment. Follow with
+ * `npx convex run jamendo:syncAllCurated '{"limit":150}'` to fill them.
+ */
+export const seedCurated = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const existing = await ctx.db
+      .query("playlists")
+      .withIndex("by_curated", (q) => q.eq("curated", true))
+      .first();
+    if (existing) return "already seeded";
+
+    for (const p of CURATED_PLAYLISTS) {
+      await ctx.db.insert("playlists", { ...p, curated: true, isPublic: true });
+    }
+    return "seeded";
   },
 });

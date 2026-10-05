@@ -40,7 +40,7 @@ export function Topbar() {
         <Search className="absolute left-3 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
         <input
           className="w-full bg-transparent border-none outline-none py-2 pl-9 pr-4 text-[13px] text-foreground placeholder:text-muted-foreground"
-          placeholder="Search channels, tracks, moods…"
+          placeholder="Search playlists, tracks, moods…"
         />
       </div>
 

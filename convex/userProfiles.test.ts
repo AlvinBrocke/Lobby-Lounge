@@ -1,6 +1,6 @@
 import { convexTest } from "convex-test";
 import { describe, it, expect } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import schema from "./schema";
 
 const USER = "user_test456";
@@ -111,5 +111,35 @@ describe("userProfiles", () => {
     await expect(
       t.mutation(api.userProfiles.createOrUpdate, { displayName: "Nobody" }),
     ).rejects.toThrow(/Not authenticated/);
+  });
+
+  it("setPlan changes the plan of an existing profile", async () => {
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    const asUser = t.withIdentity({ subject: USER });
+    await asUser.mutation(api.userProfiles.createOrUpdate, {});
+    await t.mutation(internal.userProfiles.setPlan, { clerkUserId: USER, plan: "basic" });
+    expect((await asUser.query(api.userProfiles.get, {}))?.plan).toBe("basic");
+  });
+
+  it("extendTrial sets trialEndsAt the given number of days out", async () => {
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    const asUser = t.withIdentity({ subject: USER });
+    await asUser.mutation(api.userProfiles.createOrUpdate, {});
+    const before = Date.now();
+    await t.mutation(internal.userProfiles.extendTrial, { clerkUserId: USER, days: 7 });
+    const profile = await asUser.query(api.userProfiles.get, {});
+    const sevenDays = 7 * 24 * 60 * 60 * 1000;
+    expect(profile?.trialEndsAt).toBeGreaterThanOrEqual(before + sevenDays);
+    expect(profile?.trialEndsAt).toBeLessThanOrEqual(Date.now() + sevenDays);
+  });
+
+  it("billing admin mutations reject unknown users", async () => {
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    await expect(
+      t.mutation(internal.userProfiles.setPlan, { clerkUserId: "user_nobody", plan: "basic" }),
+    ).rejects.toThrow("No profile");
+    await expect(
+      t.mutation(internal.userProfiles.extendTrial, { clerkUserId: "user_nobody" }),
+    ).rejects.toThrow("No profile");
   });
 });

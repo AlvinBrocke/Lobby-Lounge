@@ -26,7 +26,7 @@ interface BlockFields {
   day: string;
   startHour: number;
   duration: number;
-  channelId?: Id<"channels">;
+  playlistId?: Id<"playlists">;
   title?: string;
 }
 
@@ -55,8 +55,14 @@ async function validateBlock(
   if (block.title !== undefined && block.title.length > MAX_TITLE) {
     throw new ConvexError(`Title must be ${MAX_TITLE} characters or fewer.`);
   }
-  if (block.channelId !== undefined && !(await ctx.db.get(block.channelId))) {
-    throw new ConvexError("That channel no longer exists.");
+  if (block.playlistId !== undefined) {
+    // Same rule as reading a playlist: yours, public, or curated. Scheduling
+    // someone else's private playlist would leak its contents via autoplay.
+    const playlist = await ctx.db.get(block.playlistId);
+    const readable =
+      playlist &&
+      (playlist.clerkUserId === clerkUserId || playlist.isPublic || playlist.curated);
+    if (!readable) throw new ConvexError("That playlist no longer exists.");
   }
 
   const existing = await ctx.db
@@ -101,7 +107,7 @@ export const create = mutation({
     day: dayValidator,
     startHour: v.number(),
     duration: v.number(),
-    channelId: v.id("channels"),
+    playlistId: v.id("playlists"),
     title: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -118,7 +124,7 @@ export const update = mutation({
     day: v.optional(dayValidator),
     startHour: v.optional(v.number()),
     duration: v.optional(v.number()),
-    channelId: v.optional(v.id("channels")),
+    playlistId: v.optional(v.id("playlists")),
     title: v.optional(v.string()),
   },
   handler: async (ctx, args) => {

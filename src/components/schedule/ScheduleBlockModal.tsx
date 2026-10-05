@@ -9,7 +9,7 @@ import { ConfirmDialog } from "@/components/playlists/ConfirmDialog";
 import { DAYS, MAX_TITLE, formatHour, overlaps, type Day } from "@/lib/schedule";
 
 export interface ScheduleBlockValues {
-  channelId: Id<"channels">;
+  playlistId: Id<"playlists">;
   day: Day;
   startHour: number;
   duration: number;
@@ -21,11 +21,20 @@ interface ScheduleBlockModalProps {
   initial: Partial<ScheduleBlockValues> & { day: Day; startHour: number };
   /** The block being edited — excluded from the overlap check. */
   editingId?: Id<"scheduleBlocks">;
-  channels: Doc<"channels">[];
+  /** Playlists a block can play, shown as two groups in the picker. */
+  curated: PlaylistOption[];
+  mine: PlaylistOption[];
   blocks: Doc<"scheduleBlocks">[];
   onClose: () => void;
   onSubmit: (values: ScheduleBlockValues) => Promise<void>;
   onDelete?: () => Promise<void>;
+}
+
+export interface PlaylistOption {
+  _id: Id<"playlists">;
+  name: string;
+  category?: string;
+  coverImage?: string;
 }
 
 const fieldClass =
@@ -40,14 +49,16 @@ export function ScheduleBlockModal({
   mode,
   initial,
   editingId,
-  channels,
+  curated,
+  mine,
   blocks,
   onClose,
   onSubmit,
   onDelete,
 }: ScheduleBlockModalProps) {
-  const [channelId, setChannelId] = useState<Id<"channels"> | "">(
-    initial.channelId ?? channels[0]?._id ?? "",
+  const playlists = [...curated, ...mine];
+  const [playlistId, setPlaylistId] = useState<Id<"playlists"> | "">(
+    initial.playlistId ?? playlists[0]?._id ?? "",
   );
   const [day, setDay] = useState<Day>(initial.day);
   const [startHour, setStartHour] = useState(initial.startHour);
@@ -63,8 +74,8 @@ export function ScheduleBlockModal({
   const clash = blocks.find(
     (b) => b._id !== editingId && overlaps(b, { day, startHour, duration }),
   );
-  const selectedChannel = channels.find((c) => c._id === channelId);
-  const canSubmit = channelId !== "" && duration >= 1 && !clash && !saving;
+  const selected = playlists.find((p) => p._id === playlistId);
+  const canSubmit = playlistId !== "" && duration >= 1 && !clash && !saving;
 
   function handleStartChange(h: number) {
     setStartHour(h);
@@ -74,11 +85,11 @@ export function ScheduleBlockModal({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!canSubmit || channelId === "") return;
+    if (!canSubmit || playlistId === "") return;
     setSaving(true);
     setError(null);
     try {
-      await onSubmit({ channelId, day, startHour, duration, title: title.trim() });
+      await onSubmit({ playlistId, day, startHour, duration, title: title.trim() });
     } catch (err) {
       // ConvexError messages are written for users; anything else is not.
       setError(
@@ -97,7 +108,7 @@ export function ScheduleBlockModal({
         message={
           <>
             <span className="font-semibold text-foreground">
-              {title.trim() || selectedChannel?.name || "This block"}
+              {title.trim() || selected?.name || "This block"}
             </span>{" "}
             will be removed from every {day}.
           </>
@@ -117,36 +128,46 @@ export function ScheduleBlockModal({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="block-channel" className={labelClass}>
-            Channel
+          <label htmlFor="block-playlist" className={labelClass}>
+            Playlist
           </label>
-          {channels.length === 0 ? (
+          {playlists.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No channels available yet — add channels before scheduling.
+              No playlists available yet — create one before scheduling.
             </p>
           ) : (
             <div className="flex items-center gap-3">
-              {selectedChannel?.coverImage && (
+              {selected?.coverImage && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={selectedChannel.coverImage}
+                  src={selected.coverImage}
                   alt=""
                   className="w-10 h-10 rounded-lg object-cover shrink-0"
                 />
               )}
               <select
-                id="block-channel"
+                id="block-playlist"
                 autoFocus
-                value={channelId}
-                onChange={(e) => setChannelId(e.target.value as Id<"channels">)}
+                value={playlistId}
+                onChange={(e) => setPlaylistId(e.target.value as Id<"playlists">)}
                 className={fieldClass}
               >
-                {channels.map((c) => (
-                  <option key={c._id} value={c._id}>
-                    {c.name}
-                    {c.category ? ` · ${c.category}` : ""}
-                  </option>
-                ))}
+                {[
+                  { label: "Curated", options: curated },
+                  { label: "My Playlists", options: mine },
+                ].map(
+                  (group) =>
+                    group.options.length > 0 && (
+                      <optgroup key={group.label} label={group.label}>
+                        {group.options.map((p) => (
+                          <option key={p._id} value={p._id}>
+                            {p.name}
+                            {p.category ? ` · ${p.category}` : ""}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ),
+                )}
               </select>
             </div>
           )}
@@ -214,7 +235,7 @@ export function ScheduleBlockModal({
             id="block-title"
             type="text"
             maxLength={MAX_TITLE}
-            placeholder={selectedChannel?.name ?? "e.g. Breakfast Chill"}
+            placeholder={selected?.name ?? "e.g. Breakfast Chill"}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className={fieldClass}
