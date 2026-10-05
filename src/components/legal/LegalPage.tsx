@@ -37,10 +37,10 @@ export function LegalPage({
   return (
     <div style={{ width: "100%", maxWidth: 1240, margin: "0 auto", padding: "72px 32px 96px" }}>
       <header style={{ marginBottom: 48, paddingBottom: 32, borderBottom: "1px solid var(--ll-ink-line)" }}>
-        <p style={{ ...body, fontSize: 12, fontWeight: 700, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--ll-accent)", margin: "0 0 14px" }}>
+        <p style={{ ...body, fontSize: 14, fontWeight: 500, color: "var(--ll-accent)", margin: "0 0 14px" }}>
           Lobby &amp; Lounge Music Inc. · Legal
         </p>
-        <h1 style={{ fontFamily: "var(--ll-font-display)", fontSize: "clamp(36px, 5vw, 56px)", fontWeight: 800, lineHeight: 1.05, letterSpacing: "-.03em", color: "#fff", margin: 0 }}>
+        <h1 style={{ fontFamily: "var(--ll-font-display)", fontSize: "clamp(32px, 4vw, 44px)", fontWeight: 600, lineHeight: 1.05, letterSpacing: "-.03em", color: "var(--ll-on-ink-1)", margin: 0 }}>
           {title}
         </h1>
         <p style={{ ...body, fontSize: 14, color: "var(--ll-on-ink-3)", margin: "16px 0 0" }}>
@@ -50,7 +50,7 @@ export function LegalPage({
 
       <div className="ll-legal-grid" style={{ display: "grid", gridTemplateColumns: "260px minmax(0, 760px)", gap: 64, alignItems: "start" }}>
         <nav aria-label="Table of contents" className="ll-legal-toc" style={{ position: "sticky", top: 100 }}>
-          <p style={{ ...body, fontSize: 12, fontWeight: 700, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--ll-on-ink-3)", margin: "0 0 16px" }}>
+          <p style={{ ...body, fontSize: 14, fontWeight: 500, color: "var(--ll-on-ink-3)", margin: "0 0 16px" }}>
             Contents
           </p>
           <ol style={{ listStyle: "none", margin: 0, padding: 0 }}>
@@ -69,14 +69,14 @@ export function LegalPage({
       </div>
 
       <style>{`
-        .ll-legal-toc-link:hover { color: #fff !important; }
+        .ll-legal-toc-link:hover { color: var(--ll-on-ink-1) !important; }
         .ll-legal-link { color: var(--ll-accent); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(78,205,196,.35); transition: text-decoration-color .2s; }
         .ll-legal-link:hover { text-decoration-color: var(--ll-accent); }
         article p { margin: 0 0 16px; }
         article ul { margin: 0 0 18px; padding-left: 22px; }
         article li { margin-bottom: 8px; }
         article li::marker { color: var(--ll-accent); }
-        article strong { color: #fff; font-weight: 700; }
+        article strong { color: var(--ll-on-ink-1); font-weight: 700; }
         @media (max-width: 1023px) {
           .ll-legal-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 40px !important; }
           .ll-legal-toc { position: static !important; padding: 20px 22px; border: 1px solid var(--ll-ink-line); border-radius: 14px; background: var(--ll-ink-2); }
@@ -99,7 +99,7 @@ export function Section({
 }) {
   return (
     <section id={id} style={{ scrollMarginTop: 96, marginBottom: 52 }}>
-      <h2 style={{ fontFamily: "var(--ll-font-display)", fontSize: 24, fontWeight: 700, lineHeight: 1.25, letterSpacing: "-.02em", color: "#fff", margin: "0 0 18px", display: "flex", gap: 14 }}>
+      <h2 style={{ fontFamily: "var(--ll-font-display)", fontSize: 24, fontWeight: 700, lineHeight: 1.25, letterSpacing: "-.02em", color: "var(--ll-on-ink-1)", margin: "0 0 18px", display: "flex", gap: 14 }}>
         <span style={{ color: "var(--ll-accent)", flexShrink: 0 }}>{number}.</span>
         <span>{title}</span>
       </h2>
@@ -111,7 +111,7 @@ export function Section({
 export function Sub({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginTop: 26 }}>
-      <h3 style={{ fontFamily: "var(--ll-font-display)", fontSize: 17, fontWeight: 700, color: "#fff", margin: "0 0 10px" }}>{title}</h3>
+      <h3 style={{ fontFamily: "var(--ll-font-display)", fontSize: 17, fontWeight: 700, color: "var(--ll-on-ink-1)", margin: "0 0 10px" }}>{title}</h3>
       {children}
     </div>
   );
@@ -120,7 +120,7 @@ export function Sub({ title, children }: { title: string; children: React.ReactN
 /** Emphasised legal notice (e.g. the all-caps banner at the top of the Terms). */
 export function Notice({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ padding: "20px 22px", marginBottom: 36, borderLeft: "3px solid var(--ll-accent)", borderRadius: "0 14px 14px 0", background: "rgba(78,205,196,.06)", color: "#fff", fontSize: 14.5, lineHeight: 1.65, fontWeight: 600 }}>
+    <div style={{ padding: "20px 22px", marginBottom: 36, borderLeft: "3px solid var(--ll-accent)", borderRadius: "0 14px 14px 0", background: "rgba(78,205,196,.06)", color: "var(--ll-on-ink-1)", fontSize: 14.5, lineHeight: 1.65, fontWeight: 600 }}>
       {children}
     </div>
   );
@@ -172,7 +172,7 @@ export function LegalTable({ columns, rows }: { columns: string[]; rows: LegalTa
         <thead>
           <tr style={{ background: "var(--ll-ink-3)" }}>
             {columns.map((c) => (
-              <th key={c} scope="col" style={{ textAlign: "left", padding: "12px 14px", fontWeight: 700, color: "#fff", fontSize: 12.5, letterSpacing: ".04em", textTransform: "uppercase", borderBottom: "1px solid var(--ll-ink-line)", whiteSpace: "nowrap" }}>
+              <th key={c} scope="col" style={{ textAlign: "left", padding: "12px 14px", fontWeight: 700, color: "var(--ll-on-ink-1)", fontSize: 12.5, letterSpacing: ".04em", textTransform: "uppercase", borderBottom: "1px solid var(--ll-ink-line)", whiteSpace: "nowrap" }}>
                 {c}
               </th>
             ))}
@@ -201,7 +201,7 @@ export function LegalTable({ columns, rows }: { columns: string[]; rows: LegalTa
 export function ContactCard({ heading, rows }: { heading: string; rows: { label: string; value: React.ReactNode }[] }) {
   return (
     <div style={{ marginTop: 8, padding: "22px 24px", border: "1px solid var(--ll-ink-line)", borderRadius: 16, background: "var(--ll-ink-2)" }}>
-      <p style={{ margin: "0 0 14px", fontFamily: "var(--ll-font-display)", fontWeight: 700, fontSize: 14, letterSpacing: ".06em", textTransform: "uppercase", color: "#fff" }}>{heading}</p>
+      <p style={{ margin: "0 0 14px", fontFamily: "var(--ll-font-display)", fontWeight: 700, fontSize: 14, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--ll-on-ink-1)" }}>{heading}</p>
       <dl style={{ margin: 0, display: "grid", gridTemplateColumns: "max-content 1fr", columnGap: 18, rowGap: 8, fontSize: 14.5 }}>
         {rows.map((r) => (
           <React.Fragment key={r.label}>

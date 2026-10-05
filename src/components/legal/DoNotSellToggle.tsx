@@ -41,7 +41,7 @@ export function DoNotSellToggle() {
         background: "linear-gradient(135deg, rgba(78,205,196,.10), rgba(21,31,108,.18))",
       }}
     >
-      <p style={{ margin: "0 0 6px", fontFamily: "var(--ll-font-display)", fontWeight: 700, fontSize: 18, color: "#fff" }}>
+      <p style={{ margin: "0 0 6px", fontFamily: "var(--ll-font-display)", fontWeight: 700, fontSize: 18, color: "var(--ll-on-ink-1)" }}>
         Do Not Sell or Share My Personal Information
       </p>
       <p style={{ margin: "0 0 20px", fontSize: 14.5, lineHeight: 1.6, color: "var(--ll-on-ink-2)" }}>
@@ -64,7 +64,7 @@ export function DoNotSellToggle() {
             border: "none",
             padding: 0,
             cursor: gpc ? "not-allowed" : "pointer",
-            background: on ? "var(--ll-accent)" : "rgba(255,255,255,.14)",
+            background: on ? "var(--ll-accent)" : "rgba(20,24,43,.18)",
             transition: "background .25s",
             flexShrink: 0,
             opacity: optedOut === null ? 0.5 : 1,
@@ -83,7 +83,7 @@ export function DoNotSellToggle() {
             }}
           />
         </button>
-        <span style={{ fontSize: 14.5, fontWeight: 600, color: "#fff" }} aria-live="polite">
+        <span style={{ fontSize: 14.5, fontWeight: 600, color: "var(--ll-on-ink-1)" }} aria-live="polite">
           {optedOut === null
             ? "Checking your preference…"
             : on

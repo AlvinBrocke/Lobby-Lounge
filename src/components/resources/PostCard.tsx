@@ -14,10 +14,10 @@ export function PostCard({ post, priority }: { post: Post; priority?: boolean })
         )}
       </div>
       <div style={{ padding: "20px 22px 24px", display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
-        <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--ll-accent)" }}>
+        <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "var(--ll-accent)" }}>
           {post.category}
         </p>
-        <h2 style={{ margin: 0, fontFamily: "var(--ll-font-display)", fontSize: 20, fontWeight: 700, lineHeight: 1.3, letterSpacing: "-.01em", color: "#fff" }}>
+        <h2 style={{ margin: 0, fontFamily: "var(--ll-font-display)", fontSize: 20, fontWeight: 700, lineHeight: 1.3, letterSpacing: "-.01em", color: "var(--ll-on-ink-1)" }}>
           {post.title}
         </h2>
         <p className="ll-clamp-3" style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: "var(--ll-on-ink-2)" }}>

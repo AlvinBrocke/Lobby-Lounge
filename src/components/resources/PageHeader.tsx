@@ -12,10 +12,10 @@ export function PageHeader({
 }) {
   return (
     <header style={{ marginBottom: 48, paddingBottom: 32, borderBottom: "1px solid var(--ll-ink-line)" }}>
-      <div style={{ fontFamily: "var(--ll-font-body)", fontSize: 12, fontWeight: 700, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--ll-accent)", margin: "0 0 14px" }}>
+      <div style={{ fontFamily: "var(--ll-font-body)", fontSize: 14, fontWeight: 500, color: "var(--ll-accent)", margin: "0 0 14px" }}>
         {eyebrow}
       </div>
-      <h1 style={{ fontFamily: "var(--ll-font-display)", fontSize: "clamp(34px, 5vw, 54px)", fontWeight: 800, lineHeight: 1.08, letterSpacing: "-.03em", color: "#fff", margin: 0 }}>
+      <h1 style={{ fontFamily: "var(--ll-font-display)", fontSize: "clamp(32px, 4vw, 44px)", fontWeight: 600, lineHeight: 1.08, letterSpacing: "-.03em", color: "var(--ll-on-ink-1)", margin: 0 }}>
         {title}
       </h1>
       {children && (

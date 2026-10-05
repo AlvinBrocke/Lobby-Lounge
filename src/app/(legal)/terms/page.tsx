@@ -65,7 +65,7 @@ export default function TermsOfServicePage() {
       </Section>
 
       <Section id="disclaimers" number={6} title={sectionTitle(sections, "disclaimers")}>
-        <p style={{ color: "#fff", fontWeight: 600 }}>
+        <p style={{ color: "var(--ll-on-ink-1)", fontWeight: 600 }}>
           SERVICES ARE PROVIDED &quot;AS IS&quot; WITHOUT WARRANTIES OF ANY KIND. IN NO EVENT SHALL COMPANY BE LIABLE FOR INDIRECT, CONSEQUENTIAL, PUNITIVE, OR LOST PROFIT DAMAGES. AGGREGATE LIABILITY IS STRICTLY LIMITED TO THE FEES ACTUALLY PAID BY CUSTOMER IN THE PRECEDING TWELVE (12) MONTHS.
         </p>
       </Section>
