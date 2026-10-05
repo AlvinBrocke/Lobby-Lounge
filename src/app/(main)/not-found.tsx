@@ -12,7 +12,6 @@ export default function AppNotFound() {
       {/* Code */}
       <p
         className="text-[72px] font-bold leading-none text-primary mb-4"
-        style={{ fontFamily: "'Poppins', sans-serif" }}
       >
         404
       </p>
@@ -20,7 +19,6 @@ export default function AppNotFound() {
       {/* Text */}
       <h1
         className="text-xl font-bold text-foreground mb-2"
-        style={{ fontFamily: "'Poppins', sans-serif" }}
       >
         Page not found
       </h1>

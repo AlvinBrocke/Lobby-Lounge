@@ -25,7 +25,6 @@ function SectionHeading({ title, blurb }: { title: string; blurb?: string }) {
     <div className="mb-3">
       <h2
         className="text-[17px] font-bold text-foreground tracking-tight"
-        style={{ fontFamily: "'Poppins', sans-serif" }}
       >
         {title}
       </h2>

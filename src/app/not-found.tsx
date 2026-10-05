@@ -18,7 +18,6 @@ export default function NotFound() {
         {/* Code */}
         <p
           className="text-[88px] font-bold leading-none text-[#4ECDC4]"
-          style={{ fontFamily: "'Poppins', sans-serif" }}
         >
           404
         </p>
@@ -27,7 +26,6 @@ export default function NotFound() {
         <div>
           <h1
             className="text-2xl font-bold text-white mb-2"
-            style={{ fontFamily: "'Poppins', sans-serif" }}
           >
             Page not found
           </h1>

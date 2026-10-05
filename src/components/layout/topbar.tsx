@@ -29,7 +29,6 @@ export function Topbar() {
       <div className="shrink-0">
         <div
           className="font-bold text-base text-foreground"
-          style={{ fontFamily: "'Poppins', sans-serif" }}
         >
           {greeting}, {userName}
         </div>

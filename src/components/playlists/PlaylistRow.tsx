@@ -99,7 +99,6 @@ export function PlaylistRow({
               "text-[15px] font-bold truncate",
               active ? "text-primary" : "text-foreground",
             )}
-            style={{ fontFamily: "'Poppins', sans-serif" }}
           >
             {playlist.name}
           </div>

@@ -200,7 +200,6 @@ export default function PlaylistDetailPage() {
           </span>
           <h1
             className="text-3xl font-bold tracking-tight text-foreground mt-1 break-words"
-            style={{ fontFamily: "'Poppins', sans-serif" }}
           >
             {playlist.name}
           </h1>

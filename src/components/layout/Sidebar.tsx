@@ -127,13 +127,11 @@ export function Sidebar() {
       <div className="mx-3 mb-3 p-4 rounded-xl bg-gradient-to-br from-[rgba(78,205,196,0.11)] to-[rgba(68,160,141,0.05)] border border-[rgba(78,205,196,0.16)]">
         <div
           className="text-[9px] font-bold tracking-[0.12em] text-primary mb-1 uppercase"
-          style={{ fontFamily: "'Poppins', sans-serif" }}
         >
           Premium Trial
         </div>
         <div
           className="text-base font-bold text-foreground mb-0.5"
-          style={{ fontFamily: "'Poppins', sans-serif" }}
         >
           12 days left
         </div>

@@ -34,7 +34,6 @@ export function Modal({ title, onClose, children, className }: ModalProps) {
         <div className="flex items-center justify-between mb-5">
           <h2
             className="text-lg font-bold text-foreground"
-            style={{ fontFamily: "'Poppins', sans-serif" }}
           >
             {title}
           </h2>
