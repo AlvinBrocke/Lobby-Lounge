@@ -54,9 +54,9 @@ export const Navigation = () => {
           <Image
             src="/images/ll-logo-white.png"
             alt="Lobby & Lounge"
-            width={160}
+            width={71}
             height={30}
-            style={{ height: 30, width: "auto", objectFit: "contain", display: "block" }}
+            style={{ objectFit: "contain", display: "block" }}
             priority
           />
         </Link>

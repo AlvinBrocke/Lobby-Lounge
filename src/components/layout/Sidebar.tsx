@@ -57,18 +57,18 @@ export function Sidebar() {
           <Image
             src="/images/ll-logo-color.png"
             alt="Lobby & Lounge"
-            width={1548}
-            height={652}
+            width={81}
+            height={34}
             priority
-            className="block dark:hidden h-[34px] w-auto"
+            className="block dark:hidden object-contain"
           />
           <Image
             src="/images/ll-logo-white.png"
             alt="Lobby & Lounge"
-            width={1548}
-            height={652}
+            width={81}
+            height={34}
             priority
-            className="hidden dark:block h-[34px] w-auto"
+            className="hidden dark:block object-contain"
           />
         </div>
         <button

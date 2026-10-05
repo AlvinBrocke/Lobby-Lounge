@@ -76,9 +76,9 @@ export const Footer = () => {
               <Image
                 src="/images/ll-logo-white.png"
                 alt="Lobby & Lounge"
-                width={140}
+                width={62}
                 height={26}
-                style={{ height: 26, width: "auto", objectFit: "contain" }}
+                style={{ objectFit: "contain" }}
               />
             </a>
             <p style={{ margin: "18px 0 22px", maxWidth: 280, fontFamily: "var(--ll-font-body)", fontSize: 14, lineHeight: 1.6, color: "var(--ll-on-ink-3)" }}>
