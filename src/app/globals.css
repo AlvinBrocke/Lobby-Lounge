@@ -15,6 +15,7 @@
   --ll-ink-2: #151B22;
   --ll-ink-3: #1A222B;
   --ll-ink-line: #232c36;
+  --ll-on-ink-1: #FFFFFF;
   --ll-on-ink-2: #AEB8C4;
   --ll-on-ink-3: #6C7783;
   --ll-grad-product: linear-gradient(120deg, #4ECDC4 0%, #44A08D 100%);
@@ -41,6 +42,7 @@
   --ll-ink-2: #FFFFFF;
   --ll-ink-3: var(--ll-paper-2);
   --ll-ink-line: var(--ll-line);
+  --ll-on-ink-1: var(--ll-text);
   --ll-on-ink-2: var(--ll-text-2);
   --ll-on-ink-3: #6B7180;
   --ll-accent: var(--ll-teal-ink);
@@ -49,76 +51,79 @@
   color: var(--ll-text);
 }
 
-/* Marketing type scale — deliberately modest */
-.ll-h1 {
-  font-size: clamp(40px, 5vw, 60px);
-  font-weight: 600;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
-  text-wrap: balance;
-}
-.ll-h2 {
-  font-size: clamp(30px, 3.4vw, 42px);
-  font-weight: 600;
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-  text-wrap: balance;
-}
-.ll-h3 {
-  font-size: 19px;
-  font-weight: 600;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
-}
-.ll-lead {
-  font-size: 18px;
-  line-height: 1.6;
-  color: var(--ll-text-2);
-  max-width: 34rem;
-  text-wrap: pretty;
-}
-.ll-eyebrow {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--ll-teal-ink);
-}
-.ll-container {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-@media (min-width: 768px) {
-  .ll-container { padding: 0 40px; }
-}
+/* In @layer components so Tailwind utilities (mt-*, pb-*…) can override them. */
+@layer components {
+  /* Marketing type scale — deliberately modest */
+  .ll-h1 {
+    font-size: clamp(40px, 5vw, 60px);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+  }
+  .ll-h2 {
+    font-size: clamp(30px, 3.4vw, 42px);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+  .ll-h3 {
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+  .ll-lead {
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--ll-text-2);
+    max-width: 34rem;
+    text-wrap: pretty;
+  }
+  .ll-eyebrow {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ll-teal-ink);
+  }
+  .ll-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  @media (min-width: 768px) {
+    .ll-container { padding: 0 40px; }
+  }
 
-/* Buttons */
-.ll-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 44px;
-  padding: 0 20px;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 500;
-  white-space: nowrap;
-  transition: background-color .2s, color .2s, border-color .2s, transform .1s;
+  /* Buttons */
+  .ll-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 20px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background-color .2s, color .2s, border-color .2s, transform .1s;
+  }
+  .ll-btn:active { transform: translateY(1px); }
+  .ll-btn:focus-visible,
+  .ll-link:focus-visible {
+    outline: 2px solid var(--ll-teal-ink);
+    outline-offset: 2px;
+  }
+  .ll-btn-primary { background: var(--ll-navy); color: #fff; }
+  .ll-btn-primary:hover { background: #1d2a8a; }
+  .ll-btn-secondary { background: transparent; color: var(--ll-text); border: 1px solid var(--ll-line); }
+  .ll-btn-secondary:hover { border-color: #c9c6bb; background: #fff; }
+  .ll-btn-light { background: #fff; color: var(--ll-navy); }
+  .ll-btn-light:hover { background: var(--ll-paper-2); }
+  .ll-link { transition: color .2s; }
 }
-.ll-btn:active { transform: translateY(1px); }
-.ll-btn:focus-visible,
-.ll-link:focus-visible {
-  outline: 2px solid var(--ll-teal-ink);
-  outline-offset: 2px;
-}
-.ll-btn-primary { background: var(--ll-navy); color: #fff; }
-.ll-btn-primary:hover { background: #1d2a8a; }
-.ll-btn-secondary { background: transparent; color: var(--ll-text); border: 1px solid var(--ll-line); }
-.ll-btn-secondary:hover { border-color: #c9c6bb; background: #fff; }
-.ll-btn-light { background: #fff; color: var(--ll-navy); }
-.ll-btn-light:hover { background: var(--ll-paper-2); }
-.ll-link { transition: color .2s; }
 
 /* EQ bars animation */
 @keyframes ll-eq {

@@ -1,98 +1,31 @@
-"use client";
-
 import React from "react";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
-const ArrowIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 18, height: 18 }}>
-    <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-  </svg>
-);
+// The page's one dark block: brand navy with the soundwave asset, kept static.
+export const CallToAction = () => (
+  <section className="ll-container pb-24 md:pb-32">
+    <div className="relative overflow-hidden rounded-3xl bg-ll-navy px-6 py-16 text-white md:px-16 md:py-20">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-cover bg-center opacity-20 mix-blend-screen"
+        style={{ backgroundImage: "url('/images/LL soundwave3.png')" }}
+      />
 
-export const CallToAction = () => {
-  return (
-    <section style={{ position: "relative", overflow: "hidden", background: "var(--ll-ink-1)", color: "#fff", padding: "130px 0", textAlign: "center" }}>
-      {/* BG radials */}
-      <div style={{
-        position: "absolute", inset: 0, zIndex: 0,
-        background: "radial-gradient(70% 120% at 50% 0%, rgba(44,181,176,.22), transparent 60%), radial-gradient(80% 120% at 50% 120%, rgba(21,31,108,.5), transparent 55%)",
-        pointerEvents: "none",
-      }} />
-
-      <div style={{ position: "relative", zIndex: 2, width: "100%", maxWidth: 1240, margin: "0 auto", padding: "0 32px" }}>
-        <h2
-          data-ll-reveal
-          style={{
-            fontFamily: "var(--ll-font-display)",
-            fontSize: "clamp(46px, 7vw, 92px)",
-            fontWeight: 800,
-            lineHeight: .95,
-            letterSpacing: "-.035em",
-            margin: 0,
-          }}
-        >
-          Start playing today
-        </h2>
-
-        <p
-          data-ll-reveal
-          data-ll-delay="1"
-          style={{
-            maxWidth: 560,
-            margin: "26px auto 0",
-            fontFamily: "var(--ll-font-body)",
-            fontSize: "clamp(17px,2vw,20px)",
-            lineHeight: 1.6,
-            color: "var(--ll-on-ink-2)",
-          }}
-        >
+      <div className="relative max-w-xl">
+        <h2 data-ll-reveal className="ll-h2">Start playing today</h2>
+        <p data-ll-reveal data-ll-delay="1" className="mt-4 text-lg leading-relaxed text-white/75">
           Set the perfect atmosphere in minutes — just open the app. Free for your first month, no credit card required.
         </p>
-
-        <div data-ll-reveal data-ll-delay="1" style={{ marginTop: 40, display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-          <a
-            href="/signup"
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 9,
-              fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 16,
-              padding: "19px 34px", borderRadius: 999,
-              background: "var(--ll-accent)", color: "var(--ll-accent-ink)",
-              boxShadow: "0 12px 30px -8px rgba(78,205,196,.6)",
-              transition: "transform .25s, box-shadow .25s",
-              position: "relative", overflow: "hidden",
-            }}
-            className="ll-btn-primary"
-          >
-            Sign up now <ArrowIcon />
-          </a>
-          <a
-            href="#pricing"
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 9,
-              fontFamily: "var(--ll-font-body)", fontWeight: 700, fontSize: 16,
-              padding: "19px 34px", borderRadius: 999,
-              background: "transparent", color: "#fff",
-              border: "1.5px solid rgba(255,255,255,.28)",
-              transition: "transform .25s, border-color .25s, color .25s",
-            }}
-            className="ll-btn-ghost"
-          >
+        <div data-ll-reveal data-ll-delay="1" className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+          <Link href="/signup" className="ll-btn ll-btn-light">
+            Sign up now <ArrowRight className="h-4 w-4" aria-hidden />
+          </Link>
+          <a href="#pricing" className="ll-link rounded-sm text-[15px] font-medium text-white/80 underline-offset-4 hover:text-white hover:underline">
             View pricing
           </a>
         </div>
-
       </div>
-
-      <style>{`
-        .ll-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 18px 40px -8px rgba(78,205,196,.7) !important; }
-        .ll-btn-primary::after {
-          content: ""; position: absolute; top: 0; left: -130%;
-          width: 55%; height: 100%; transform: skewX(-18deg);
-          background: linear-gradient(100deg, transparent, rgba(255,255,255,.38), transparent);
-          pointer-events: none;
-        }
-        .ll-btn-primary:hover::after { animation: ll-btn-shine .85s var(--ll-ease); }
-        .ll-btn-ghost:hover { border-color: var(--ll-accent) !important; color: var(--ll-accent) !important; transform: translateY(-2px); }
-      `}</style>
-    </section>
-  );
-};
+    </div>
+  </section>
+);

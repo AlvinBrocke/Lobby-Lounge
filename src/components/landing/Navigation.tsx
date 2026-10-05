@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 const links = [
   { label: "Licensing", href: "/home#licensing" },
@@ -17,7 +18,7 @@ export const Navigation = () => {
   const [stuck, setStuck] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setStuck(window.scrollY > 24);
+    const onScroll = () => setStuck(window.scrollY > 8);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -25,117 +26,47 @@ export const Navigation = () => {
 
   return (
     <header
-      style={{
-        position: "fixed",
-        inset: "0 0 auto 0",
-        zIndex: 100,
-        transition: "background .3s, border-color .3s, backdrop-filter .3s",
-        borderBottom: stuck ? "1px solid #232c36" : "1px solid transparent",
-        background: stuck
-          ? "color-mix(in oklab, #0A0E12 78%, transparent)"
-          : "transparent",
-        backdropFilter: stuck ? "blur(16px) saturate(1.2)" : "none",
-      }}
+      className={cn(
+        "fixed inset-x-0 top-0 z-50 border-b transition-colors duration-200",
+        stuck ? "border-ll-line bg-[rgba(250,250,247,0.88)] backdrop-blur-md" : "border-transparent bg-ll-paper"
+      )}
     >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 1240,
-          margin: "0 auto",
-          padding: "0 32px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          height: 76,
-        }}
-      >
-        {/* Logo */}
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 11, transition: "transform .3s", flexShrink: 0 }}>
+      <div className="ll-container flex h-[68px] items-center justify-between gap-6">
+        <Link href="/" className="ll-link shrink-0 rounded-md">
           <Image
-            src="/images/ll-logo-white.png"
+            src="/images/ll-logo-color.png"
             alt="Lobby & Lounge"
-            width={71}
-            height={30}
-            style={{ objectFit: "contain", display: "block" }}
+            width={76}
+            height={32}
+            className="block h-8 w-auto"
             priority
           />
         </Link>
 
-        {/* Nav links */}
-        <nav style={{ alignItems: "center", gap: 36 }} className="hidden lg:flex">
-          {links.map(({ label, href }) => {
-            return (
-              <a
-                key={href}
-                href={href}
-                style={{
-                  fontFamily: "var(--ll-font-body)",
-                  fontWeight: 600,
-                  fontSize: 14.5,
-                  color: "rgba(255,255,255,.82)",
-                  position: "relative",
-                  paddingBottom: 7,
-                  whiteSpace: "nowrap",
-                  transition: "color .2s",
-                }}
-                className="ll-nav-link"
-              >
-                {label}
-              </a>
-            );
-          })}
+        <nav aria-label="Main" className="hidden items-center gap-8 lg:flex">
+          {links.map(({ label, href }) => (
+            <a
+              key={href}
+              href={href}
+              className="ll-link rounded-sm text-[15px] font-medium text-ll-text-2 hover:text-ll-text"
+            >
+              {label}
+            </a>
+          ))}
         </nav>
 
-        {/* Actions */}
-        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+        <div className="flex items-center gap-5">
           <Link
             href="/signin"
-            style={{
-              fontFamily: "var(--ll-font-body)",
-              fontWeight: 600,
-              fontSize: 14.5,
-              color: "rgba(255,255,255,.9)",
-              whiteSpace: "nowrap",
-            }}
-            className="hidden sm:block"
+            className="ll-link hidden rounded-sm text-[15px] font-medium text-ll-text-2 hover:text-ll-text sm:block"
           >
             Log in
           </Link>
-          <Link
-            href="/signup"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              fontFamily: "var(--ll-font-body)",
-              fontWeight: 700,
-              fontSize: 14,
-              padding: "12px 20px",
-              borderRadius: 999,
-              background: "var(--ll-accent)",
-              color: "var(--ll-accent-ink)",
-              boxShadow: "0 12px 30px -8px rgba(78,205,196,.6)",
-              transition: "transform .25s, box-shadow .25s",
-              whiteSpace: "nowrap",
-            }}
-          >
+          <Link href="/signup" className="ll-btn ll-btn-primary h-10 px-4">
             Try it free
           </Link>
         </div>
       </div>
-
-      <style>{`
-        .ll-nav-link::after {
-          content: "";
-          position: absolute;
-          left: 0; right: 100%; bottom: 0;
-          height: 2px; border-radius: 2px;
-          background: var(--ll-accent);
-          transition: right .3s var(--ll-ease);
-        }
-        .ll-nav-link:hover::after { right: 0; }
-        .ll-nav-link:hover { color: #fff !important; }
-      `}</style>
     </header>
   );
 };
