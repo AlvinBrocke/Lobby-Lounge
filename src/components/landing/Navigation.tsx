@@ -5,10 +5,10 @@ import Link from "next/link";
 import Image from "next/image";
 
 const links = [
-  { label: "Licensing", href: "/landing-page#licensing" },
-  { label: "How it works", href: "/landing-page#how-it-works" },
-  { label: "Business types", href: "/landing-page#business-types" },
-  { label: "Pricing", href: "/landing-page#pricing" },
+  { label: "Licensing", href: "/home#licensing" },
+  { label: "How it works", href: "/home#how-it-works" },
+  { label: "Business types", href: "/home#business-types" },
+  { label: "Pricing", href: "/home#pricing" },
   { label: "Blog", href: "/blog" },
   { label: "Help", href: "/help" },
 ];

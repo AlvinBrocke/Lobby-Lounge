@@ -30,17 +30,17 @@ const footerCols = [
   {
     title: "Product",
     links: [
-      { label: "Licensing", href: "/landing-page#licensing" },
-      { label: "How it works", href: "/landing-page#how-it-works" },
-      { label: "Business types", href: "/landing-page#business-types" },
-      { label: "Pricing", href: "/landing-page#pricing" },
+      { label: "Licensing", href: "/home#licensing" },
+      { label: "How it works", href: "/home#how-it-works" },
+      { label: "Business types", href: "/home#business-types" },
+      { label: "Pricing", href: "/home#pricing" },
     ],
   },
   {
     title: "Company",
     links: [
       { label: "About", href: "#" },
-      { label: "Research", href: "/landing-page#results" },
+      { label: "Research", href: "/home#results" },
       { label: "Talk to sales", href: "mailto:hello@lobbylounge.com" },
     ],
   },
@@ -49,7 +49,7 @@ const footerCols = [
     links: [
       { label: "Blog", href: "/blog" },
       { label: "Help Center", href: "/help" },
-      { label: "Licensing", href: "/landing-page#licensing" },
+      { label: "Licensing", href: "/home#licensing" },
     ],
   },
 ];

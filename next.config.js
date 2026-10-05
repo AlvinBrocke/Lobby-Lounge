@@ -16,6 +16,11 @@ const nextConfig = {
 turbopack: {
     root: __dirname,
   },
+  // The marketing page moved from /landing-page to /home; keep old links and
+  // search results working (308 = permanent, and keeps the #section anchor).
+  async redirects() {
+    return [{ source: "/landing-page", destination: "/home", permanent: true }];
+  },
 };
 
 module.exports = withMDX(nextConfig);
