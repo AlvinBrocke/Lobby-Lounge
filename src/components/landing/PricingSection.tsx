@@ -16,7 +16,7 @@ const plan = {
   desc: "Everything a single venue needs to sound great.",
   features: [
     "Full licensed catalogue — 1,000+ tracks",
-    "Curated channels & weekly scheduling",
+    "Curated playlists & weekly scheduling",
     "Your own playlists",
     "Web app — any device",
     "No credit card to start — cancel anytime",

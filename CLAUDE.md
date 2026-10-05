@@ -57,7 +57,7 @@ Clerk issues the session JWT; the app never mints its own tokens. Authorization 
 
 1. **Middleware** — `src/proxy.ts` (**not** `middleware.ts`; Next.js 16 convention, do not rename). Shallow check only: reads the session JWT, never the database. Protected routes: `/dashboard`, `/account`, `/explore`, `/schedule`, `/playlists`, `/library`, `/settings`.
 2. **Data Access Layer** — `src/lib/session.ts`. Any server code (Server Components, layouts, Server Actions) that needs the current user goes through `verifySession()` (redirects) or `getSession()` (nullable). `getConvexToken()` returns the Clerk JWT for calling Convex from the server with `fetchQuery`/`fetchMutation` from `convex/nextjs`. `src/app/(main)/layout.tsx` calls `verifySession()` so nothing under `(main)` renders signed-out.
-3. **Convex** — `requireUser()` / `assertOwner()` in `convex/lib/auth.ts` on every user-scoped function. Shared-catalog writes (`channels.*`, `tracks.*` create/update/remove/seed, `jamendo.*`) are `internalMutation` / `internalAction` — callable only from other Convex functions or `npx convex run`, never from the browser.
+3. **Convex** — `requireUser()` / `assertOwner()` in `convex/lib/auth.ts` on every user-scoped function. Shared-catalog writes (`playlists.seedCurated` / `appendTracks`, `tracks.*` create/update/remove/seed, `jamendo.*`) are `internalMutation` / `internalAction` — callable only from other Convex functions or `npx convex run`, never from the browser.
 
 **Onboarding gate:** `src/proxy.ts` reads `sessionClaims.metadata.onboardingComplete`, a custom session-token claim mirroring Clerk `publicMetadata.onboardingComplete`. It is set **only** by the `completeOnboarding` Server Action in `src/app/(auth)/signup/onboarding/actions.ts` (after the Convex profile write succeeds). Un-onboarded users on protected routes are sent to `/signup/onboarding`; onboarded users hitting that page are sent to `/dashboard`. `syncOnboardingClaim` backfills the claim for accounts whose Convex profile was completed before the claim existed. The claim's type lives in `types/globals.d.ts`. There is no `ll-onboarded` cookie any more.
 
@@ -82,14 +82,26 @@ NEXT_PUBLIC_CONVEX_SITE_URL
 Optional:
 
 ```
-NEXT_PUBLIC_STRIPE_PREMIUM_PAYMENT_LINK   # https://buy.stripe.com/... — Premium plan CTA on the landing page
+NEXT_PUBLIC_STRIPE_PREMIUM_PAYMENT_LINK   # https://buy.stripe.com/... — the in-app Subscribe button (trial banner, /account)
+NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL    # https://billing.stripe.com/p/login/... — "Manage subscription" on /account
 ```
 
-Billing is a Stripe **Payment Link** (a plain URL created in the Stripe Dashboard) — there is no Stripe SDK, secret key, or webhook in this repo. If the variable is unset, the Premium button falls back to `/signup`. After a customer pays, `userProfiles.plan` must be updated manually (e.g. `npx convex run userProfiles:...` or the Convex dashboard).
+Billing is a Stripe **Payment Link** (a plain URL created in the Stripe Dashboard) — there is no Stripe SDK, secret key, or webhook in this repo. The Subscribe link carries `client_reference_id=<Clerk user id>`, so each Stripe payment shows who paid. If the variable is unset, /account says checkout isn't available and the banner links to /account. The landing page CTA always goes to `/signup` (the trial comes first).
+
+**Trial & access** (`convex/lib/billing.ts`): `plan` is `"trial"` or `"basic"`. A trial lasts `TRIAL_DAYS` (30) from profile creation, unless `trialEndsAt` overrides it. When it ends, `playlists.getTracks` withholds `audioUrl` (browsing still works) and a banner prompts to subscribe. There's no webhook, so after a payment lands, flip the plan by hand (add `--prod` for production):
+
+```bash
+npx convex run userProfiles:setPlan '{"clerkUserId":"user_...","plan":"basic"}'
+npx convex run userProfiles:extendTrial '{"clerkUserId":"user_...","days":14}'   # days from now; default 30
+```
+
+Audio URLs are only ever returned by `playlists.getTracks`; `tracks.search` strips them and `tracks.list`/`get` are internal. Keep it that way, or the gate can be bypassed.
 
 `JAMENDO_CLIENT_ID` and `CLERK_JWT_ISSUER_DOMAIN` are **not** Next.js env vars — they're read Convex-side (`convex/jamendo.ts` and `convex/auth.config.ts`), so they must be set via the Convex CLI (`npx convex env set JAMENDO_CLIENT_ID <value>`, add `--prod` for production), not in `.env.local`.
 
-The landing page claims "1,000+ tracks". A fresh deployment starts with ~120 (15 per channel), so after seeding channels run `npx convex run jamendo:syncAllChannels '{"limit":150}'` (add `--prod` for production) to bring the catalogue above 1,000. The weekly cron tops it up from there.
+There are no channels: the catalogue is **curated playlists** — `playlists` rows with `curated: true` and no `clerkUserId`, grouped into `section: "daytime" | "evening"` on the Playlists page. Users can read them but never modify them (`assertOwner` rejects ownerless docs). Schedule blocks point at a playlist via `playlistId`.
+
+The landing page claims "1,000+ tracks". A fresh deployment has none, so run `npx convex run playlists:seedCurated` then `npx convex run jamendo:syncAllCurated '{"limit":150}'` (add `--prod` for production) to bring the catalogue above 1,000. The weekly cron tops it up from there.
 
 ## Git workflow
 
@@ -101,17 +113,15 @@ The landing page claims "1,000+ tracks". A fresh deployment starts with ~120 (15
 
 ```
 src/app/(auth)/     — sign-in, sign-up, onboarding routes
-src/app/(main)/     — protected app routes (dashboard, settings, etc.)
-src/app/(resources)/ — public /blog and /help (same Navigation/Footer shell as (legal))
-src/content/blog/   — one .mdx per post (exports `meta`); register new posts in src/content/blog/index.ts
-src/content/help.ts — Help Center categories and Q&As
+src/app/(main)/     — protected app routes (playlists, schedule, settings, etc.; `/dashboard` just redirects to `/playlists`)
 src/proxy.ts        — Clerk middleware (layer 1)
 src/lib/session.ts  — server-side session DAL (layer 2)
 types/globals.d.ts  — Clerk session-token claim types
 convex/             — Convex schema, queries, mutations
 convex/lib/auth.ts  — requireUser / assertOwner (layer 3)
-convex/jamendo.ts   — internal action that syncs real streamable tracks/audio from the Jamendo API into `channels`/`tracks` (`npx convex run jamendo:syncAllChannels`)
-convex/crons.ts     — weekly cron that re-runs `jamendo:syncAllChannels` (backs the "Curated weekly" claim on the landing page)
+convex/jamendo.ts   — internal action that syncs real streamable tracks/audio from the Jamendo API into the curated playlists (`npx convex run jamendo:syncAllCurated`)
+convex/lib/curated.ts — the curated playlist catalogue used by `playlists:seedCurated`
+convex/crons.ts     — weekly cron that re-runs `jamendo:syncAllCurated` (backs the "Curated weekly" claim on the landing page)
 ```
 
 Route groups use parentheses `(auth)` / `(main)` — these do not appear in URLs.

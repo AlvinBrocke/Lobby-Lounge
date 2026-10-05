@@ -6,9 +6,16 @@ const usePlayerStore = create<PlayerState>((set) => ({
   currentTrack: null,
   volume: 50,
   queue: [],
+  activePlaylistId: null,
 
   setIsPlaying: (isPlaying) => set({ isPlaying }),
-  setCurrentTrack: (track) => set({ currentTrack: track, isPlaying: true }),
+  // A single hand-picked track isn't "playing a playlist" any more.
+  setCurrentTrack: (track) => set({ currentTrack: track, isPlaying: true, activePlaylistId: null }),
+  playQueue: (tracks, playlistId) => {
+    const [first, ...rest] = tracks;
+    if (!first) return;
+    set({ currentTrack: first, queue: rest, isPlaying: true, activePlaylistId: playlistId ?? null });
+  },
   setVolume: (volume) => set({ volume }),
   addToQueue: (track) => set((state) => ({ queue: [...state.queue, track] })),
   clearQueue: () => set({ queue: [] }),

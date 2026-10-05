@@ -16,6 +16,8 @@ import {
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { useTheme } from "@/components/theme-provider";
 import { PasswordCard } from "@/components/settings/PasswordCard";
+import { useAccess } from "@/hooks/useAccess";
+import { PLAN_NAME } from "@/lib/billing";
 
 interface SessionInfo {
   id: string;
@@ -49,6 +51,7 @@ export default function SettingsPage() {
 
   const { isAuthenticated } = useConvexAuth();
   const profile = useQuery(api.userProfiles.get, isAuthenticated ? {} : "skip");
+  const access = useAccess();
   const saveProfile = useMutation(api.userProfiles.createOrUpdate);
 
   const [venueName, setVenueName] = useState("");
@@ -251,7 +254,13 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between py-3">
               <span className="text-muted-foreground">Subscription Plan</span>
               <span className="text-primary font-bold">
-                {profile?.plan ?? "trial"}
+                {!access
+                  ? "—"
+                  : access.access.status === "active"
+                    ? PLAN_NAME
+                    : access.access.status === "trial"
+                      ? `Free trial · ${access.daysLeft} ${access.daysLeft === 1 ? "day" : "days"} left`
+                      : "Trial ended"}
               </span>
             </div>
           </CardContent>

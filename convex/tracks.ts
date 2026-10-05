@@ -1,18 +1,11 @@
-import { internalMutation, query } from "./_generated/server";
+import { internalMutation, internalQuery, query } from "./_generated/server";
 import { v } from "convex/values";
+import { requireUser } from "./lib/auth";
 import { energyForCategory } from "./lib/energy";
 
-export const list = query({
-  args: {
-    channelId: v.optional(v.id("channels")),
-  },
-  handler: async (ctx, args) => {
-    if (args.channelId) {
-      return await ctx.db
-        .query("tracks")
-        .withIndex("by_channel", (q) => q.eq("channelId", args.channelId))
-        .collect();
-    }
+export const list = internalQuery({
+  args: {},
+  handler: async (ctx) => {
     return await ctx.db.query("tracks").collect();
   },
 });
@@ -25,17 +18,22 @@ export const list = query({
 export const search = query({
   args: { term: v.string(), limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
+    await requireUser(ctx);
     const limit = Math.min(args.limit ?? 25, 50);
     const term = args.term.trim();
-    if (!term) return await ctx.db.query("tracks").take(limit);
-    return await ctx.db
-      .query("tracks")
-      .withSearchIndex("search_name", (q) => q.search("name", term))
-      .take(limit);
+    const tracks = term
+      ? await ctx.db
+          .query("tracks")
+          .withSearchIndex("search_name", (q) => q.search("name", term))
+          .take(limit)
+      : await ctx.db.query("tracks").take(limit);
+    // Search is for adding songs, not playing them. Audio only comes from
+    // `playlists.getTracks`, which checks the caller's trial/plan.
+    return tracks.map(({ audioUrl: _audioUrl, ...track }) => track);
   },
 });
 
-export const get = query({
+export const get = internalQuery({
   args: { id: v.id("tracks") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
@@ -51,7 +49,6 @@ export const create = internalMutation({
     energy: v.optional(v.string()),
     audioUrl: v.optional(v.string()),
     coverImage: v.optional(v.string()),
-    channelId: v.optional(v.id("channels")),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("tracks", args);
@@ -68,7 +65,6 @@ export const update = internalMutation({
     energy: v.optional(v.string()),
     audioUrl: v.optional(v.string()),
     coverImage: v.optional(v.string()),
-    channelId: v.optional(v.id("channels")),
   },
   handler: async (ctx, args) => {
     const { id, ...fields } = args;
@@ -89,7 +85,7 @@ export const remove = internalMutation({
 /**
  * Fills in `energy` on tracks that predate the field.
  *
- * `jamendo.syncChannel` only sets `energy` on newly inserted tracks, and it
+ * `jamendo.syncPlaylist` only sets `energy` on newly inserted tracks, and it
  * skips tracks it has already synced — so rows written before the field existed
  * would otherwise stay unset forever.
  *
@@ -106,14 +102,7 @@ export const backfillEnergy = internalMutation({
 
     let patched = 0;
     for (const track of missing.slice(0, limit)) {
-      // Tracks carry the channel's category at insert time, but fall back to
-      // the channel itself for rows created before that was true.
-      let category = track.category;
-      if (!category && track.channelId) {
-        const channel = await ctx.db.get(track.channelId);
-        category = channel?.category;
-      }
-      await ctx.db.patch(track._id, { energy: energyForCategory(category) });
+      await ctx.db.patch(track._id, { energy: energyForCategory(track.category) });
       patched++;
     }
 

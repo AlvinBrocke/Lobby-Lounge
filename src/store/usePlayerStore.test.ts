@@ -13,6 +13,7 @@ beforeEach(() => {
     currentTrack: null,
     volume: 50,
     queue: [],
+    activePlaylistId: null,
   });
 });
 
@@ -91,5 +92,30 @@ describe("nextTrack", () => {
     expect(usePlayerStore.getState().currentTrack).toEqual(track3);
     usePlayerStore.getState().nextTrack();
     expect(usePlayerStore.getState().currentTrack).toBeNull();
+  });
+});
+
+describe("playQueue", () => {
+  it("plays the first track, queues the rest and remembers the playlist", () => {
+    usePlayerStore.getState().addToQueue(track3);
+    usePlayerStore.getState().playQueue([track1, track2], "pl_1");
+    const { currentTrack, queue, isPlaying, activePlaylistId } = usePlayerStore.getState();
+    expect(currentTrack).toEqual(track1);
+    expect(queue).toEqual([track2]); // replaces, doesn't append to, the old queue
+    expect(isPlaying).toBe(true);
+    expect(activePlaylistId).toBe("pl_1");
+  });
+
+  it("does nothing for an empty list", () => {
+    usePlayerStore.getState().setCurrentTrack(track1);
+    usePlayerStore.getState().playQueue([], "pl_1");
+    expect(usePlayerStore.getState().currentTrack).toEqual(track1);
+    expect(usePlayerStore.getState().activePlaylistId).toBeNull();
+  });
+
+  it("a single hand-picked track clears the active playlist", () => {
+    usePlayerStore.getState().playQueue([track1], "pl_1");
+    usePlayerStore.getState().setCurrentTrack(track2);
+    expect(usePlayerStore.getState().activePlaylistId).toBeNull();
   });
 });

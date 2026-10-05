@@ -6,7 +6,10 @@ export default defineSchema({
     clerkUserId: v.string(),
     displayName: v.optional(v.string()),
     venueName: v.optional(v.string()),
-    plan: v.string(), // 'trial' | 'pro' | etc.
+    plan: v.string(), // 'trial' | 'basic' — see convex/lib/billing.ts
+    // Overrides the default trial end (profile creation + TRIAL_DAYS), e.g. to
+    // extend a trial via `userProfiles:extendTrial`. Epoch ms.
+    trialEndsAt: v.optional(v.number()),
     genres: v.array(v.string()),
     mood: v.optional(v.string()),
     onboardingCompleted: v.boolean(),
@@ -19,15 +22,6 @@ export default defineSchema({
     guestDemographics: v.optional(v.array(v.string())),
   }).index("by_clerk_user", ["clerkUserId"]),
 
-  channels: defineTable({
-    name: v.string(),
-    description: v.optional(v.string()),
-    category: v.optional(v.string()),
-    bpm: v.optional(v.number()),
-    coverImage: v.optional(v.string()),
-    audioUrl: v.optional(v.string()),
-  }),
-
   tracks: defineTable({
     name: v.string(),
     artist: v.optional(v.string()),
@@ -36,18 +30,23 @@ export default defineSchema({
     energy: v.optional(v.string()), // 'low' | 'mid' | 'high'
     audioUrl: v.optional(v.string()),
     coverImage: v.optional(v.string()),
-    channelId: v.optional(v.id("channels")),
-  })
-    .index("by_channel", ["channelId"])
-    .searchIndex("search_name", { searchField: "name" }),
+  }).searchIndex("search_name", { searchField: "name" }),
 
   playlists: defineTable({
-    clerkUserId: v.string(),
+    // Absent on curated playlists, which ship with the app and have no owner.
+    clerkUserId: v.optional(v.string()),
     name: v.string(),
     description: v.optional(v.string()),
     coverImage: v.optional(v.string()),
     isPublic: v.boolean(),
-  }).index("by_clerk_user", ["clerkUserId"]),
+    // Curated catalogue playlists (the former "channels"). Readable by every
+    // signed-in user, writable only from internal functions.
+    curated: v.optional(v.boolean()),
+    category: v.optional(v.string()),
+    section: v.optional(v.union(v.literal("daytime"), v.literal("evening"))),
+  })
+    .index("by_clerk_user", ["clerkUserId"])
+    .index("by_curated", ["curated"]),
 
   playlistTracks: defineTable({
     playlistId: v.id("playlists"),
@@ -62,7 +61,7 @@ export default defineSchema({
     day: v.string(), // 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun'
     startHour: v.number(), // 0-23
     duration: v.number(), // hours
-    channelId: v.optional(v.id("channels")),
+    playlistId: v.optional(v.id("playlists")),
     title: v.optional(v.string()),
   }).index("by_clerk_user", ["clerkUserId"]),
 });
