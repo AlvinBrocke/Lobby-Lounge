@@ -52,7 +52,7 @@ export const Navigation = () => {
         {/* Logo */}
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: 11, transition: "transform .3s", flexShrink: 0 }}>
           <Image
-            src="/images/L&L White Logo.png"
+            src="/images/ll-logo-white.png"
             alt="Lobby & Lounge"
             width={160}
             height={30}

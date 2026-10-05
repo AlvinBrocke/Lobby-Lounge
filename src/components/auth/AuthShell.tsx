@@ -152,7 +152,7 @@ export function AuthShell({ children }: AuthShellProps) {
         {/* Logo */}
         <Link href="/" className="block w-fit">
           <Image
-            src="/images/L&L White Logo.png"
+            src="/images/ll-logo-white.png"
             alt="Lobby & Lounge"
             width={156}
             height={28}
@@ -260,7 +260,7 @@ export function AuthShell({ children }: AuthShellProps) {
         <div className="absolute top-6 left-6 lg:hidden">
           <Link href="/">
             <Image
-              src="/images/L&L White Logo.png"
+              src="/images/ll-logo-white.png"
               alt="Lobby & Lounge"
               width={130}
               height={24}

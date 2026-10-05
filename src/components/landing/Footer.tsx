@@ -74,7 +74,7 @@ export const Footer = () => {
           <div>
             <a href="#top" style={{ display: "flex", alignItems: "center", gap: 11 }}>
               <Image
-                src="/images/L&L White Logo.png"
+                src="/images/ll-logo-white.png"
                 alt="Lobby & Lounge"
                 width={140}
                 height={26}

@@ -50,25 +50,26 @@ export function Sidebar() {
     <aside className="w-64 min-w-[256px] flex flex-col bg-card border-r border-border overflow-hidden shrink-0">
       {/* Brand */}
       <div className="flex items-center gap-3 px-[18px] py-[18px] pb-4 border-b border-border">
-        <div className="relative w-[34px] h-[34px] rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-br from-[#4ECDC4] to-[#44A08D] flex items-center justify-center">
-          <Image
-            src="/images/Logo Icon.png"
-            alt="Logo"
-            fill
-            sizes="34px"
-            className="object-cover"
-          />
-        </div>
+        {/* Full wordmark. Both variants are rendered and CSS picks one via the
+            `dark` class on <html>, so there's no flash of the wrong logo before
+            the theme hook hydrates. */}
         <div className="flex-1 min-w-0">
-          <div
-            className="font-bold text-sm text-foreground leading-tight truncate"
-            style={{ fontFamily: "'Poppins', sans-serif" }}
-          >
-            Lobby &amp; Lounge
-          </div>
-          <div className="text-[11px] font-medium text-muted-foreground mt-0.5">
-            Business Music
-          </div>
+          <Image
+            src="/images/ll-logo-color.png"
+            alt="Lobby & Lounge"
+            width={1548}
+            height={652}
+            priority
+            className="block dark:hidden h-[34px] w-auto"
+          />
+          <Image
+            src="/images/ll-logo-white.png"
+            alt="Lobby & Lounge"
+            width={1548}
+            height={652}
+            priority
+            className="hidden dark:block h-[34px] w-auto"
+          />
         </div>
         <button
           onClick={toggleTheme}
