@@ -30,25 +30,26 @@ const footerCols = [
   {
     title: "Product",
     links: [
-      { label: "Licensing", href: "/landing-page#licensing" },
-      { label: "How it works", href: "/landing-page#how-it-works" },
-      { label: "Business types", href: "/landing-page#business-types" },
-      { label: "Pricing", href: "/landing-page#pricing" },
+      { label: "Licensing", href: "/home#licensing" },
+      { label: "How it works", href: "/home#how-it-works" },
+      { label: "Business types", href: "/home#business-types" },
+      { label: "Pricing", href: "/home#pricing" },
     ],
   },
   {
     title: "Company",
     links: [
       { label: "About", href: "#" },
-      { label: "Research", href: "/landing-page#results" },
+      { label: "Research", href: "/home#results" },
       { label: "Talk to sales", href: "mailto:hello@lobbylounge.com" },
     ],
   },
   {
     title: "Resources",
     links: [
-      { label: "Licensing", href: "/landing-page#licensing" },
-      { label: "Status", href: "#" },
+      { label: "Blog", href: "/blog" },
+      { label: "Help Center", href: "/help" },
+      { label: "Licensing", href: "/home#licensing" },
     ],
   },
 ];
@@ -73,11 +74,11 @@ export const Footer = () => {
           <div>
             <a href="#top" style={{ display: "flex", alignItems: "center", gap: 11 }}>
               <Image
-                src="/images/L&L White Logo.png"
+                src="/images/ll-logo-white.png"
                 alt="Lobby & Lounge"
-                width={140}
+                width={62}
                 height={26}
-                style={{ height: 26, width: "auto", objectFit: "contain" }}
+                style={{ objectFit: "contain" }}
               />
             </a>
             <p style={{ margin: "18px 0 22px", maxWidth: 280, fontFamily: "var(--ll-font-body)", fontSize: 14, lineHeight: 1.6, color: "var(--ll-on-ink-3)" }}>

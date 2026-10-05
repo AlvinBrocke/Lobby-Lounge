@@ -21,7 +21,7 @@ src/
   app/
     (auth)/         — sign-in, sign-up, onboarding routes
     (main)/         — protected app routes (dashboard, settings, etc.)
-    landing-page/   — public marketing page
+    home/           — public marketing page (/home)
   components/
     landing/        — marketing page sections
     layout/         — sidebar, top bar, player bar

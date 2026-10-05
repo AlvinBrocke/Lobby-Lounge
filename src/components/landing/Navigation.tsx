@@ -5,10 +5,12 @@ import Link from "next/link";
 import Image from "next/image";
 
 const links = [
-  { label: "Licensing", href: "/landing-page#licensing" },
-  { label: "How it works", href: "/landing-page#how-it-works" },
-  { label: "Business types", href: "/landing-page#business-types" },
-  { label: "Pricing", href: "/landing-page#pricing" },
+  { label: "Licensing", href: "/home#licensing" },
+  { label: "How it works", href: "/home#how-it-works" },
+  { label: "Business types", href: "/home#business-types" },
+  { label: "Pricing", href: "/home#pricing" },
+  { label: "Blog", href: "/blog" },
+  { label: "Help", href: "/help" },
 ];
 
 export const Navigation = () => {
@@ -50,17 +52,17 @@ export const Navigation = () => {
         {/* Logo */}
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: 11, transition: "transform .3s", flexShrink: 0 }}>
           <Image
-            src="/images/L&L White Logo.png"
+            src="/images/ll-logo-white.png"
             alt="Lobby & Lounge"
-            width={160}
+            width={71}
             height={30}
-            style={{ height: 30, width: "auto", objectFit: "contain", display: "block" }}
+            style={{ objectFit: "contain", display: "block" }}
             priority
           />
         </Link>
 
         {/* Nav links */}
-        <nav style={{ display: "flex", alignItems: "center", gap: 36 }} className="hidden md:flex">
+        <nav style={{ alignItems: "center", gap: 36 }} className="hidden lg:flex">
           {links.map(({ label, href }) => {
             return (
               <a
@@ -73,6 +75,7 @@ export const Navigation = () => {
                   color: "rgba(255,255,255,.82)",
                   position: "relative",
                   paddingBottom: 7,
+                  whiteSpace: "nowrap",
                   transition: "color .2s",
                 }}
                 className="ll-nav-link"
