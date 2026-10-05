@@ -47,8 +47,9 @@ const footerCols = [
   {
     title: "Resources",
     links: [
+      { label: "Blog", href: "/blog" },
+      { label: "Help Center", href: "/help" },
       { label: "Licensing", href: "/landing-page#licensing" },
-      { label: "Status", href: "#" },
     ],
   },
 ];

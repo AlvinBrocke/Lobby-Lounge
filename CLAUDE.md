@@ -102,6 +102,9 @@ The landing page claims "1,000+ tracks". A fresh deployment starts with ~120 (15
 ```
 src/app/(auth)/     — sign-in, sign-up, onboarding routes
 src/app/(main)/     — protected app routes (dashboard, settings, etc.)
+src/app/(resources)/ — public /blog and /help (same Navigation/Footer shell as (legal))
+src/content/blog/   — one .mdx per post (exports `meta`); register new posts in src/content/blog/index.ts
+src/content/help.ts — Help Center categories and Q&As
 src/proxy.ts        — Clerk middleware (layer 1)
 src/lib/session.ts  — server-side session DAL (layer 2)
 types/globals.d.ts  — Clerk session-token claim types
