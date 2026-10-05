@@ -372,4 +372,47 @@ describe("playlists", () => {
       expect(mix.energy).toBe("high");
     });
   });
+
+  describe("trial gating", () => {
+    async function setup() {
+      const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+      const asUser = t.withIdentity({ subject: USER });
+      await asUser.mutation(api.userProfiles.createOrUpdate, {});
+      const playlistId = await asUser.mutation(api.playlists.create, { name: "Mix" });
+      const trackId = await t.mutation(internal.tracks.create, {
+        name: "Track A",
+        audioUrl: "https://a/1.mp3",
+      });
+      await asUser.mutation(api.playlists.addTrack, { playlistId, trackId });
+      return { t, asUser, playlistId };
+    }
+
+    it("getTracks includes audio during the trial", async () => {
+      const { asUser, playlistId } = await setup();
+      const [track] = await asUser.query(api.playlists.getTracks, { playlistId });
+      expect(track.audioUrl).toBe("https://a/1.mp3");
+    });
+
+    it("getTracks withholds audio once the trial has ended", async () => {
+      const { t, asUser, playlistId } = await setup();
+      await t.run(async (ctx) => {
+        const profile = await ctx.db.query("userProfiles").first();
+        await ctx.db.patch(profile!._id, { trialEndsAt: Date.now() - 1000 });
+      });
+      const [track] = await asUser.query(api.playlists.getTracks, { playlistId });
+      expect(track.name).toBe("Track A");
+      expect(track.audioUrl).toBeUndefined();
+    });
+
+    it("getTracks includes audio for paying users after the trial", async () => {
+      const { t, asUser, playlistId } = await setup();
+      await t.run(async (ctx) => {
+        const profile = await ctx.db.query("userProfiles").first();
+        await ctx.db.patch(profile!._id, { trialEndsAt: Date.now() - 1000 });
+      });
+      await t.mutation(internal.userProfiles.setPlan, { clerkUserId: USER, plan: "basic" });
+      const [track] = await asUser.query(api.playlists.getTracks, { playlistId });
+      expect(track.audioUrl).toBe("https://a/1.mp3");
+    });
+  });
 });

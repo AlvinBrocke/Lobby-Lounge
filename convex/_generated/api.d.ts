@@ -11,6 +11,7 @@
 import type * as crons from "../crons.js";
 import type * as jamendo from "../jamendo.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_billing from "../lib/billing.js";
 import type * as lib_curated from "../lib/curated.js";
 import type * as lib_energy from "../lib/energy.js";
 import type * as playlists from "../playlists.js";
@@ -28,6 +29,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   jamendo: typeof jamendo;
   "lib/auth": typeof lib_auth;
+  "lib/billing": typeof lib_billing;
   "lib/curated": typeof lib_curated;
   "lib/energy": typeof lib_energy;
   playlists: typeof playlists;

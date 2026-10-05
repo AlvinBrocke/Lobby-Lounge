@@ -1,8 +1,9 @@
-import { internalMutation, query } from "./_generated/server";
+import { internalMutation, internalQuery, query } from "./_generated/server";
 import { v } from "convex/values";
+import { requireUser } from "./lib/auth";
 import { energyForCategory } from "./lib/energy";
 
-export const list = query({
+export const list = internalQuery({
   args: {},
   handler: async (ctx) => {
     return await ctx.db.query("tracks").collect();
@@ -17,17 +18,22 @@ export const list = query({
 export const search = query({
   args: { term: v.string(), limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
+    await requireUser(ctx);
     const limit = Math.min(args.limit ?? 25, 50);
     const term = args.term.trim();
-    if (!term) return await ctx.db.query("tracks").take(limit);
-    return await ctx.db
-      .query("tracks")
-      .withSearchIndex("search_name", (q) => q.search("name", term))
-      .take(limit);
+    const tracks = term
+      ? await ctx.db
+          .query("tracks")
+          .withSearchIndex("search_name", (q) => q.search("name", term))
+          .take(limit)
+      : await ctx.db.query("tracks").take(limit);
+    // Search is for adding songs, not playing them. Audio only comes from
+    // `playlists.getTracks`, which checks the caller's trial/plan.
+    return tracks.map(({ audioUrl: _audioUrl, ...track }) => track);
   },
 });
 
-export const get = query({
+export const get = internalQuery({
   args: { id: v.id("tracks") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);

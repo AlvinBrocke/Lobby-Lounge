@@ -2,7 +2,7 @@ import { internalMutation, internalQuery, mutation, query } from "./_generated/s
 import { v } from "convex/values";
 import { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
-import { assertOwner, requireUser } from "./lib/auth";
+import { assertOwner, canPlay, requireUser } from "./lib/auth";
 import { energyForCategory, type Energy } from "./lib/energy";
 import { CURATED_PLAYLISTS, appendTracksTo } from "./lib/curated";
 
@@ -262,13 +262,21 @@ export const getTracks = query({
 
     playlistTracks.sort((a, b) => a.position - b.position);
 
+    // Expired trials can still browse, but get no audio to play.
+    const playable = await canPlay(ctx, clerkUserId);
+
     const tracks = await Promise.all(
       playlistTracks.map(async (pt) => {
         const track = await ctx.db.get(pt.trackId);
         // A track can vanish from the catalogue (e.g. a Jamendo resync). Drop
         // it here — spreading `null` would yield a truthy half-empty object.
         if (!track) return null;
-        return { ...track, playlistTrackId: pt._id, position: pt.position };
+        return {
+          ...track,
+          audioUrl: playable ? track.audioUrl : undefined,
+          playlistTrackId: pt._id,
+          position: pt.position,
+        };
       }),
     );
 

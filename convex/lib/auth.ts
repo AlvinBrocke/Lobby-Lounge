@@ -1,4 +1,5 @@
 import type { MutationCtx, QueryCtx } from "../_generated/server";
+import { accessFor } from "./billing";
 
 /**
  * Identity of the caller, taken from the verified Clerk JWT.
@@ -24,4 +25,16 @@ export function assertOwner<T extends { clerkUserId?: string }>(
 ): asserts doc is T {
   if (!doc) throw new Error(`${what} not found`);
   if (doc.clerkUserId !== userId) throw new Error("Not authorized");
+}
+
+/**
+ * Whether the caller's trial or plan currently allows playback. Queries
+ * withhold audio URLs when it doesn't; see `accessFor` for the rules.
+ */
+export async function canPlay(ctx: QueryCtx | MutationCtx, userId: string): Promise<boolean> {
+  const profile = await ctx.db
+    .query("userProfiles")
+    .withIndex("by_clerk_user", (q) => q.eq("clerkUserId", userId))
+    .unique();
+  return accessFor(profile, Date.now()).status !== "expired";
 }

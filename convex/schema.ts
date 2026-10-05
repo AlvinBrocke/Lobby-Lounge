@@ -6,7 +6,10 @@ export default defineSchema({
     clerkUserId: v.string(),
     displayName: v.optional(v.string()),
     venueName: v.optional(v.string()),
-    plan: v.string(), // 'trial' | 'pro' | etc.
+    plan: v.string(), // 'trial' | 'basic' — see convex/lib/billing.ts
+    // Overrides the default trial end (profile creation + TRIAL_DAYS), e.g. to
+    // extend a trial via `userProfiles:extendTrial`. Epoch ms.
+    trialEndsAt: v.optional(v.number()),
     genres: v.array(v.string()),
     mood: v.optional(v.string()),
     onboardingCompleted: v.boolean(),

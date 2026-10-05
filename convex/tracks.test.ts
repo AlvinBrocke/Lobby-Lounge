@@ -8,14 +8,14 @@ describe("tracks", () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
     await t.mutation(internal.tracks.create, { name: "Track A" });
     await t.mutation(internal.tracks.create, { name: "Track B" });
-    const tracks = await t.query(api.tracks.list, {});
+    const tracks = await t.query(internal.tracks.list, {});
     expect(tracks).toHaveLength(2);
   });
 
   it("get returns track by id", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
     const id = await t.mutation(internal.tracks.create, { name: "Blue Bossa", artist: "Chet Baker" });
-    const track = await t.query(api.tracks.get, { id });
+    const track = await t.query(internal.tracks.get, { id });
     expect(track?.name).toBe("Blue Bossa");
     expect(track?.artist).toBe("Chet Baker");
   });
@@ -24,7 +24,7 @@ describe("tracks", () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
     const id = await t.mutation(internal.tracks.create, { name: "Original", energy: "low" });
     await t.mutation(internal.tracks.update, { id, name: "Updated" });
-    const track = await t.query(api.tracks.get, { id });
+    const track = await t.query(internal.tracks.get, { id });
     expect(track?.name).toBe("Updated");
     expect(track?.energy).toBe("low"); // unchanged
   });
@@ -33,7 +33,7 @@ describe("tracks", () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
     const id = await t.mutation(internal.tracks.create, { name: "Temporary" });
     await t.mutation(internal.tracks.remove, { id });
-    const track = await t.query(api.tracks.get, { id });
+    const track = await t.query(internal.tracks.get, { id });
     expect(track).toBeNull();
   });
 
@@ -43,7 +43,7 @@ describe("tracks", () => {
 
     const result = await t.mutation(internal.tracks.backfillEnergy, {});
     expect(result).toMatchObject({ scanned: 1, patched: 1, remaining: 0 });
-    expect((await t.query(api.tracks.get, { id }))?.energy).toBe("high");
+    expect((await t.query(internal.tracks.get, { id }))?.energy).toBe("high");
   });
 
   it("backfillEnergy leaves already-set energy alone", async () => {
@@ -56,7 +56,7 @@ describe("tracks", () => {
 
     const result = await t.mutation(internal.tracks.backfillEnergy, {});
     expect(result.patched).toBe(0);
-    expect((await t.query(api.tracks.get, { id }))?.energy).toBe("low");
+    expect((await t.query(internal.tracks.get, { id }))?.energy).toBe("low");
   });
 
   it("backfillEnergy defaults unknown categories to mid", async () => {
@@ -64,7 +64,7 @@ describe("tracks", () => {
     const id = await t.mutation(internal.tracks.create, { name: "Unmapped", category: "Polka" });
 
     await t.mutation(internal.tracks.backfillEnergy, {});
-    expect((await t.query(api.tracks.get, { id }))?.energy).toBe("mid");
+    expect((await t.query(internal.tracks.get, { id }))?.energy).toBe("mid");
   });
 
   it("backfillEnergy honours the limit and reports what is left", async () => {
@@ -84,7 +84,7 @@ describe("tracks", () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
     const result = await t.mutation(internal.tracks.seed);
     expect(result).toBe("seeded");
-    const tracks = await t.query(api.tracks.list, {});
+    const tracks = await t.query(internal.tracks.list, {});
     expect(tracks).toHaveLength(10);
   });
 
@@ -93,7 +93,7 @@ describe("tracks", () => {
     await t.mutation(internal.tracks.seed);
     const result = await t.mutation(internal.tracks.seed);
     expect(result).toBe("already seeded");
-    expect(await t.query(api.tracks.list, {})).toHaveLength(10);
+    expect(await t.query(internal.tracks.list, {})).toHaveLength(10);
   });
 
   it("search matches track names and caps results", async () => {
@@ -101,11 +101,24 @@ describe("tracks", () => {
     await t.mutation(internal.tracks.create, { name: "Blue Bossa" });
     await t.mutation(internal.tracks.create, { name: "Autumn Leaves" });
     await t.mutation(internal.tracks.create, { name: "Blue Monk" });
+    const asUser = t.withIdentity({ subject: "user_search" });
 
-    const blue = await t.query(api.tracks.search, { term: "blue" });
+    const blue = await asUser.query(api.tracks.search, { term: "blue" });
     expect(blue.map((tr) => tr.name).sort()).toEqual(["Blue Bossa", "Blue Monk"]);
 
-    const firstPage = await t.query(api.tracks.search, { term: "  ", limit: 2 });
+    const firstPage = await asUser.query(api.tracks.search, { term: "  ", limit: 2 });
     expect(firstPage).toHaveLength(2);
+  });
+
+  it("search requires sign-in and never returns audio", async () => {
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    await t.mutation(internal.tracks.create, { name: "Blue Bossa", audioUrl: "https://a/1.mp3" });
+
+    await expect(t.query(api.tracks.search, { term: "blue" })).rejects.toThrow("Not authenticated");
+
+    const asUser = t.withIdentity({ subject: "user_search" });
+    const [track] = await asUser.query(api.tracks.search, { term: "blue" });
+    expect(track.name).toBe("Blue Bossa");
+    expect(track).not.toHaveProperty("audioUrl");
   });
 });
