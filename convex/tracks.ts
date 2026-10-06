@@ -2,6 +2,7 @@ import { internalMutation, internalQuery, query } from "./_generated/server";
 import { v } from "convex/values";
 import { requireUser } from "./lib/auth";
 import { energyForCategory } from "./lib/energy";
+import { decodeEntities } from "./lib/text";
 
 export const list = internalQuery({
   args: {},
@@ -110,6 +111,39 @@ export const backfillEnergy = internalMutation({
       scanned: tracks.length,
       patched,
       remaining: missing.length - patched,
+    };
+  },
+});
+
+/**
+ * One-off fix for tracks synced before `jamendo.syncPlaylist` decoded HTML
+ * entities, whose names/artists were stored as e.g. "Dada &amp; the Weathermen".
+ *
+ * Same capped-batch shape as `backfillEnergy`; repeat until `remaining` is 0:
+ *   npx convex run tracks:backfillDecodeEntities '{}'
+ */
+export const backfillDecodeEntities = internalMutation({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const limit = args.limit ?? 200;
+    const tracks = await ctx.db.query("tracks").collect();
+    const encoded = tracks.filter(
+      (t) => decodeEntities(t.name) !== t.name || (t.artist && decodeEntities(t.artist) !== t.artist),
+    );
+
+    let patched = 0;
+    for (const track of encoded.slice(0, limit)) {
+      await ctx.db.patch(track._id, {
+        name: decodeEntities(track.name),
+        artist: track.artist && decodeEntities(track.artist),
+      });
+      patched++;
+    }
+
+    return {
+      scanned: tracks.length,
+      patched,
+      remaining: encoded.length - patched,
     };
   },
 });
