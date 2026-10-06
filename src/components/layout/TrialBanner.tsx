@@ -18,7 +18,7 @@ export function TrialBanner() {
   if (access.status === "active") return null;
   if (access.status === "trial" && daysLeft > WARN_DAYS) return null;
 
-  const href = subscribeUrl(user.id, user.primaryEmailAddress?.emailAddress) ?? "/account";
+  const href = subscribeUrl(user.id, user.primaryEmailAddress?.emailAddress) ?? "/settings?tab=billing";
 
   if (access.status === "expired") {
     return (
@@ -42,7 +42,7 @@ export function TrialBanner() {
       <span>
         {daysLeft} {daysLeft === 1 ? "day" : "days"} left in your free trial.
       </span>
-      <Link href="/account" className="font-semibold text-primary hover:underline">
+      <Link href="/settings?tab=billing" className="font-semibold text-primary hover:underline">
         See plan
       </Link>
     </div>

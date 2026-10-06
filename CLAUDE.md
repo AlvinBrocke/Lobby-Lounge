@@ -82,11 +82,11 @@ NEXT_PUBLIC_CONVEX_SITE_URL
 Optional:
 
 ```
-NEXT_PUBLIC_STRIPE_PREMIUM_PAYMENT_LINK   # https://buy.stripe.com/... — the in-app Subscribe button (trial banner, /account)
-NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL    # https://billing.stripe.com/p/login/... — "Manage subscription" on /account
+NEXT_PUBLIC_STRIPE_PREMIUM_PAYMENT_LINK   # https://buy.stripe.com/... — the in-app Subscribe button (trial banner, Settings → Plan & billing)
+NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL    # https://billing.stripe.com/p/login/... — "Manage subscription" in Settings → Plan & billing (`/account` redirects there)
 ```
 
-Billing is a Stripe **Payment Link** (a plain URL created in the Stripe Dashboard) — there is no Stripe SDK, secret key, or webhook in this repo. The Subscribe link carries `client_reference_id=<Clerk user id>`, so each Stripe payment shows who paid. If the variable is unset, /account says checkout isn't available and the banner links to /account. The landing page CTA always goes to `/signup` (the trial comes first).
+Billing is a Stripe **Payment Link** (a plain URL created in the Stripe Dashboard) — there is no Stripe SDK, secret key, or webhook in this repo. The Subscribe link carries `client_reference_id=<Clerk user id>`, so each Stripe payment shows who paid. If the variable is unset, the billing tab says checkout isn't available and the banner links to the billing tab. The landing page CTA always goes to `/signup` (the trial comes first).
 
 **Trial & access** (`convex/lib/billing.ts`): `plan` is `"trial"` or `"basic"`. A trial lasts `TRIAL_DAYS` (30) from profile creation, unless `trialEndsAt` overrides it. When it ends, `playlists.getTracks` withholds `audioUrl` (browsing still works) and a banner prompts to subscribe. There's no webhook, so after a payment lands, flip the plan by hand (add `--prod` for production):
 

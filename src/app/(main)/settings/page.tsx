@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useClerk, useSession, useUser } from "@clerk/nextjs";
 import { useConvexAuth, useQuery, useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
-import { LogOut, Monitor, Moon, Shield, Smartphone, Sun, User } from "lucide-react";
+import { LogOut, Monitor, Shield, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,9 +14,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { PageWrapper } from "@/components/layout/page-wrapper";
-import { useTheme } from "@/components/theme-provider";
+import { BillingPanel } from "@/components/settings/BillingPanel";
 import { PasswordCard } from "@/components/settings/PasswordCard";
+import { cn } from "@/lib/utils";
 import { useAccess } from "@/hooks/useAccess";
 import { PLAN_NAME } from "@/lib/billing";
 
@@ -33,6 +34,13 @@ interface SessionInfo {
   revoke(): Promise<unknown>;
 }
 
+const TABS = [
+  { key: "venue", label: "Venue details" },
+  { key: "security", label: "Security" },
+  { key: "billing", label: "Plan & billing" },
+] as const;
+type TabKey = (typeof TABS)[number]["key"];
+
 function relativeTime(date: Date): string {
   const s = Math.floor((Date.now() - date.getTime()) / 1000);
   if (s < 60) return "Just now";
@@ -44,7 +52,11 @@ function relativeTime(date: Date): string {
 }
 
 export default function SettingsPage() {
-  const { theme, toggleTheme } = useTheme();
+  const router = useRouter();
+  // The tab is in the URL (`?tab=billing`) so the account menu and the old
+  // /account route can link straight to it.
+  const tabParam = useSearchParams().get("tab");
+  const tab: TabKey = TABS.some((t) => t.key === tabParam) ? (tabParam as TabKey) : "venue";
   const { user, isLoaded: userLoaded } = useUser();
   const { session: currentSession } = useSession();
   const { signOut } = useClerk();
@@ -156,232 +168,222 @@ export default function SettingsPage() {
   const userEmail = user?.primaryEmailAddress?.emailAddress ?? "";
   const activeSessions = sessionList.filter((s) => s.status === "active");
   const venueNameLoaded = venueNameInitialised;
+  const displayName = profile?.venueName || user?.fullName || "Your venue";
+  const initials = displayName
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+  const planLabel = !access
+    ? "—"
+    : access.access.status === "active"
+      ? PLAN_NAME
+      : access.access.status === "trial"
+        ? `Free trial · ${access.daysLeft} ${access.daysLeft === 1 ? "day" : "days"} left`
+        : "Trial ended";
+
+  const fieldLabel = "block text-[9px] font-bold uppercase tracking-[0.08em] text-faint mb-1.5";
+  const fieldBox =
+    "w-full rounded-[7px] border border-primary/20 bg-card px-2.5 py-2 text-xs text-foreground outline-none focus:border-primary transition-colors";
 
   return (
-    <PageWrapper
-      title="Settings"
-      description="Manage your venue and account preferences."
-    >
-      <div className="max-w-4xl space-y-6 pb-12">
-
-        {/* Appearance */}
-        <Card className="bg-card border-border text-card-foreground rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {theme === "light" ? (
-                <Sun className="w-5 h-5 text-primary" />
-              ) : (
-                <Moon className="w-5 h-5 text-primary" />
+    // Negative margins pull the header band edge-to-edge inside the page padding.
+    <div className="-mx-5 -mt-[18px] md:-mx-7 md:-mt-6">
+      <div className="px-5 md:px-7 pt-5 bg-shell border-b border-primary/[0.08]">
+        <h1 className="text-[22px] font-extrabold tracking-tight text-foreground mb-[18px]">Settings</h1>
+        <div role="tablist" className="flex gap-0.5 overflow-x-auto scrollbar-hide">
+          {TABS.map((t) => (
+            <button
+              key={t.key}
+              role="tab"
+              aria-selected={tab === t.key}
+              onClick={() => router.replace(t.key === "venue" ? "/settings" : `/settings?tab=${t.key}`, { scroll: false })}
+              className={cn(
+                "relative px-[13px] pt-[9px] pb-[11px] whitespace-nowrap text-[11px] transition-colors",
+                tab === t.key ? "text-foreground font-bold" : "text-muted-foreground hover:text-foreground",
               )}
-              Appearance
-            </CardTitle>
-            <CardDescription className="text-muted-foreground">
-              Choose between light and dark mode for the app.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
-            <button
-              onClick={() => theme !== "light" && toggleTheme()}
-              className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all ${
-                theme === "light"
-                  ? "border-primary bg-primary/5 text-primary"
-                  : "border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
-              }`}
             >
-              <Sun className="w-8 h-8 mb-2" />
-              <span className="text-sm font-semibold">Light</span>
+              {t.label}
+              {tab === t.key && (
+                <span className="absolute left-2.5 right-2.5 bottom-0 h-0.5 rounded-sm bg-primary" />
+              )}
             </button>
-            <button
-              onClick={() => theme !== "dark" && toggleTheme()}
-              className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all ${
-                theme === "dark"
-                  ? "border-primary bg-primary/5 text-primary"
-                  : "border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
-              }`}
-            >
-              <Moon className="w-8 h-8 mb-2" />
-              <span className="text-sm font-semibold">Dark</span>
-            </button>
-          </CardContent>
-        </Card>
+          ))}
+        </div>
+      </div>
 
-        {/* Venue Profile */}
-        <Card className="bg-card border-border text-card-foreground shadow-sm rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="w-5 h-5 text-primary" />
-              Venue Profile
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between py-3 border-b border-border/50 gap-4">
-              <span className="text-muted-foreground shrink-0">Business Name</span>
-              <div className="flex items-center gap-2 min-w-0">
-                {venueNameLoaded ? (
-                  <input
-                    type="text"
-                    value={venueName}
-                    onChange={(e) => setVenueName(e.target.value)}
-                    className="font-semibold text-foreground bg-transparent border border-border rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 min-w-0 w-48"
-                  />
-                ) : (
-                  <div className="h-7 w-48 rounded-lg bg-muted animate-pulse" />
-                )}
-                <button
-                  onClick={handleSaveVenueName}
-                  disabled={isSaving || !venueNameLoaded}
-                  className="shrink-0 text-[11px] font-bold px-3 py-1.5 rounded-lg bg-primary text-[#04201d] hover:opacity-90 transition-opacity disabled:opacity-50"
-                >
-                  {isSaving ? "Saving…" : "Save"}
-                </button>
-                {savedFeedback && (
-                  <span className="shrink-0 text-[11px] font-semibold text-primary">
-                    Saved!
-                  </span>
-                )}
+      <div className="px-5 md:px-7 pt-[22px] pb-8">
+        {tab === "venue" && (
+          <div className="max-w-[820px] space-y-3">
+            {/* Venue hero */}
+            <div className="rounded-xl border border-white/[0.06] p-[22px] shadow-[0_6px_24px_rgba(0,0,0,0.24)] bg-secondary bg-[radial-gradient(circle_at_90%_0%,hsl(var(--primary)/0.13),transparent_35%)]">
+              <div className="flex items-center gap-3.5">
+                <div className="w-[54px] h-[54px] rounded-xl bg-primary/10 border border-primary/20 text-primary text-base font-black flex items-center justify-center shrink-0">
+                  {initials}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[17px] font-extrabold text-foreground truncate">{displayName}</div>
+                  <div className="text-[11px] text-muted-foreground mt-1 truncate">{userEmail}</div>
+                </div>
+                <span className="px-2 py-1 rounded-full bg-primary/10 text-primary text-[9px] font-extrabold shrink-0">
+                  {planLabel}
+                </span>
               </div>
             </div>
 
-            <div className="flex items-center justify-between py-3 border-b border-border/50">
-              <span className="text-muted-foreground">Email</span>
-              {!userLoaded ? (
-                <div className="h-4 w-44 rounded bg-muted animate-pulse" />
-              ) : (
-                <span className="font-semibold text-foreground">{userEmail}</span>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between py-3">
-              <span className="text-muted-foreground">Subscription Plan</span>
-              <span className="text-primary font-bold">
-                {!access
-                  ? "—"
-                  : access.access.status === "active"
-                    ? PLAN_NAME
-                    : access.access.status === "trial"
-                      ? `Free trial · ${access.daysLeft} ${access.daysLeft === 1 ? "day" : "days"} left`
-                      : "Trial ended"}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Password */}
-        <PasswordCard />
-
-        {/* Security */}
-        <Card className="bg-card border-border text-card-foreground shadow-sm rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-primary" />
-              Security
-            </CardTitle>
-            <CardDescription className="text-muted-foreground">
-              Active sessions across your devices. You&apos;ll be signed out after 30
-              minutes of inactivity while no music is playing.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {!sessionsLoaded ? (
-              <div className="space-y-2">
-                {[0, 1].map((i) => (
-                  <div key={i} className="h-14 rounded-xl bg-muted animate-pulse" />
-                ))}
-              </div>
-            ) : activeSessions.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No active sessions found.</p>
-            ) : (
-              activeSessions.map((s) => {
-                const isCurrent = s.id === currentSession?.id;
-                const activity = s.latestActivity;
-                const deviceLabel = activity?.browserName
-                  ? `${activity.browserName}${activity.deviceType ? ` on ${activity.deviceType}` : ""}`
-                  : "Unknown device";
-                const location = [activity?.city, activity?.country]
-                  .filter(Boolean)
-                  .join(", ");
-
-                return (
-                  <div
-                    key={s.id}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border bg-secondary/30"
-                  >
-                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 text-primary">
-                      {activity?.isMobile ? (
-                        <Smartphone className="w-4 h-4" />
-                      ) : (
-                        <Monitor className="w-4 h-4" />
-                      )}
+            <Card>
+              <CardHeader>
+                <CardTitle>Venue details</CardTitle>
+                <CardDescription>Business identity and primary contact information.</CardDescription>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label htmlFor="venue-name" className={fieldLabel}>
+                    Business name
+                  </label>
+                  {venueNameLoaded ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        id="venue-name"
+                        type="text"
+                        value={venueName}
+                        onChange={(e) => setVenueName(e.target.value)}
+                        className={fieldBox}
+                      />
+                      <button
+                        onClick={handleSaveVenueName}
+                        disabled={isSaving}
+                        className="shrink-0 px-3 py-2 rounded-[7px] bg-primary text-primary-foreground text-[11px] font-extrabold hover:opacity-90 transition-opacity disabled:opacity-50"
+                      >
+                        {isSaving ? "Saving…" : savedFeedback ? "Saved" : "Save"}
+                      </button>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-semibold text-foreground truncate">
-                          {deviceLabel}
-                        </span>
-                        {isCurrent && (
-                          <span className="text-[9px] font-bold tracking-[0.1em] text-primary bg-primary/14 px-2 py-0.5 rounded-full shrink-0">
-                            CURRENT
-                          </span>
+                  ) : (
+                    <div className="h-[34px] rounded-[7px] bg-muted animate-pulse" />
+                  )}
+                </div>
+                <div>
+                  <span className={fieldLabel}>Email</span>
+                  {!userLoaded ? (
+                    <div className="h-[34px] rounded-[7px] bg-muted animate-pulse" />
+                  ) : (
+                    <div className={cn(fieldBox, "text-muted-foreground truncate")}>{userEmail}</div>
+                  )}
+                </div>
+                <div>
+                  <span className={fieldLabel}>Subscription</span>
+                  <div className={cn(fieldBox, "text-primary font-bold")}>{planLabel}</div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {tab === "security" && (
+          <div className="max-w-[820px] space-y-3">
+            <PasswordCard />
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-primary" />
+                  Active sessions
+                </CardTitle>
+                <CardDescription>
+                  Devices signed in to this account. You&apos;ll be signed out after 30 minutes of
+                  inactivity while no music is playing.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {!sessionsLoaded ? (
+                  <div className="space-y-2">
+                    {[0, 1].map((i) => (
+                      <div key={i} className="h-14 rounded-[10px] bg-muted animate-pulse" />
+                    ))}
+                  </div>
+                ) : activeSessions.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No active sessions found.</p>
+                ) : (
+                  activeSessions.map((s) => {
+                    const isCurrent = s.id === currentSession?.id;
+                    const activity = s.latestActivity;
+                    const deviceLabel = activity?.browserName
+                      ? `${activity.browserName}${activity.deviceType ? ` on ${activity.deviceType}` : ""}`
+                      : "Unknown device";
+                    const location = [activity?.city, activity?.country]
+                      .filter(Boolean)
+                      .join(", ");
+
+                    return (
+                      <div
+                        key={s.id}
+                        className="flex items-center gap-3 px-3.5 py-2.5 rounded-[10px] border border-white/5 bg-card"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 text-primary">
+                          {activity?.isMobile ? (
+                            <Smartphone className="w-4 h-4" />
+                          ) : (
+                            <Monitor className="w-4 h-4" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-foreground truncate">
+                              {deviceLabel}
+                            </span>
+                            {isCurrent && (
+                              <span className="text-[8px] font-extrabold tracking-[0.1em] text-primary bg-primary/10 px-2 py-0.5 rounded-full shrink-0">
+                                CURRENT
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground mt-0.5">
+                            {location ? `${location} · ` : ""}
+                            Last active: {relativeTime(s.lastActiveAt)}
+                          </div>
+                        </div>
+                        {!isCurrent && (
+                          <button
+                            onClick={() => handleRevokeSession(s.id)}
+                            disabled={revokingId === s.id}
+                            title="Sign out this session"
+                            aria-label={`Sign out ${deviceLabel}`}
+                            className="shrink-0 w-7 h-7 rounded-md border border-primary/20 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                          >
+                            <LogOut className="w-3 h-3" />
+                          </button>
                         )}
                       </div>
-                      <div className="text-xs text-muted-foreground mt-0.5">
-                        {location ? `${location} · ` : ""}
-                        Last active: {relativeTime(s.lastActiveAt)}
-                      </div>
-                    </div>
-                    {!isCurrent && (
-                      <button
-                        onClick={() => handleRevokeSession(s.id)}
-                        disabled={revokingId === s.id}
-                        title="Sign out this session"
-                        className="shrink-0 w-7 h-7 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/50 transition-colors disabled:opacity-50"
-                      >
-                        <LogOut className="w-3 h-3" />
-                      </button>
-                    )}
-                  </div>
-                );
-              })
-            )}
+                    );
+                  })
+                )}
 
-            {sessionError && (
-              <p role="alert" className="text-sm text-destructive">
-                {sessionError}
-              </p>
-            )}
+                {sessionError && (
+                  <p role="alert" className="text-xs text-destructive">
+                    {sessionError}
+                  </p>
+                )}
 
-            {sessionsLoaded && activeSessions.length > 0 && (
-              <Button
-                variant="outline"
-                onClick={handleSignOutAll}
-                disabled={signingOutAll}
-                className="w-full mt-2 border-border text-muted-foreground hover:text-foreground"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                {signingOutAll ? "Signing out…" : "Sign out all devices"}
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+                {sessionsLoaded && activeSessions.length > 0 && (
+                  <Button
+                    variant="outline"
+                    onClick={handleSignOutAll}
+                    disabled={signingOutAll}
+                    className="w-full mt-2 border-primary/20 bg-transparent text-muted-foreground hover:text-foreground hover:bg-white/5"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    {signingOutAll ? "Signing out…" : "Sign out all devices"}
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
-        {/* Plan */}
-        <Card className="bg-gradient-to-r from-primary to-primary/80 border-none text-primary-foreground shadow-lg">
-          <CardContent className="p-8 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="space-y-2 text-center md:text-left">
-              <h3 className="text-2xl font-bold">Lobby Lounge Premium</h3>
-              <p className="opacity-90 max-w-md">
-                Full B2B licensing, offline mode, and unlimited zones.
-              </p>
-            </div>
-            <Button
-              variant="secondary"
-              className="font-bold hover:scale-105 transition-transform rounded-full px-8 shadow-sm"
-            >
-              Manage Plan
-            </Button>
-          </CardContent>
-        </Card>
+        {tab === "billing" && <BillingPanel />}
       </div>
-    </PageWrapper>
+    </div>
   );
 }

@@ -17,18 +17,18 @@ export function PageWrapper({
   className,
 }: PageWrapperProps) {
   return (
-    <div className={cn("flex flex-col gap-8 w-full", className)}>
+    <div className={cn("flex flex-col gap-6 w-full", className)}>
       {/* Header Section (Only render if title or action exists) */}
       {(title || action) && (
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div className="space-y-1">
             {title && (
-              <h1 className="text-3xl font-bold tracking-tight text-foreground">
+              <h1 className="text-[22px] font-bold tracking-tight text-foreground">
                 {title}
               </h1>
             )}
             {description && (
-              <p className="text-muted-foreground text-sm">{description}</p>
+              <p className="text-muted-foreground text-xs">{description}</p>
             )}
           </div>
           {action && <div>{action}</div>}

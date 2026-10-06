@@ -189,9 +189,8 @@
   border-radius: 2px;
   transform-origin: bottom;
   display: inline-block;
-  background: #4ECDC4;
+  background: hsl(var(--primary));
 }
-.dark .eq-bar { background: #4ECDC4; }
 .eq-bar:nth-child(1) { animation: eq-bounce 0.52s 0.00s ease-in-out infinite alternate; }
 .eq-bar:nth-child(2) { animation: eq-bounce 0.61s 0.05s ease-in-out infinite alternate; }
 .eq-bar:nth-child(3) { animation: eq-bounce 0.70s 0.10s ease-in-out infinite alternate; }
@@ -231,28 +230,31 @@
   }
 
   .dark {
-    /* Dark mode — from design tokens */
-    --background: 218 22% 8%;    /* #0F1419 */
+    /* App palette — navy + teal, from the Figma Make dashboard design.
+       The app is dark-only; marketing pages opt into `.ll-light` instead. */
+    --background: 223 57% 7%;    /* #080e1d navy */
     --foreground: 0 0% 100%;
-    --card: 218 20% 12%;         /* #1A1F26 */
+    --card: 218 51% 14%;         /* #111e35 navy surface */
     --card-foreground: 0 0% 100%;
-    --popover: 218 20% 12%;
+    --popover: 220 51% 10%;      /* #0d1628 navy mid */
     --popover-foreground: 0 0% 100%;
-    --primary: 175 56% 62%;      /* #4ECDC4 */
-    --primary-foreground: 173 100% 7%;  /* #04201d */
-    --secondary: 218 21% 9%;     /* #131820 */
+    --primary: 171 75% 52%;      /* #27E0C5 teal */
+    --primary-foreground: 223 57% 7%;
+    --secondary: 226 49% 17%;    /* #162040 navy card */
     --secondary-foreground: 0 0% 100%;
-    --muted: 218 18% 14%;
-    --muted-foreground: 213 14% 66%; /* #9CA7B4 */
-    --accent: 218 18% 14%;
+    --muted: 226 49% 17%;
+    --muted-foreground: 217 17% 59%; /* #8492a8 slate */
+    --accent: 226 49% 17%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 72% 51%;
+    --destructive: 348 100% 65%; /* #FF4B6E rose */
     --destructive-foreground: 0 0% 100%;
-    --border: 218 17% 18%;       /* #252C36 */
-    --input: 218 17% 18%;
-    --ring: 175 56% 62%;
+    --border: 220 42% 19%;       /* #1c2a45 */
+    --input: 220 42% 19%;
+    --ring: 171 75% 52%;
     --radius: 0.75rem;
-    --surface-2: 218 21% 9%;
+    --surface-2: 220 51% 10%;
+    --shell: 220 51% 10%;        /* sidebar + player bar */
+    --faint: 215 26% 32%;        /* #3d4f68 dim labels */
   }
 }
 
@@ -264,3 +266,7 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Hide a scroll container's scrollbar but keep it scrollable (carousels, panes). */
+.scrollbar-hide { scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }

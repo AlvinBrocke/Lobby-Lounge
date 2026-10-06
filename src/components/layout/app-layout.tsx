@@ -20,14 +20,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <TrialBanner />
           <Topbar />
           <ScrollArea className="flex-1 h-full w-full">
-            <div className="p-6 md:p-7 max-w-[1600px] mx-auto w-full pb-8">
+            <div className="px-5 py-[18px] md:px-7 md:py-6 max-w-[1600px] mx-auto w-full pb-10">
               {children}
             </div>
           </ScrollArea>
         </main>
       </div>
 
-      <div className="h-[72px] shrink-0 bg-card border-t border-border z-50">
+      <div className="h-[76px] shrink-0 z-50">
         <PlayerBar />
       </div>
     </div>

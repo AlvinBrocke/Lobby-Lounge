@@ -2,7 +2,6 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { ThemeProvider } from "@/components/theme-provider";
 import { ConvexClientProvider } from "./ConvexClientProvider";
 
 // One family for the whole product — a neutral grotesk close to the wordmark.
@@ -30,13 +29,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('ll-theme');if(t==='light'){document.documentElement.classList.remove('dark');document.documentElement.classList.add('light');}else{document.documentElement.classList.add('dark');}}catch(e){}})();`,
-          }}
-        />
-      </head>
       <body
         className={`${geist.variable} font-sans antialiased bg-background text-foreground`}
       >
@@ -47,7 +39,7 @@ export default function RootLayout({
           signUpFallbackRedirectUrl="/signup/onboarding"
         >
           <ConvexClientProvider>
-            <ThemeProvider>{children}</ThemeProvider>
+            {children}
           </ConvexClientProvider>
         </ClerkProvider>
       </body>

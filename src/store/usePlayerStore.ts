@@ -18,6 +18,14 @@ const usePlayerStore = create<PlayerState>((set) => ({
   },
   setVolume: (volume) => set({ volume }),
   addToQueue: (track) => set((state) => ({ queue: [...state.queue, track] })),
+  reorderQueue: (from, to) =>
+    set((state) => {
+      if (from === to || !state.queue[from] || !state.queue[to]) return {};
+      const queue = [...state.queue];
+      const [moved] = queue.splice(from, 1);
+      queue.splice(to, 0, moved);
+      return { queue };
+    }),
   clearQueue: () => set({ queue: [] }),
   togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
 

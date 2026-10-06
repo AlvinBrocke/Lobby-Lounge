@@ -7,6 +7,8 @@ export function toPlayerTrack(track: Doc<"tracks">): Track {
   return {
     id: track._id,
     name: track.name,
+    artist: track.artist,
+    duration: track.duration,
     image: track.coverImage ?? "",
     audioUrl: track.audioUrl,
     category: track.category,

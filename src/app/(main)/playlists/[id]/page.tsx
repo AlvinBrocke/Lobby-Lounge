@@ -5,13 +5,13 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { ArrowLeft, ListMusic, Loader2, Pencil, Play, Plus, Trash2, X } from "lucide-react";
+import { ArrowLeft, ListMusic, ListPlus, Loader2, Pencil, Play, Plus, Trash2, X } from "lucide-react";
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { FunctionReturnType } from "convex/server";
 import { cn, formatDuration, formatTotalDuration } from "@/lib/utils";
 import usePlayerStore from "@/store/usePlayerStore";
-import { toPlayerQueue } from "@/lib/playlists";
+import { toPlayerQueue, toPlayerTrack } from "@/lib/playlists";
 import { AddSongsDialog } from "@/components/playlists/AddSongsDialog";
 import { ConfirmDialog } from "@/components/playlists/ConfirmDialog";
 import { PlaylistCover } from "@/components/playlists/PlaylistCover";
@@ -19,11 +19,11 @@ import { PlaylistFormModal, type PlaylistFormValues } from "@/components/playlis
 
 type PlaylistTrack = FunctionReturnType<typeof api.playlists.getTracks>[number];
 
-const ENERGY_STYLES: Record<string, string> = {
-  low: "text-blue-400 bg-blue-400/12",
-  mid: "text-emerald-400 bg-emerald-400/12",
-  high: "text-amber-400 bg-amber-400/12",
-};
+// # · Title · Artist · Time · actions
+const GRID = "grid grid-cols-[28px_minmax(0,1fr)_minmax(0,1fr)_52px_auto] items-center gap-3";
+
+const ghostButton =
+  "flex items-center gap-1.5 h-[31px] px-2.5 rounded-md border border-primary/20 text-xs text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors";
 
 function TrackRow({
   track,
@@ -31,6 +31,7 @@ function TrackRow({
   isCurrent,
   canEdit,
   onPlay,
+  onQueue,
   onRemove,
 }: {
   track: PlaylistTrack;
@@ -38,61 +39,72 @@ function TrackRow({
   isCurrent: boolean;
   canEdit: boolean;
   onPlay: () => void;
+  /** Absent when the track can't be played (no audio, or the trial has ended). */
+  onQueue?: () => void;
   onRemove: () => void;
 }) {
   return (
     <div
       onClick={onPlay}
-      className="flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer hover:bg-secondary transition-colors group"
+      className={cn(
+        GRID,
+        "group px-5 py-[9px] cursor-pointer border-b border-primary/[0.04] transition-colors",
+        isCurrent ? "bg-primary/10" : "hover:bg-white/[0.03]",
+      )}
     >
-      <span className="font-mono text-[11px] text-muted-foreground w-5 text-center shrink-0 flex items-center justify-center">
-        <span className="group-hover:hidden">{index + 1}</span>
-        <Play className="w-3 h-3 fill-current text-primary hidden group-hover:block" />
+      <span
+        className={cn(
+          "text-[11px] font-mono text-center",
+          isCurrent ? "text-primary" : "text-faint",
+        )}
+      >
+        {isCurrent ? "▶" : (
+          <>
+            <span className="group-hover:hidden">{index + 1}</span>
+            <Play className="w-3 h-3 mx-auto fill-current text-primary hidden group-hover:block" />
+          </>
+        )}
       </span>
 
-      <div className="flex-1 min-w-0">
-        <div className={cn("text-[13px] font-semibold truncate", isCurrent ? "text-primary" : "text-foreground")}>
+      <div className="flex items-center gap-[9px] min-w-0">
+        <PlaylistCover src={track.coverImage} alt="" className="w-[30px] h-[30px] rounded-[3px] shrink-0" iconClassName="w-3 h-3" />
+        <span className={cn("text-xs font-semibold truncate", isCurrent ? "text-primary" : "text-foreground")}>
           {track.name}
-        </div>
-        <div className="text-xs text-muted-foreground mt-0.5 truncate">
-          {track.artist ?? "Unknown Artist"}
-        </div>
+        </span>
       </div>
 
-      {track.category && (
-        <span className="text-[11px] font-medium text-muted-foreground hidden sm:block shrink-0">
-          {track.category}
-        </span>
-      )}
+      <span className="text-[11px] text-muted-foreground truncate">{track.artist ?? "Unknown Artist"}</span>
 
-      {track.energy && ENERGY_STYLES[track.energy] && (
-        <span
-          className={cn(
-            "text-[9px] font-bold tracking-[0.1em] px-2 py-[3px] rounded-full shrink-0 uppercase",
-            ENERGY_STYLES[track.energy],
-          )}
-        >
-          {track.energy}
-        </span>
-      )}
+      <span className="text-[11px] font-mono text-faint">{formatDuration(track.duration)}</span>
 
-      <span className="font-mono text-[11px] text-muted-foreground shrink-0 w-9 text-right">
-        {formatDuration(track.duration)}
-      </span>
-
-      {canEdit && (
-        <button
-          onClick={(e) => {
-            // Don't let the click bubble up to the row and start playback.
-            e.stopPropagation();
-            onRemove();
-          }}
-          aria-label={`Remove ${track.name} from playlist`}
-          className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
-        >
-          <X className="w-3.5 h-3.5" />
-        </button>
-      )}
+      <div className="flex items-center gap-1">
+        {onQueue && (
+          <button
+            onClick={(e) => {
+              // Don't let the click bubble up to the row and start playback.
+              e.stopPropagation();
+              onQueue();
+            }}
+            title="Add to queue"
+            aria-label={`Add ${track.name} to queue`}
+            className="w-7 h-7 rounded-md border border-primary/20 flex items-center justify-center text-primary hover:bg-primary/10 transition-colors"
+          >
+            <ListPlus className="w-3.5 h-3.5" />
+          </button>
+        )}
+        {canEdit && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove();
+            }}
+            aria-label={`Remove ${track.name} from playlist`}
+            className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -116,7 +128,10 @@ export default function PlaylistDetailPage() {
   const removeTrack = useMutation(api.playlists.removeTrack);
 
   const playQueue = usePlayerStore((s) => s.playQueue);
+  const addToQueue = usePlayerStore((s) => s.addToQueue);
   const currentTrackId = usePlayerStore((s) => s.currentTrack?.id);
+  const isActive = usePlayerStore((s) => s.activePlaylistId === playlistId);
+  const isPlaying = usePlayerStore((s) => s.isPlaying);
 
   const [modal, setModal] = useState<"edit" | "delete" | "add" | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -155,6 +170,13 @@ export default function PlaylistDetailPage() {
   const canEdit = !!userId && playlist.clerkUserId === userId;
   const totalDuration = tracks.reduce((sum, t) => sum + (t.duration ?? 0), 0);
   const cover = playlist.coverImage ?? tracks.find((t) => t.coverImage)?.coverImage;
+  const meta = [
+    playlist.category ?? (playlist.curated ? "Curated" : "Your playlist"),
+    `${tracks.length} track${tracks.length !== 1 ? "s" : ""}`,
+    totalDuration ? formatTotalDuration(totalDuration) : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   function playFrom(index: number) {
     playQueue(toPlayerQueue(tracks.slice(index)), playlistId);
@@ -177,114 +199,112 @@ export default function PlaylistDetailPage() {
   }
 
   return (
-    <div className="flex flex-col gap-8 w-full pb-12">
-      <Link
-        href="/playlists"
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors w-fit"
-      >
-        <ArrowLeft className="w-3.5 h-3.5" />
-        Playlists
-      </Link>
+    <div className="flex flex-col w-full pb-8">
+      {/* Header bar */}
+      <div className="flex flex-wrap items-center gap-3.5 pb-3.5 mb-1 border-b border-primary/[0.08]">
+        <Link href="/playlists" className={ghostButton}>
+          <ArrowLeft className="w-[13px] h-[13px]" />
+          Back
+        </Link>
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row gap-6 sm:items-end">
-        <PlaylistCover
-          src={cover}
-          alt={playlist.name}
-          className="w-40 h-40 sm:w-48 sm:h-48 rounded-2xl shadow-lg shrink-0"
-          iconClassName="w-12 h-12"
-        />
-        <div className="flex-1 min-w-0">
-          <span className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">
-            {playlist.curated ? "Curated playlist" : "Playlist"}
-          </span>
-          <h1
-            className="text-3xl font-bold tracking-tight text-foreground mt-1 break-words"
-          >
-            {playlist.name}
-          </h1>
-          {playlist.description && (
-            <p className="text-sm text-muted-foreground mt-2 max-w-xl">{playlist.description}</p>
-          )}
-          <p className="text-xs text-muted-foreground mt-3">
-            {tracks.length} track{tracks.length !== 1 ? "s" : ""} · {formatTotalDuration(totalDuration)}
-          </p>
-
-          <div className="flex flex-wrap items-center gap-2 mt-5">
-            <button
-              onClick={() => playFrom(0)}
-              disabled={tracks.length === 0}
-              className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <Play className="w-4 h-4 fill-current" />
-              Play
-            </button>
-            {canEdit && (
-              <>
-                <button
-                  onClick={() => setModal("add")}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border text-sm font-semibold text-foreground hover:bg-secondary transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add songs
-                </button>
-                <button
-                  onClick={() => setModal("edit")}
-                  aria-label="Edit playlist"
-                  className="w-10 h-10 rounded-xl border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                >
-                  <Pencil className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setModal("delete")}
-                  aria-label="Delete playlist"
-                  className="w-10 h-10 rounded-xl border border-border flex items-center justify-center text-muted-foreground hover:text-destructive hover:border-destructive/40 hover:bg-destructive/10 transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </>
-            )}
+        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+          <PlaylistCover src={cover} alt="" className="w-11 h-11 rounded-[5px] shrink-0" iconClassName="w-4 h-4" />
+          <div className="min-w-0">
+            <h1 className={cn("text-base font-bold tracking-tight truncate", isActive ? "text-primary" : "text-foreground")}>
+              {playlist.name}
+            </h1>
+            <p className="text-[11px] text-muted-foreground truncate">{meta}</p>
           </div>
+          {isActive && (
+            <span className="text-[9px] font-bold bg-primary text-primary-foreground rounded px-[7px] py-0.5 ml-1 shrink-0">
+              ● {isPlaying ? "PLAYING NOW" : "PAUSED"}
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          {canEdit && (
+            <>
+              <button onClick={() => setModal("add")} className={ghostButton}>
+                <Plus className="w-[13px] h-[13px]" />
+                Add songs
+              </button>
+              <button onClick={() => setModal("edit")} aria-label="Edit playlist" className={ghostButton}>
+                <Pencil className="w-[13px] h-[13px]" />
+              </button>
+              <button
+                onClick={() => setModal("delete")}
+                aria-label="Delete playlist"
+                className={cn(ghostButton, "hover:text-destructive hover:border-destructive/50")}
+              >
+                <Trash2 className="w-[13px] h-[13px]" />
+              </button>
+            </>
+          )}
+          <button
+            onClick={() => playFrom(0)}
+            disabled={tracks.length === 0}
+            className="flex items-center gap-1.5 h-[31px] px-3.5 rounded-md bg-primary text-primary-foreground text-xs font-bold hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Play className="w-3 h-3 fill-current" />
+            Play all
+          </button>
         </div>
       </div>
 
+      {playlist.description && (
+        <p className="text-xs text-muted-foreground max-w-2xl py-3">{playlist.description}</p>
+      )}
+
       {/* Tracks */}
-      <div className="bg-card border border-border rounded-2xl overflow-hidden">
-        {tracks.length > 0 ? (
-          <div className="p-2">
-            {tracks.map((track, i) => (
-              <TrackRow
-                key={track.playlistTrackId}
-                track={track}
-                index={i}
-                isCurrent={currentTrackId === track._id}
-                canEdit={canEdit}
-                onPlay={() => playFrom(i)}
-                onRemove={() => removeTrack({ playlistTrackId: track.playlistTrackId })}
-              />
+      {tracks.length > 0 ? (
+        <div className="-mx-5 md:-mx-7">
+          <div className={cn(GRID, "px-5 py-2 border-b border-primary/[0.08]")}>
+            {["#", "Title", "Artist", "Time", ""].map((h, i) => (
+              <span
+                key={i}
+                className={cn(
+                  "text-[10px] font-semibold uppercase tracking-[0.1em] text-faint",
+                  h === "#" && "text-center",
+                )}
+              >
+                {h}
+              </span>
             ))}
           </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-4">
-              <ListMusic className="w-5 h-5 text-primary" />
-            </div>
-            <p className="text-sm font-semibold text-foreground mb-1">This playlist is empty</p>
-            <p className="text-xs text-muted-foreground mb-5">
-              {canEdit ? "Search the catalogue to add songs." : "No tracks have been added yet."}
-            </p>
-            {canEdit && (
-              <button
-                onClick={() => setModal("add")}
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-bold hover:opacity-90 transition-opacity"
-              >
-                <Plus className="w-4 h-4" />
-                Add songs
-              </button>
-            )}
+          {tracks.map((track, i) => (
+            <TrackRow
+              key={track.playlistTrackId}
+              track={track}
+              index={i}
+              isCurrent={currentTrackId === track._id}
+              canEdit={canEdit}
+              onPlay={() => playFrom(i)}
+              onQueue={track.audioUrl ? () => addToQueue(toPlayerTrack(track)) : undefined}
+              onRemove={() => removeTrack({ playlistTrackId: track.playlistTrackId })}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-4">
+            <ListMusic className="w-5 h-5 text-primary" />
           </div>
-        )}
-      </div>
+          <p className="text-sm font-semibold text-foreground mb-1">This playlist is empty</p>
+          <p className="text-xs text-muted-foreground mb-5">
+            {canEdit ? "Search the catalogue to add songs." : "No tracks have been added yet."}
+          </p>
+          {canEdit && (
+            <button
+              onClick={() => setModal("add")}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-bold hover:opacity-90 transition-opacity"
+            >
+              <Plus className="w-4 h-4" />
+              Add songs
+            </button>
+          )}
+        </div>
+      )}
 
       {modal === "edit" && (
         <PlaylistFormModal

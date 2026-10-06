@@ -43,6 +43,9 @@ module.exports = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         surface: "#1A1F26",
+        // App shell (sidebar, player bar) and dim tertiary text.
+        shell: "hsl(var(--shell))",
+        faint: "hsl(var(--faint))",
         "tunify-blue": "#0093E9",
         "tunify-dark": "#0F2027",
         "tunify-dark-blue": "#203A43",
