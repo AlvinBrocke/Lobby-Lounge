@@ -4,8 +4,12 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Book, Calendar, List, ListMusic, Settings } from "lucide-react";
+import { useConvexAuth, useQuery } from "convex/react";
+import { Book, Calendar, List, ListMusic, Send, Settings } from "lucide-react";
+import { api } from "@convex/_generated/api";
 import { EqBars } from "@/components/player/EqBars";
+import { useNow } from "@/hooks/useNow";
+import { isLiveToday } from "@/lib/announcements";
 import { cn, formatDuration } from "@/lib/utils";
 import usePlayerStore from "@/store/usePlayerStore";
 
@@ -13,6 +17,7 @@ const navItems = [
   { name: "Library", href: "/library", icon: Book },
   { name: "Schedule", href: "/schedule", icon: Calendar },
   { name: "Playlists", href: "/playlists", icon: List },
+  { name: "Announcements", href: "/announcements", icon: Send },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
@@ -126,6 +131,11 @@ function UpNext() {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { isAuthenticated } = useConvexAuth();
+  // Same query as the announcement scheduler, so Convex serves both from one subscription.
+  const announcements = useQuery(api.announcements.listByUser, isAuthenticated ? {} : "skip");
+  const now = useNow(60_000);
+  const liveCount = (announcements ?? []).filter((a) => !a.paused && isLiveToday(a, now)).length;
 
   return (
     <aside className="w-[228px] shrink-0 z-[2] flex flex-col gap-2.5 px-2.5 py-3 bg-shell shadow-[4px_0_24px_rgba(0,0,0,0.45)] overflow-y-auto">
@@ -161,7 +171,15 @@ export function Sidebar() {
                 className={cn("w-[18px] h-[18px]", active ? "text-primary" : "text-faint")}
                 strokeWidth={1.6}
               />
-              {item.name}
+              <span className="flex-1">{item.name}</span>
+              {item.href === "/announcements" && liveCount > 0 && (
+                <span
+                  title={`${liveCount} playing today`}
+                  className="text-[9px] font-bold bg-primary text-primary-foreground rounded-full px-[5px] py-px"
+                >
+                  {liveCount}
+                </span>
+              )}
             </Link>
           );
         })}

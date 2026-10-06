@@ -55,7 +55,7 @@ After `npx convex deploy`, copy the printed production URL into Vercel's Product
 
 Clerk issues the session JWT; the app never mints its own tokens. Authorization is layered:
 
-1. **Middleware** — `src/proxy.ts` (**not** `middleware.ts`; Next.js 16 convention, do not rename). Shallow check only: reads the session JWT, never the database. Protected routes: `/dashboard`, `/account`, `/explore`, `/schedule`, `/playlists`, `/library`, `/settings`.
+1. **Middleware** — `src/proxy.ts` (**not** `middleware.ts`; Next.js 16 convention, do not rename). Shallow check only: reads the session JWT, never the database. Protected routes: `/dashboard`, `/account`, `/explore`, `/schedule`, `/playlists`, `/library`, `/settings`, `/announcements`.
 2. **Data Access Layer** — `src/lib/session.ts`. Any server code (Server Components, layouts, Server Actions) that needs the current user goes through `verifySession()` (redirects) or `getSession()` (nullable). `getConvexToken()` returns the Clerk JWT for calling Convex from the server with `fetchQuery`/`fetchMutation` from `convex/nextjs`. `src/app/(main)/layout.tsx` calls `verifySession()` so nothing under `(main)` renders signed-out.
 3. **Convex** — `requireUser()` / `assertOwner()` in `convex/lib/auth.ts` on every user-scoped function. Shared-catalog writes (`playlists.seedCurated` / `appendTracks`, `tracks.*` create/update/remove/seed, `jamendo.*`) are `internalMutation` / `internalAction` — callable only from other Convex functions or `npx convex run`, never from the browser.
 

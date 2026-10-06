@@ -15,6 +15,21 @@ export interface User {
   plan: string;
 }
 
+/** One play of an announcement, as handed to the player. */
+export interface AnnouncementCue {
+  /** Announcement id + play slot, unique per play. */
+  key: string;
+  title: string;
+  /** Spoken with text-to-speech when there's no `audioUrl`. */
+  message?: string;
+  audioUrl?: string;
+  voiceName?: string;
+  pitch: number;
+  speed: number;
+  volumeBoost: number;
+  interruptMusic: boolean;
+}
+
 export interface PlayerState {
   isPlaying: boolean;
   currentTrack: Track | null;
@@ -34,4 +49,12 @@ export interface PlayerState {
   togglePlay: () => void;
   nextTrack: () => void;
   previousTrack: () => void;
+  /** Announcements waiting for their turn (the current song to end, unless they interrupt). */
+  pendingAnnouncements: AnnouncementCue[];
+  /** The announcement playing now; music is paused until it finishes. */
+  announcing: { cue: AnnouncementCue; advanceAfter: boolean } | null;
+  queueAnnouncement: (cue: AnnouncementCue) => void;
+  /** Plays the first pending announcement. `advanceAfter` moves to the next song when it ends. */
+  startAnnouncement: (advanceAfter: boolean) => void;
+  finishAnnouncement: () => void;
 }
