@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { CalendarClock, Clock, Plus } from "lucide-react";
+import { CalendarClock, Plus } from "lucide-react";
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
-import { Card, CardContent } from "@/components/ui/card";
 import { PageWrapper } from "@/components/layout/page-wrapper";
+import { PlaylistCover } from "@/components/playlists/PlaylistCover";
 import {
   ScheduleBlockModal,
   type ScheduleBlockValues,
@@ -28,14 +28,8 @@ const SCROLL_TO_HOUR = 7; // most venues open in the morning
 
 // Colour is picked from the playlist's category so the same kind of music
 // always looks the same across the week.
-const PALETTE = [
-  "bg-blue-500/10 text-blue-500 border-blue-500/40",
-  "bg-amber-500/10 text-amber-500 border-amber-500/40",
-  "bg-purple-500/10 text-purple-500 border-purple-500/40",
-  "bg-rose-500/10 text-rose-500 border-rose-500/40",
-  "bg-emerald-500/10 text-emerald-500 border-emerald-500/40",
-  "bg-cyan-500/10 text-cyan-500 border-cyan-500/40",
-];
+// Hex rather than Tailwind classes: blocks use the colour in a gradient.
+const PALETTE = ["#805BE8", "#2764E7", "#E88E9A", "#26866E", "#D96B37", "#6A235E", "#0B9E53", "#C53364"];
 
 function colourFor(key: string): string {
   let hash = 0;
@@ -74,7 +68,8 @@ export default function SchedulePage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const loading = blocks === undefined || curated === undefined || mine === undefined;
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = SCROLL_TO_HOUR * ROW_HEIGHT;
+    // Small offset so the first hour's label isn't tucked under the sticky header.
+    if (scrollRef.current) scrollRef.current.scrollTop = SCROLL_TO_HOUR * ROW_HEIGHT - 12;
   }, [loading]);
 
   function blockLabel(block: Doc<"scheduleBlocks">) {
@@ -113,10 +108,10 @@ export default function SchedulePage() {
       description="Set a playlist for every hour of the week — it repeats automatically."
       action={
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 bg-muted/50 rounded-full px-3 py-1.5 text-xs text-muted-foreground">
+          <div className="hidden sm:flex items-center gap-2 text-[11px] text-muted-foreground">
             {current ? (
               <>
-                <span className="w-2 h-2 rounded-full bg-primary live-dot" />
+                <span className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />
                 On now:{" "}
                 <span className="font-semibold text-foreground">{blockLabel(current)}</span>
               </>
@@ -130,29 +125,26 @@ export default function SchedulePage() {
           <button
             onClick={openNewBlock}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-40"
+            className="flex items-center gap-1 px-[15px] py-[9px] bg-primary text-primary-foreground rounded-lg text-[11px] font-extrabold shadow-[0_6px_22px_hsl(var(--primary)/0.18)] hover:opacity-90 transition-opacity disabled:opacity-40"
           >
-            <Plus className="w-4 h-4" />
-            New Block
+            <Plus className="w-3 h-3" strokeWidth={3} />
+            Add playlist
           </button>
         </div>
       }
     >
-      <Card className="bg-card border-border shadow-xl rounded-2xl overflow-hidden">
-        <CardContent className="p-0">
-          <div ref={scrollRef} className="max-h-[calc(100vh-280px)] min-h-[400px] overflow-y-auto">
+      <div className="bg-[#0A101C] border border-white/[0.07] rounded-[14px] p-[13px] shadow-[0_18px_50px_rgba(0,0,0,0.32)] overflow-hidden">
+          <div ref={scrollRef} className="max-h-[calc(100vh-290px)] min-h-[400px] overflow-y-auto scrollbar-hide">
             {/* Day headers */}
-            <div className="grid grid-cols-[72px_1fr] border-b border-border sticky top-0 bg-card z-30">
-              <div className="p-4 border-r border-border flex items-center justify-center">
-                <Clock className="w-5 h-5 text-muted-foreground" />
-              </div>
-              <div className="grid grid-cols-7">
+            <div className="grid grid-cols-[56px_1fr] sticky top-0 bg-[#0A101C] z-30 pb-[7px]">
+              <div />
+              <div className="grid grid-cols-7 gap-[7px]">
                 {DAYS.map((day) => (
                   <div
                     key={day}
                     className={cn(
-                      "p-4 text-center font-bold border-r border-border last:border-r-0 text-xs tracking-widest uppercase",
-                      day === today ? "text-primary" : "text-muted-foreground",
+                      "py-[7px] rounded-[7px] text-center text-[11px] font-bold",
+                      day === today ? "bg-primary/10 text-primary" : "text-muted-foreground",
                     )}
                   >
                     {day}
@@ -166,13 +158,13 @@ export default function SchedulePage() {
               {HOURS.map((hour) => (
                 <div
                   key={hour}
-                  className="grid grid-cols-[72px_1fr] border-b border-border last:border-b-0"
+                  className="grid grid-cols-[56px_1fr]"
                   style={{ height: ROW_HEIGHT }}
                 >
-                  <div className="text-[11px] text-muted-foreground pr-3 font-mono font-bold flex items-start justify-end pt-1.5 uppercase tracking-tighter">
-                    {formatHour(hour)}
+                  <div className="text-[10px] text-faint pr-2.5 font-semibold flex items-start justify-end -mt-1.5 uppercase">
+                    {hour > 0 && formatHour(hour)}
                   </div>
-                  <div className="grid grid-cols-7">
+                  <div className="grid grid-cols-7 gap-[7px] border-t border-white/[0.04]">
                     {DAYS.map((day) => (
                       <button
                         key={`${day}-${hour}`}
@@ -181,8 +173,8 @@ export default function SchedulePage() {
                         aria-label={`Add block on ${day} at ${formatHour(hour)}`}
                         onClick={() => setModal({ mode: "create", day, startHour: hour })}
                         className={cn(
-                          "border-r border-border last:border-r-0 hover:bg-muted/30 transition-colors group/cell relative",
-                          day === today && "bg-primary/[0.03]",
+                          "hover:bg-white/[0.04] transition-colors group/cell relative",
+                          day === today ? "bg-primary/[0.045]" : "bg-white/[0.025]",
                         )}
                       >
                         <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/cell:opacity-100 transition-opacity">
@@ -195,16 +187,16 @@ export default function SchedulePage() {
               ))}
 
               {/* Blocks, absolutely positioned over the grid */}
-              <div className="absolute top-0 left-[72px] right-0 bottom-0 pointer-events-none">
-                <div className="grid grid-cols-7 h-full">
+              <div className="absolute top-0 left-[56px] right-0 bottom-0 pointer-events-none">
+                <div className="grid grid-cols-7 gap-[7px] h-full">
                   {DAYS.map((day) => (
                     <div key={`blocks-${day}`} className="relative h-full">
                       {day === today && (
                         <div
-                          className="absolute left-0 right-0 h-0.5 bg-primary z-20"
+                          className="absolute left-0 right-0 h-px bg-destructive z-20 shadow-[0_0_7px_hsl(var(--destructive)/0.5)]"
                           style={{ top: (now.getHours() + now.getMinutes() / 60) * ROW_HEIGHT }}
                         >
-                          <span className="absolute -left-1 -top-[3px] w-2 h-2 rounded-full bg-primary" />
+                          <span className="absolute -left-1 -top-[3px] w-[7px] h-[7px] rounded-full bg-destructive" />
                         </div>
                       )}
                       {(blocks ?? [])
@@ -213,38 +205,45 @@ export default function SchedulePage() {
                           const playlist = playlistById.get(block.playlistId);
                           const isNow = current?._id === block._id;
                           const compact = block.duration === 1;
+                          const colour = colourFor(playlist?.category ?? playlist?.name ?? "");
                           return (
                             <button
                               key={block._id}
                               type="button"
                               onClick={() => setModal({ mode: "edit", block })}
                               className={cn(
-                                "absolute left-1 right-1 rounded-xl border border-l-4 bg-card pointer-events-auto text-left text-xs font-bold overflow-hidden shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-200 z-10",
-                                compact ? "px-2 py-1" : "p-2.5",
-                                colourFor(playlist?.category ?? playlist?.name ?? ""),
-                                isNow && "ring-2 ring-primary/50",
+                                "absolute left-1 right-1 rounded-lg border pointer-events-auto text-left text-white overflow-hidden hover:scale-[1.02] transition-transform duration-150 z-10",
+                                compact ? "px-2 py-1" : "px-2 py-[9px]",
+                                isNow
+                                  ? "border-primary shadow-[0_0_0_2px_hsl(var(--primary)/0.15),0_8px_22px_rgba(0,0,0,0.3)]"
+                                  : "border-white/10 shadow-[0_5px_14px_rgba(0,0,0,0.22)]",
                               )}
                               style={{
-                                top: block.startHour * ROW_HEIGHT + 3,
-                                height: block.duration * ROW_HEIGHT - 6,
+                                top: block.startHour * ROW_HEIGHT + 2,
+                                height: block.duration * ROW_HEIGHT - 4,
+                                // Per-playlist colour, so it can't be a static Tailwind class.
+                                background: `linear-gradient(155deg, ${colour}, ${colour}B8)`,
                               }}
                             >
-                              <div className="flex items-center gap-1.5">
-                                {isNow && (
-                                  <span className="w-1.5 h-1.5 rounded-full bg-primary live-dot shrink-0" />
-                                )}
-                                <span className="truncate text-[13px] tracking-tight">
-                                  {blockLabel(block)}
-                                </span>
-                              </div>
-                              <div className="flex items-center opacity-70 font-medium mt-0.5 truncate">
-                                {!compact && <Clock className="w-3 h-3 mr-1 shrink-0" />}
+                              <span className={cn("block truncate text-[11px] font-extrabold leading-tight tracking-tight", !compact && "pr-8")}>
+                                {blockLabel(block)}
+                              </span>
+                              <span className="block mt-1 text-[9px] text-white/70 truncate">
                                 {formatRange(block.startHour, block.duration)}
-                              </div>
-                              {!compact && block.title && playlist && (
-                                <div className="opacity-60 font-medium mt-0.5 truncate">
-                                  {playlist.name}
-                                </div>
+                                {!compact && block.title && playlist ? ` · ${playlist.name}` : ""}
+                              </span>
+                              {!compact && (
+                                <PlaylistCover
+                                  src={playlist?.coverImage}
+                                  alt=""
+                                  className="absolute top-[7px] right-[7px] w-[27px] h-[27px] rounded-[5px] shadow-[0_2px_8px_rgba(0,0,0,0.35)]"
+                                  iconClassName="w-3 h-3"
+                                />
+                              )}
+                              {isNow && (
+                                <span className="absolute right-[7px] bottom-[7px] px-[5px] py-0.5 rounded-full bg-background text-primary text-[7px] font-extrabold uppercase tracking-[0.08em]">
+                                  Live
+                                </span>
                               )}
                             </button>
                           );
@@ -255,8 +254,7 @@ export default function SchedulePage() {
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+      </div>
 
       {blocks?.length === 0 && (
         <p className="text-sm text-muted-foreground text-center mt-4">

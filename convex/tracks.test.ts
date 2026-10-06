@@ -37,6 +37,22 @@ describe("tracks", () => {
     expect(track).toBeNull();
   });
 
+  it("backfillDecodeEntities fixes escaped names and artists, and leaves clean ones alone", async () => {
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    const escaped = await t.mutation(internal.tracks.create, {
+      name: "Rock &amp; Roll",
+      artist: "John Dada &amp; the Weathermen",
+    });
+    await t.mutation(internal.tracks.create, { name: "Clean", artist: "Plain & Simple" });
+
+    const result = await t.mutation(internal.tracks.backfillDecodeEntities, {});
+    expect(result).toMatchObject({ scanned: 2, patched: 1, remaining: 0 });
+    expect(await t.query(internal.tracks.get, { id: escaped })).toMatchObject({
+      name: "Rock & Roll",
+      artist: "John Dada & the Weathermen",
+    });
+  });
+
   it("backfillEnergy fills missing energy from the track category", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
     const id = await t.mutation(internal.tracks.create, { name: "No Energy", category: "Upbeat" });

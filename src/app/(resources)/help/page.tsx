@@ -28,7 +28,7 @@ export default function HelpCenterPage() {
           <a key={id} href={`#${id}`} className="ll-help-topic">
             <span className="ll-help-topic-icon"><Icon size={18} /></span>
             <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-              <span style={{ fontWeight: 700, color: "#fff", fontSize: 15 }}>{title}</span>
+              <span style={{ fontWeight: 700, color: "var(--ll-on-ink-1)", fontSize: 15 }}>{title}</span>
               <span style={{ fontSize: 13, color: "var(--ll-on-ink-3)" }}>{faqs.length} {faqs.length === 1 ? "article" : "articles"}</span>
             </span>
           </a>
@@ -38,7 +38,7 @@ export default function HelpCenterPage() {
       <div style={{ maxWidth: 860, margin: "0 auto" }}>
         {helpCategories.map(({ id, title, icon: Icon, faqs, footer }) => (
           <section key={id} id={id} aria-labelledby={`${id}-title`} style={{ scrollMarginTop: 96, marginTop: 64 }}>
-            <h2 id={`${id}-title`} style={{ display: "flex", alignItems: "center", gap: 12, fontFamily: "var(--ll-font-display)", fontSize: 24, fontWeight: 700, letterSpacing: "-.02em", color: "#fff", margin: "0 0 18px" }}>
+            <h2 id={`${id}-title`} style={{ display: "flex", alignItems: "center", gap: 12, fontFamily: "var(--ll-font-display)", fontSize: 24, fontWeight: 700, letterSpacing: "-.02em", color: "var(--ll-on-ink-1)", margin: "0 0 18px" }}>
               <Icon size={22} color="var(--ll-accent)" aria-hidden />
               {title}
             </h2>

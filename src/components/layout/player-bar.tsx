@@ -1,49 +1,137 @@
 "use client";
 
-import usePlayerStore from "@/store/usePlayerStore";
-import { cn } from "@/lib/utils";
+import { useEffect, useRef, useState } from "react";
 import {
   ListMusic,
-  MonitorSpeaker,
+  Maximize2,
   Pause,
   Play,
-  Repeat,
-  Shuffle,
   SkipBack,
   SkipForward,
-  Volume2,
+  Volume1,
+  VolumeX,
+  X,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { cn, formatDuration } from "@/lib/utils";
+import usePlayerStore from "@/store/usePlayerStore";
+import type { Track } from "@/types";
 
-function EqBars({ playing }: { playing: boolean }) {
+/** Player clock: `formatDuration` shows a dash for 0, but a clock should read 0:00. */
+const clock = (seconds: number) => (seconds >= 1 ? formatDuration(seconds) : "0:00");
+
+function Artwork({ track, className }: { track: Track | null; className: string }) {
+  return (
+    <div className={cn("overflow-hidden shrink-0 bg-secondary", className)}>
+      {track?.image ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={track.image} alt="" className="w-full h-full object-cover" />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center">
+          <ListMusic className="w-1/3 h-1/3 text-primary/60" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Click-to-seek bar. `big` is the variant used in the expanded view. */
+function Progress({
+  progress,
+  onSeek,
+  big,
+}: {
+  progress: number;
+  onSeek: (pct: number) => void;
+  big?: boolean;
+}) {
   return (
     <div
+      role="slider"
+      aria-label="Seek"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={Math.round(progress)}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "ArrowRight") onSeek(Math.min(100, progress + 5));
+        if (e.key === "ArrowLeft") onSeek(Math.max(0, progress - 5));
+      }}
+      onClick={(e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        onSeek(Math.max(0, Math.min(100, ((e.clientX - r.left) / r.width) * 100)));
+      }}
       className={cn(
-        "flex gap-[2.5px] items-end",
-        !playing && "eq-bars-paused",
+        "relative flex-1 rounded-sm cursor-pointer",
+        big ? "h-1 bg-muted-foreground/30" : "h-[3px] bg-muted-foreground/20",
       )}
     >
-      <span className="eq-bar w-[2.5px] h-[9px]" />
-      <span className="eq-bar w-[2.5px] h-[14px]" />
-      <span className="eq-bar w-[2.5px] h-[11px]" />
-      <span className="eq-bar w-[2.5px] h-[17px]" />
-      <span className="eq-bar w-[2.5px] h-[13px]" />
-      <span className="eq-bar w-[2.5px] h-[16px]" />
+      <div className="absolute inset-y-0 left-0 bg-primary rounded-sm" style={{ width: `${progress}%` }} />
+      <div
+        className={cn(
+          "absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary pointer-events-none",
+          big ? "w-[13px] h-[13px] shadow-[0_0_8px_hsl(var(--primary))]" : "w-2.5 h-2.5",
+        )}
+        style={{ left: `${progress}%` }}
+      />
+    </div>
+  );
+}
+
+function Transport({
+  playing,
+  disabled,
+  onPrev,
+  onToggle,
+  onNext,
+  big,
+}: {
+  playing: boolean;
+  disabled: boolean;
+  onPrev: () => void;
+  onToggle: () => void;
+  onNext: () => void;
+  big?: boolean;
+}) {
+  const side = "p-1 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40";
+  const icon = big ? "w-[22px] h-[22px]" : "w-4 h-4";
+  return (
+    <div className={cn("flex items-center", big ? "gap-[22px]" : "gap-3.5")}>
+      <button onClick={onPrev} disabled={disabled} title="Restart track" aria-label="Restart track" className={side}>
+        <SkipBack className={cn(icon, "fill-current")} />
+      </button>
+      <button
+        onClick={onToggle}
+        disabled={disabled}
+        aria-label={playing ? "Pause" : "Play"}
+        className={cn(
+          "rounded-full bg-primary text-primary-foreground flex items-center justify-center transition-transform hover:scale-[1.08] disabled:opacity-40 disabled:hover:scale-100",
+          big
+            ? "w-[54px] h-[54px] shadow-[0_4px_24px_hsl(var(--primary)/0.45)]"
+            : "w-10 h-10 shadow-[0_2px_16px_hsl(var(--primary)/0.4)]",
+        )}
+      >
+        {playing ? (
+          <Pause className={cn(big ? "w-[18px] h-[18px]" : "w-3.5 h-3.5", "fill-current")} />
+        ) : (
+          <Play className={cn(big ? "w-[18px] h-[18px]" : "w-3.5 h-3.5", "fill-current ml-0.5")} />
+        )}
+      </button>
+      <button onClick={onNext} disabled={disabled} title="Next" aria-label="Next track" className={side}>
+        <SkipForward className={cn(icon, "fill-current")} />
+      </button>
     </div>
   );
 }
 
 export function PlayerBar() {
-  const { isPlaying, currentTrack, volume, togglePlay, setVolume, nextTrack, previousTrack } =
-    usePlayerStore();
+  const { isPlaying, currentTrack, volume, togglePlay, setVolume, nextTrack } = usePlayerStore();
 
-  // Presentation-only local state
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [shuffle, setShuffle] = useState(false);
-  const [repeat, setRepeat] = useState(false);
-
+  const [expanded, setExpanded] = useState(false);
+  const [showVolume, setShowVolume] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const volumeRef = useRef<HTMLDivElement>(null);
 
   // Load new track when currentTrack changes
   useEffect(() => {
@@ -79,163 +167,179 @@ export function PlayerBar() {
     audio.volume = volume / 100;
   }, [volume]);
 
-  // Nothing playing — render nothing
-  if (!currentTrack) return null;
+  // Close the volume popover on an outside click, and the expanded view on Escape.
+  useEffect(() => {
+    if (!showVolume) return;
+    const close = (e: PointerEvent) => {
+      if (!volumeRef.current?.contains(e.target as Node)) setShowVolume(false);
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, [showVolume]);
 
-  const formatTime = (s: number) =>
-    `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+  useEffect(() => {
+    if (!expanded) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setExpanded(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [expanded]);
 
-  const currentSeconds = Math.round((progress / 100) * duration);
+  const elapsed = (progress / 100) * duration;
+  const disabled = !currentTrack;
 
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+  function seek(pct: number) {
     const audio = audioRef.current;
     if (!audio || !duration) return;
-    const r = e.currentTarget.getBoundingClientRect();
-    const pct = Math.max(0, Math.min(100, ((e.clientX - r.left) / r.width) * 100));
     audio.currentTime = (pct / 100) * duration;
     setProgress(pct);
+  }
+
+  // There's no play history yet, so "previous" restarts the current track.
+  const restart = () => seek(0);
+
+  const transport = {
+    playing: isPlaying,
+    disabled,
+    onPrev: restart,
+    onToggle: togglePlay,
+    onNext: nextTrack,
   };
 
   return (
     <>
-      {/* Hidden audio element */}
       <audio
         ref={audioRef}
-        loop={repeat}
         onTimeUpdate={(e) => {
           const el = e.currentTarget;
           if (el.duration) setProgress((el.currentTime / el.duration) * 100);
         }}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
-        onEnded={() => {
-          if (!repeat) nextTrack();
-        }}
+        onEnded={nextTrack}
         className="hidden"
       />
 
-      <div className="h-full px-6 flex items-center justify-between gap-5">
-        {/* Track info */}
-        <div className="flex items-center gap-3 w-[28%] min-w-0">
-          <div className="relative w-[46px] h-[46px] rounded-lg overflow-hidden border border-border shrink-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={
-                currentTrack.image ||
-                "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=120&h=120&fit=crop"
-              }
-              alt="album"
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-black/22" />
-            <div className="absolute bottom-[5px] left-[5px]">
-              <EqBars playing={isPlaying} />
+      {expanded && currentTrack && (
+        <div
+          className="fixed inset-0 z-[300] flex items-center justify-center"
+          onClick={() => setExpanded(false)}
+        >
+          <div className="absolute inset-0 bg-[rgba(5,10,22,0.75)] backdrop-blur-[10px]" />
+          <div
+            role="dialog"
+            aria-label="Now playing"
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-[360px] flex flex-col items-center gap-4 px-8 pt-7 pb-6 rounded-[18px] bg-secondary border border-white/10 shadow-[0_32px_80px_rgba(0,0,0,0.75)]"
+          >
+            <button
+              onClick={() => setExpanded(false)}
+              aria-label="Close"
+              className="absolute top-3.5 right-3.5 w-[26px] h-[26px] rounded-full bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+            <Artwork track={currentTrack} className="w-[200px] h-[200px] rounded-xl shadow-[0_8px_36px_rgba(0,0,0,0.65)]" />
+            <div className="text-center w-full">
+              <div className="text-[17px] font-bold tracking-tight text-foreground truncate">
+                {currentTrack.name}
+              </div>
+              {currentTrack.artist && (
+                <div className="text-xs text-muted-foreground mt-1">{currentTrack.artist}</div>
+              )}
+              {currentTrack.category && (
+                <div className="text-[11px] text-faint">{currentTrack.category}</div>
+              )}
             </div>
+            <div className="w-full">
+              <div className="flex">
+                <Progress progress={progress} onSeek={seek} big />
+              </div>
+              <div className="flex justify-between mt-2 text-[10px] font-mono text-faint">
+                <span>{clock(elapsed)}</span>
+                <span>{clock(duration)}</span>
+              </div>
+            </div>
+            <Transport {...transport} big />
+          </div>
+        </div>
+      )}
+
+      <div className="h-full flex items-center px-5 bg-shell shadow-[0_-8px_40px_rgba(0,0,0,0.55)]">
+        {/* Now playing — opens the expanded view */}
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          disabled={disabled}
+          aria-label="Expand now playing"
+          className="group w-[30%] min-w-0 flex items-center gap-2.5 pr-5 text-left disabled:cursor-default"
+        >
+          <div className="relative w-12 h-12 rounded-md overflow-hidden shrink-0 shadow-[0_2px_10px_rgba(0,0,0,0.5)] transition-transform group-enabled:group-hover:scale-105">
+            <Artwork track={currentTrack} className="w-full h-full" />
+            {currentTrack && (
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 flex items-center justify-center transition-colors">
+                <Maximize2 className="w-[13px] h-[13px] text-white opacity-0 group-hover:opacity-90" />
+              </div>
+            )}
           </div>
           <div className="min-w-0">
-            <div className="text-[13px] font-semibold text-foreground truncate">
-              {currentTrack.name}
+            <div className="text-xs font-bold text-foreground truncate">
+              {currentTrack?.name ?? "Nothing playing"}
             </div>
-            <div className="text-[11px] text-muted-foreground truncate mt-0.5">
-              Lobby &amp; Lounge · Signature Mix
+            <div className="text-[11px] text-muted-foreground truncate">
+              {currentTrack ? (currentTrack.artist ?? "Lobby & Lounge") : "Choose a playlist to start"}
             </div>
+            {currentTrack?.category && (
+              <div className="text-[10px] text-faint truncate mt-px">{currentTrack.category}</div>
+            )}
           </div>
-        </div>
+        </button>
 
-        {/* Controls */}
-        <div className="flex flex-col items-center gap-2 flex-1 max-w-[460px]">
-          <div className="flex items-center gap-3.5">
-            <button
-              onClick={() => setShuffle((s) => !s)}
-              className={cn(
-                "flex items-center justify-center w-[30px] h-[30px] rounded-lg transition-colors",
-                shuffle ? "text-primary" : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <Shuffle className="w-[15px] h-[15px]" />
-            </button>
-            <button
-              onClick={previousTrack}
-              className="flex items-center justify-center w-[30px] h-[30px] rounded-lg text-foreground hover:text-primary transition-colors"
-            >
-              <SkipBack className="w-[17px] h-[17px]" />
-            </button>
-            <button
-              onClick={togglePlay}
-              className="w-[38px] h-[38px] rounded-full flex items-center justify-center shrink-0 shadow-md transition-transform hover:scale-105 active:scale-95
-                bg-white text-[#0F1419] dark:bg-white dark:text-[#0F1419]
-                light:bg-[#00388D] light:text-white"
-            >
-              {isPlaying ? (
-                <Pause className="w-[18px] h-[18px] fill-current" />
-              ) : (
-                <Play className="w-[18px] h-[18px] fill-current ml-0.5" />
-              )}
-            </button>
-            <button
-              onClick={nextTrack}
-              className="flex items-center justify-center w-[30px] h-[30px] rounded-lg text-foreground hover:text-primary transition-colors"
-            >
-              <SkipForward className="w-[17px] h-[17px]" />
-            </button>
-            <button
-              onClick={() => setRepeat((r) => !r)}
-              className={cn(
-                "flex items-center justify-center w-[30px] h-[30px] rounded-lg transition-colors",
-                repeat ? "text-primary" : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <Repeat className="w-[15px] h-[15px]" />
-            </button>
-          </div>
-
-          {/* Progress */}
-          <div className="flex items-center gap-2.5 w-full">
-            <span className="font-mono text-[10px] text-muted-foreground shrink-0 w-7 text-center tabular-nums">
-              {formatTime(currentSeconds)}
+        {/* Transport + progress */}
+        <div className="flex-1 flex flex-col items-center justify-center gap-2">
+          <Transport {...transport} />
+          <div className="flex items-center gap-2 w-full max-w-[260px]">
+            <span className="text-[10px] font-mono text-faint shrink-0 tabular-nums">
+              {clock(elapsed)}
             </span>
-            <div
-              className="flex-1 h-1 bg-border rounded-full relative cursor-pointer group"
-              onClick={handleSeek}
-            >
-              <div
-                className="absolute left-0 top-0 h-full bg-primary rounded-full"
-                style={{ width: `${progress}%` }}
-              />
-              <div
-                className="absolute top-1/2 -translate-y-1/2 w-[11px] h-[11px] rounded-full bg-foreground border-2 border-primary opacity-0 group-hover:opacity-100 transition-opacity -translate-x-1/2 pointer-events-none"
-                style={{ left: `${progress}%` }}
-              />
-            </div>
-            <span className="font-mono text-[10px] text-muted-foreground shrink-0 w-7 text-center tabular-nums">
-              {formatTime(duration)}
+            <Progress progress={progress} onSeek={seek} />
+            <span className="text-[10px] font-mono text-faint shrink-0 tabular-nums">
+              {clock(duration)}
             </span>
           </div>
         </div>
 
-        {/* Extras */}
-        <div className="flex items-center gap-1.5 w-[28%] justify-end">
-          <button className="flex items-center justify-center w-[30px] h-[30px] rounded-lg text-muted-foreground hover:text-foreground transition-colors">
-            <MonitorSpeaker className="w-[15px] h-[15px]" />
-          </button>
-          <button className="flex items-center justify-center w-[30px] h-[30px] rounded-lg text-muted-foreground hover:text-foreground transition-colors">
-            <ListMusic className="w-[15px] h-[15px]" />
-          </button>
-          <div className="flex items-center gap-2 ml-1">
-            <Volume2 className="w-[13px] h-[13px] text-muted-foreground shrink-0" />
-            <div className="relative w-20 h-1 bg-border rounded-full">
-              <div
-                className="absolute left-0 top-0 h-full bg-primary rounded-full pointer-events-none"
-                style={{ width: `${volume}%` }}
-              />
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={volume}
-                onChange={(e) => setVolume(Number(e.target.value))}
-                className="absolute inset-0 w-full h-[200%] -top-[50%] opacity-0 cursor-pointer"
-              />
-            </div>
+        {/* Volume */}
+        <div className="w-[30%] flex justify-end pl-5">
+          <div ref={volumeRef} className="relative">
+            <button
+              onClick={() => setShowVolume((v) => !v)}
+              title="Volume"
+              aria-label="Volume"
+              aria-expanded={showVolume}
+              className={cn(
+                "px-[7px] py-1.5 rounded-md border transition-colors",
+                showVolume
+                  ? "bg-primary/10 border-primary/25 text-primary"
+                  : "border-transparent text-faint hover:text-foreground",
+              )}
+            >
+              {volume === 0 ? <VolumeX className="w-[15px] h-[15px]" /> : <Volume1 className="w-[15px] h-[15px]" />}
+            </button>
+            {showVolume && (
+              <div className="absolute bottom-[calc(100%+10px)] left-1/2 -translate-x-1/2 w-9 px-2.5 py-3.5 flex flex-col items-center gap-2 rounded-[10px] bg-secondary border border-white/10 shadow-[0_-8px_28px_rgba(0,0,0,0.55)] z-50">
+                <span className="text-[9px] font-bold font-mono text-primary/60">{volume}</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={volume}
+                  onChange={(e) => setVolume(Number(e.target.value))}
+                  aria-label="Volume level"
+                  // Vertical slider; `direction: rtl` puts 100 at the top.
+                  style={{ writingMode: "vertical-lr", direction: "rtl" }}
+                  className="h-20 w-3.5 cursor-pointer accent-primary"
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -64,7 +64,7 @@ export function FaqAccordion({ idPrefix, faqs }: { idPrefix: string; faqs: Faq[]
         .ll-faq { border: 1px solid var(--ll-ink-line); border-radius: 16px; background: var(--ll-ink-2); overflow: hidden; }
         .ll-faq-item { scroll-margin-top: 96px; }
         .ll-faq-item + .ll-faq-item { border-top: 1px solid var(--ll-ink-line); }
-        .ll-faq-item summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 22px; font-family: var(--ll-font-body); font-size: 15.5px; font-weight: 700; line-height: 1.45; color: #fff; transition: color .2s; }
+        .ll-faq-item summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 22px; font-family: var(--ll-font-body); font-size: 15.5px; font-weight: 700; line-height: 1.45; color: var(--ll-on-ink-1); transition: color .2s; }
         .ll-faq-item summary::-webkit-details-marker { display: none; }
         .ll-faq-item summary:hover { color: var(--ll-accent); }
         .ll-faq-item summary:focus-visible { outline: 2px solid var(--ll-accent); outline-offset: -2px; }

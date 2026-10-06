@@ -1,25 +1,13 @@
-import { Outfit, DM_Sans, Plus_Jakarta_Sans } from "next/font/google";
+import { Geist } from "next/font/google";
 import "./globals.css";
 import { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { ThemeProvider } from "@/components/theme-provider";
 import { ConvexClientProvider } from "./ConvexClientProvider";
 
-const outfit = Outfit({
+// One family for the whole product — a neutral grotesk close to the wordmark.
+const geist = Geist({
   subsets: ["latin"],
-  variable: "--font-outfit",
-  display: "swap",
-});
-
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-dm-sans",
-  display: "swap",
-});
-
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-jakarta",
+  variable: "--font-geist",
   display: "swap",
 });
 
@@ -41,15 +29,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('ll-theme');if(t==='light'){document.documentElement.classList.remove('dark');document.documentElement.classList.add('light');}else{document.documentElement.classList.add('dark');}}catch(e){}})();`,
-          }}
-        />
-      </head>
       <body
-        className={`${outfit.variable} ${dmSans.variable} ${jakarta.variable} font-jakarta bg-background text-foreground`}
+        className={`${geist.variable} font-sans antialiased bg-background text-foreground`}
       >
         <ClerkProvider
           signInUrl="/signin"
@@ -58,7 +39,7 @@ export default function RootLayout({
           signUpFallbackRedirectUrl="/signup/onboarding"
         >
           <ConvexClientProvider>
-            <ThemeProvider>{children}</ThemeProvider>
+            {children}
           </ConvexClientProvider>
         </ClerkProvider>
       </body>

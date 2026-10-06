@@ -82,6 +82,30 @@ describe("jamendo.syncPlaylist", () => {
     expect(inserted).toBe(1);
   });
 
+  it("decodes HTML entities Jamendo returns in names and artists", async () => {
+    const { t, playlistId } = await setup("Elegant");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            results: [
+              { ...track("Rock &amp; Roll"), artist_name: "John Dada &amp; the Weathermen" },
+            ],
+          }),
+        ),
+      ),
+    );
+
+    await t.action(internal.jamendo.syncPlaylist, { playlistId });
+
+    const [stored] = await t
+      .withIdentity({ subject: "user_x" })
+      .query(api.playlists.getTracks, { playlistId });
+    expect(stored.name).toBe("Rock & Roll");
+    expect(stored.artist).toBe("John Dada & the Weathermen");
+  });
+
   it("syncAllCurated syncs every curated playlist and reports errors per playlist", async () => {
     vi.stubEnv("JAMENDO_CLIENT_ID", "test-client");
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));

@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -17,13 +15,114 @@
   --ll-ink-2: #151B22;
   --ll-ink-3: #1A222B;
   --ll-ink-line: #232c36;
+  --ll-on-ink-1: #FFFFFF;
   --ll-on-ink-2: #AEB8C4;
   --ll-on-ink-3: #6C7783;
   --ll-grad-product: linear-gradient(120deg, #4ECDC4 0%, #44A08D 100%);
   --ll-grad-tide: linear-gradient(120deg, #4ECDC4 0%, #00388D 100%);
   --ll-ease: cubic-bezier(.22, 1, .36, 1);
-  --ll-font-display: 'Poppins', system-ui, sans-serif;
-  --ll-font-body: 'Manrope', system-ui, sans-serif;
+  --ll-font-display: var(--font-geist), system-ui, sans-serif;
+  --ll-font-body: var(--font-geist), system-ui, sans-serif;
+
+  /* Light marketing palette (landing, blog, help, legal) */
+  --ll-paper: #FAFAF7;
+  --ll-paper-2: #F2F1EC;
+  --ll-text: #14182B;
+  --ll-text-2: #4A5163;
+  --ll-line: #E4E2DA;
+  --ll-teal: #2CB5B0;
+  --ll-teal-ink: #187873; /* teal dark enough for text/buttons on paper (5:1) */
+}
+
+/* Light scope: remaps the dark "ink" tokens so components written against
+   them (resources, legal) render on paper without per-file colour edits. */
+.ll-light {
+  --ll-ink-0: #EFEDE6;
+  --ll-ink-1: var(--ll-paper);
+  --ll-ink-2: #FFFFFF;
+  --ll-ink-3: var(--ll-paper-2);
+  --ll-ink-line: var(--ll-line);
+  --ll-on-ink-1: var(--ll-text);
+  --ll-on-ink-2: var(--ll-text-2);
+  --ll-on-ink-3: #6B7180;
+  --ll-accent: var(--ll-teal-ink);
+  --ll-accent-ink: #FFFFFF;
+  background: var(--ll-paper);
+  color: var(--ll-text);
+}
+
+/* In @layer components so Tailwind utilities (mt-*, pb-*…) can override them. */
+@layer components {
+  /* Marketing type scale — deliberately modest */
+  .ll-h1 {
+    font-size: clamp(40px, 5vw, 60px);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+  }
+  .ll-h2 {
+    font-size: clamp(30px, 3.4vw, 42px);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+  .ll-h3 {
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+  .ll-lead {
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--ll-text-2);
+    max-width: 34rem;
+    text-wrap: pretty;
+  }
+  .ll-eyebrow {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ll-teal-ink);
+  }
+  .ll-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  @media (min-width: 768px) {
+    .ll-container { padding: 0 40px; }
+  }
+
+  /* Buttons */
+  .ll-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 20px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background-color .2s, color .2s, border-color .2s, transform .1s;
+  }
+  .ll-btn:active { transform: translateY(1px); }
+  .ll-btn:focus-visible,
+  .ll-link:focus-visible {
+    outline: 2px solid var(--ll-teal-ink);
+    outline-offset: 2px;
+  }
+  .ll-btn-primary { background: var(--ll-navy); color: #fff; }
+  .ll-btn-primary:hover { background: #1d2a8a; }
+  .ll-btn-secondary { background: transparent; color: var(--ll-text); border: 1px solid var(--ll-line); }
+  .ll-btn-secondary:hover { border-color: #c9c6bb; background: #fff; }
+  .ll-btn-light { background: #fff; color: var(--ll-navy); }
+  .ll-btn-light:hover { background: var(--ll-paper-2); }
+  .ll-link { transition: color .2s; }
 }
 
 /* EQ bars animation */
@@ -31,42 +130,17 @@
   0%, 100% { transform: scaleY(0.35); }
   50% { transform: scaleY(1); }
 }
-/* Floating orb */
-@keyframes ll-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-14px); }
-}
 /* Marquee scroll */
 @keyframes ll-marquee {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
-/* Gradient drift on hero headline */
-@keyframes ll-grad-drift {
-  0%, 100% { background-position: 0% center; }
-  50% { background-position: 100% center; }
-}
-/* Button shine sweep */
-@keyframes ll-btn-shine {
-  from { left: -130%; }
-  to { left: 150%; }
-}
-/* Floating stat card bob */
-@keyframes ll-floaty {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-/* Pricing "Most popular" tag pulse */
-@keyframes ll-tag-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(78, 205, 196, 0.55); }
-  50% { box-shadow: 0 0 0 9px rgba(78, 205, 196, 0); }
-}
 /* Scroll-reveal */
 @media (prefers-reduced-motion: no-preference) {
   html.ll-js [data-ll-reveal] {
     opacity: 0;
-    transform: translateY(28px);
-    transition: opacity .7s var(--ll-ease), transform .7s var(--ll-ease);
+    transform: translateY(12px);
+    transition: opacity .6s var(--ll-ease), transform .6s var(--ll-ease);
   }
   html.ll-js [data-ll-reveal].ll-visible {
     opacity: 1 !important;
@@ -88,14 +162,8 @@
   .ll-bars [data-bar]:nth-child(6) { transition-delay: .3s; }
 }
 
-/* Hero soundwave drift */
-@keyframes ll-wave-drift {
-  0%   { transform: translate3d(-2%, 0, 0) scale(1.04); }
-  50%  { transform: translate3d(2%, -1%, 0) scale(1.08); }
-  100% { transform: translate3d(-2%, 0, 0) scale(1.04); }
-}
 @media (prefers-reduced-motion: reduce) {
-  .ll-hero-wave, .ll-hero-eq span { animation: none !important; }
+  .ll-track { animation: none !important; }
 }
 
 /* Catalog marquee pause on hover */
@@ -121,9 +189,8 @@
   border-radius: 2px;
   transform-origin: bottom;
   display: inline-block;
-  background: #4ECDC4;
+  background: hsl(var(--primary));
 }
-.dark .eq-bar { background: #4ECDC4; }
 .eq-bar:nth-child(1) { animation: eq-bounce 0.52s 0.00s ease-in-out infinite alternate; }
 .eq-bar:nth-child(2) { animation: eq-bounce 0.61s 0.05s ease-in-out infinite alternate; }
 .eq-bar:nth-child(3) { animation: eq-bounce 0.70s 0.10s ease-in-out infinite alternate; }
@@ -163,28 +230,31 @@
   }
 
   .dark {
-    /* Dark mode — from design tokens */
-    --background: 218 22% 8%;    /* #0F1419 */
+    /* App palette — navy + teal, from the Figma Make dashboard design.
+       The app is dark-only; marketing pages opt into `.ll-light` instead. */
+    --background: 223 57% 7%;    /* #080e1d navy */
     --foreground: 0 0% 100%;
-    --card: 218 20% 12%;         /* #1A1F26 */
+    --card: 218 51% 14%;         /* #111e35 navy surface */
     --card-foreground: 0 0% 100%;
-    --popover: 218 20% 12%;
+    --popover: 220 51% 10%;      /* #0d1628 navy mid */
     --popover-foreground: 0 0% 100%;
-    --primary: 175 56% 62%;      /* #4ECDC4 */
-    --primary-foreground: 173 100% 7%;  /* #04201d */
-    --secondary: 218 21% 9%;     /* #131820 */
+    --primary: 171 75% 52%;      /* #27E0C5 teal */
+    --primary-foreground: 223 57% 7%;
+    --secondary: 226 49% 17%;    /* #162040 navy card */
     --secondary-foreground: 0 0% 100%;
-    --muted: 218 18% 14%;
-    --muted-foreground: 213 14% 66%; /* #9CA7B4 */
-    --accent: 218 18% 14%;
+    --muted: 226 49% 17%;
+    --muted-foreground: 217 17% 59%; /* #8492a8 slate */
+    --accent: 226 49% 17%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 72% 51%;
+    --destructive: 348 100% 65%; /* #FF4B6E rose */
     --destructive-foreground: 0 0% 100%;
-    --border: 218 17% 18%;       /* #252C36 */
-    --input: 218 17% 18%;
-    --ring: 175 56% 62%;
+    --border: 220 42% 19%;       /* #1c2a45 */
+    --input: 220 42% 19%;
+    --ring: 171 75% 52%;
     --radius: 0.75rem;
-    --surface-2: 218 21% 9%;
+    --surface-2: 220 51% 10%;
+    --shell: 220 51% 10%;        /* sidebar + player bar */
+    --faint: 215 26% 32%;        /* #3d4f68 dim labels */
   }
 }
 
@@ -196,3 +266,7 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Hide a scroll container's scrollbar but keep it scrollable (carousels, panes). */
+.scrollbar-hide { scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }

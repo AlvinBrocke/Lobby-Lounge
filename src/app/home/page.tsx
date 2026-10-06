@@ -14,20 +14,11 @@ import { TrustSection } from "@/components/landing/TrustSection";
 import { BusinessTypes } from "@/components/landing/BusinessTypes";
 
 export default function LandingPage() {
-  // Mark <html> so reveal CSS activates, and run scroll-reveal + progress bar
+  // Mark <html> so reveal CSS activates, and run scroll-reveal
   useEffect(() => {
     document.documentElement.classList.add("ll-js");
 
-    const progEl = document.getElementById("ll-prog");
-
     const onScroll = () => {
-      // Scroll progress bar
-      if (progEl) {
-        const h = document.documentElement.scrollHeight - window.innerHeight;
-        progEl.style.width = (h > 0 ? (window.scrollY / h) * 100 : 0) + "%";
-      }
-
-      // Scroll-reveal
       const vh = window.innerHeight;
       document.querySelectorAll<HTMLElement>("[data-ll-reveal]:not(.ll-visible), .ll-bars:not(.ll-visible)").forEach((el) => {
         if (el.getBoundingClientRect().top < vh * 0.9) {
@@ -55,19 +46,7 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div style={{ fontFamily: "var(--ll-font-body)", background: "var(--ll-ink-1)", color: "#fff", overflowX: "hidden" }}>
-      {/* Scroll progress bar */}
-      <div
-        id="ll-prog"
-        style={{
-          position: "fixed", top: 0, left: 0, height: 2, width: 0, zIndex: 101,
-          background: "linear-gradient(120deg, #4ECDC4 0%, #44A08D 100%)",
-          boxShadow: "0 0 12px rgba(78,205,196,.8)",
-          transition: "width .12s linear",
-          pointerEvents: "none",
-        }}
-      />
-
+    <div className="ll-light overflow-x-hidden">
       <Navigation />
 
       <main>

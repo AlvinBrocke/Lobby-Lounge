@@ -1,171 +1,173 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-import { useTheme } from "@/components/theme-provider";
-import { useUser, useClerk } from "@clerk/nextjs";
-import {
-  Calendar,
-  Library,
-  ListMusic,
-  LogOut,
-  Moon,
-  Settings,
-  Sun,
-} from "lucide-react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Book, Calendar, List, ListMusic, Settings } from "lucide-react";
+import { EqBars } from "@/components/player/EqBars";
+import { cn, formatDuration } from "@/lib/utils";
+import usePlayerStore from "@/store/usePlayerStore";
 
 const navItems = [
-  { name: "Library", href: "/library", icon: Library },
+  { name: "Library", href: "/library", icon: Book },
   { name: "Schedule", href: "/schedule", icon: Calendar },
-  { name: "Playlists", href: "/playlists", icon: ListMusic },
+  { name: "Playlists", href: "/playlists", icon: List },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
-export function Sidebar() {
-  const pathname = usePathname();
-  const { theme, toggleTheme } = useTheme();
-  const { user } = useUser();
-  const { signOut } = useClerk();
+/** Shared look for the two stacked panels (nav + queue). */
+const panel =
+  "rounded-[10px] border border-white/5 bg-card shadow-[0_2px_12px_rgba(0,0,0,0.35)]";
 
-  const userName = user?.fullName ?? user?.firstName ?? "Loading...";
-  const userEmail = user?.primaryEmailAddress?.emailAddress ?? "";
-  const initials = userName
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+function Cover({ src, alt, className }: { src: string; alt: string; className: string }) {
+  return (
+    <div className={cn("overflow-hidden shrink-0 bg-secondary", className)}>
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={alt} className="w-full h-full object-cover" />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center">
+          <ListMusic className="w-3.5 h-3.5 text-primary/70" />
+        </div>
+      )}
+    </div>
+  );
+}
 
-  const handleSignOut = async () => {
-    // Let Clerk own the redirect: it clears the session cookie *then* navigates, so
-    // middleware never sees a stale session and bounce us back into the app.
-    await signOut({ redirectUrl: "/signin" });
-  };
+function UpNext() {
+  const currentTrack = usePlayerStore((s) => s.currentTrack);
+  const isPlaying = usePlayerStore((s) => s.isPlaying);
+  const queue = usePlayerStore((s) => s.queue);
+  const reorderQueue = usePlayerStore((s) => s.reorderQueue);
+  // Index of the row being dragged. HTML5 drag-and-drop gives us the drop
+  // target; we remember the source ourselves rather than parsing dataTransfer.
+  const [dragged, setDragged] = useState<number | null>(null);
 
   return (
-    <aside className="w-64 min-w-[256px] flex flex-col bg-card border-r border-border overflow-hidden shrink-0">
-      {/* Brand */}
-      <div className="flex items-center gap-3 px-[18px] py-[18px] pb-4 border-b border-border">
-        {/* Full wordmark. Both variants are rendered and CSS picks one via the
-            `dark` class on <html>, so there's no flash of the wrong logo before
-            the theme hook hydrates. */}
-        <div className="flex-1 min-w-0">
-          <Image
-            src="/images/ll-logo-color.png"
-            alt="Lobby & Lounge"
-            width={81}
-            height={34}
-            priority
-            className="block dark:hidden object-contain"
-          />
-          <Image
-            src="/images/ll-logo-white.png"
-            alt="Lobby & Lounge"
-            width={81}
-            height={34}
-            priority
-            className="hidden dark:block object-contain"
-          />
-        </div>
-        <button
-          onClick={toggleTheme}
-          title="Toggle theme"
-          className="w-7 h-7 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0"
-        >
-          {theme === "light" ? (
-            <Moon className="w-3.5 h-3.5" />
-          ) : (
-            <Sun className="w-3.5 h-3.5" />
-          )}
-        </button>
+    <div className={cn(panel, "flex-1 min-h-0 flex flex-col px-2.5 py-3")}>
+      <div className="flex items-center justify-between mb-2.5">
+        <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-faint">Up Next</span>
+        <ListMusic className="w-[15px] h-[15px] text-primary" />
       </div>
 
-      {/* Live bar */}
-      <div className="flex items-center gap-2 px-[18px] py-2.5 bg-[rgba(52,211,153,0.05)] border-b border-border">
-        <span className="live-dot w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
-        <span className="text-xs font-semibold text-muted-foreground flex-1 truncate">
-          Live · The Grand Lobby
-        </span>
-        <span className="text-[9px] font-bold tracking-widest text-emerald-400 bg-[rgba(52,211,153,0.1)] px-2 py-0.5 rounded-full shrink-0">
-          ON AIR
-        </span>
-      </div>
-
-      {/* Nav */}
-      <nav className="flex-1 px-3 pt-3.5 flex flex-col gap-0.5">
-        <div className="text-[9px] font-bold text-muted-foreground tracking-[0.12em] uppercase px-2 pb-2">
-          Navigation
+      {currentTrack ? (
+        <div className="flex items-center gap-2 mb-2.5 px-2 py-[7px] rounded-[7px] bg-primary/10 border border-primary/[0.12]">
+          <div className="relative">
+            <Cover src={currentTrack.image} alt="" className="w-[34px] h-[34px] rounded" />
+            {isPlaying && (
+              <div className="absolute inset-0 rounded bg-black/50 flex items-center justify-center">
+                <EqBars />
+              </div>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-[11px] font-bold text-primary truncate">{currentTrack.name}</div>
+            {currentTrack.artist && (
+              <div className="text-[10px] text-muted-foreground truncate">{currentTrack.artist}</div>
+            )}
+          </div>
+          <span className="text-[8px] font-bold text-primary bg-primary/[0.12] rounded-[3px] px-[5px] py-px shrink-0">
+            NOW
+          </span>
         </div>
+      ) : (
+        <p className="text-[11px] text-muted-foreground leading-relaxed px-1">
+          Nothing playing. Pick a playlist and its tracks will line up here.
+        </p>
+      )}
+
+      <ol className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pr-0.5">
+        {queue.map((track, i) => (
+          <li
+            key={`${track.id}-${i}`}
+            draggable
+            onDragStart={(e) => {
+              setDragged(i);
+              e.dataTransfer.effectAllowed = "move";
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = "move";
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (dragged !== null) reorderQueue(dragged, i);
+              setDragged(null);
+            }}
+            onDragEnd={() => setDragged(null)}
+            className={cn(
+              "flex items-center gap-[7px] px-1.5 py-[5px] mb-[3px] rounded-md border-t border-transparent hover:bg-white/5 transition-colors",
+              dragged === i ? "opacity-40 cursor-grabbing" : "cursor-grab",
+              dragged !== null && dragged !== i && "border-primary/20",
+            )}
+          >
+            <span aria-hidden className="w-2 text-[10px] leading-[0.65] text-faint shrink-0">
+              ⠿
+            </span>
+            <Cover src={track.image} alt="" className="w-7 h-7 rounded-[3px]" />
+            <div className="flex-1 min-w-0">
+              <div className="text-[11px] font-medium text-foreground truncate">{track.name}</div>
+              {track.artist && (
+                <div className="text-[10px] text-faint truncate">{track.artist}</div>
+              )}
+            </div>
+            {track.duration ? (
+              <span className="text-[9px] font-mono text-faint shrink-0">
+                {formatDuration(track.duration)}
+              </span>
+            ) : null}
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+export function Sidebar() {
+  const pathname = usePathname();
+
+  return (
+    <aside className="w-[228px] shrink-0 z-[2] flex flex-col gap-2.5 px-2.5 py-3 bg-shell shadow-[4px_0_24px_rgba(0,0,0,0.45)] overflow-y-auto">
+      <Link href="/playlists" className="h-[42px] shrink-0 flex items-center px-1">
+        <Image
+          src="/images/ll-logo-white.png"
+          alt="Lobby & Lounge"
+          width={81}
+          height={34}
+          priority
+          className="object-contain"
+        />
+      </Link>
+
+      <nav className={cn(panel, "shrink-0 flex flex-col gap-0.5 px-1.5 py-2")}>
         {navItems.map((item) => {
           const Icon = item.icon;
           // Prefix match so /playlists/[id] keeps "Playlists" highlighted.
-          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <Link
               key={item.href}
               href={item.href}
+              aria-current={active ? "page" : undefined}
               className={cn(
-                "flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150",
-                isActive
-                  ? "bg-[rgba(78,205,196,0.10)] text-primary font-semibold dark:bg-[rgba(78,205,196,0.10)] dark:text-primary"
-                  : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                "flex items-center gap-2.5 px-2.5 py-[9px] rounded-md border-l-2 text-[13px] transition-colors",
+                active
+                  ? "bg-primary/10 border-primary text-primary font-semibold"
+                  : "border-transparent text-muted-foreground hover:bg-primary/5",
               )}
             >
-              <Icon className="w-4 h-4 shrink-0" />
-              <span className="flex-1">{item.name}</span>
-              {isActive && (
-                <span className="w-[5px] h-[5px] rounded-full bg-primary shrink-0" />
-              )}
+              <Icon
+                className={cn("w-[18px] h-[18px]", active ? "text-primary" : "text-faint")}
+                strokeWidth={1.6}
+              />
+              {item.name}
             </Link>
           );
         })}
       </nav>
 
-      {/* Trial card */}
-      <div className="mx-3 mb-3 p-4 rounded-xl bg-gradient-to-br from-[rgba(78,205,196,0.11)] to-[rgba(68,160,141,0.05)] border border-[rgba(78,205,196,0.16)]">
-        <div
-          className="text-[9px] font-bold tracking-[0.12em] text-primary mb-1 uppercase"
-          style={{ fontFamily: "'Poppins', sans-serif" }}
-        >
-          Premium Trial
-        </div>
-        <div
-          className="text-base font-bold text-foreground mb-0.5"
-          style={{ fontFamily: "'Poppins', sans-serif" }}
-        >
-          12 days left
-        </div>
-        <div className="text-xs font-medium text-muted-foreground mb-3">
-          Full catalog, scheduling &amp; analytics.
-        </div>
-        <button className="w-full py-2 bg-primary text-[#04201d] rounded-lg text-xs font-bold hover:opacity-90 transition-opacity">
-          Upgrade Plan
-        </button>
-      </div>
-
-      {/* User row */}
-      <div className="flex items-center gap-2.5 px-3.5 py-3 border-t border-border">
-        <div className="w-[34px] h-[34px] rounded-full bg-gradient-to-br from-[#4ECDC4] to-[#44A08D] flex items-center justify-center shrink-0">
-          <span className="text-[#04201d] text-xs font-bold">{initials}</span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-[13px] font-semibold text-foreground truncate">
-            {userName}
-          </div>
-          <div className="text-[11px] text-muted-foreground truncate">
-            {userEmail}
-          </div>
-        </div>
-        <button
-          onClick={handleSignOut}
-          title="Sign out"
-          className="w-7 h-7 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0"
-        >
-          <LogOut className="w-3 h-3" />
-        </button>
-      </div>
+      <UpNext />
     </aside>
   );
 }

@@ -60,7 +60,7 @@ export default async function BlogPostPage({ params }: Props) {
       </article>
 
       <section aria-labelledby="related" style={{ marginTop: 80, paddingTop: 40, borderTop: "1px solid var(--ll-ink-line)" }}>
-        <h2 id="related" style={{ fontFamily: "var(--ll-font-display)", fontSize: 22, fontWeight: 700, color: "#fff", margin: "0 0 24px" }}>
+        <h2 id="related" style={{ fontFamily: "var(--ll-font-display)", fontSize: 22, fontWeight: 700, color: "var(--ll-on-ink-1)", margin: "0 0 24px" }}>
           Related Articles
         </h2>
         <PostGrid posts={relatedPosts(post.slug)} />

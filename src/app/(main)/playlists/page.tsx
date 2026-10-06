@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useConvex, useConvexAuth, useMutation, useQuery } from "convex/react";
-import { ListMusic, Plus, Search } from "lucide-react";
+import { ListMusic, Plus } from "lucide-react";
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { FunctionReturnType } from "convex/server";
+import { PlaylistCard } from "@/components/playlists/PlaylistCard";
+import { PlaylistCarousel } from "@/components/playlists/PlaylistCarousel";
 import { PlaylistFormModal, type PlaylistFormValues } from "@/components/playlists/PlaylistFormModal";
-import { PlaylistRow } from "@/components/playlists/PlaylistRow";
 import { cn } from "@/lib/utils";
 import { toPlayerQueue } from "@/lib/playlists";
 import usePlayerStore from "@/store/usePlayerStore";
@@ -17,28 +18,14 @@ type PlaylistSummary = FunctionReturnType<typeof api.playlists.listCurated>[numb
 
 const SECTIONS = [
   { key: "daytime", title: "Daytime Sets", blurb: "Start strong and carry energy through the afternoon" },
-  { key: "evening", title: "Evening & Night", blurb: "Wind down, dine and keep the night going" },
+  { key: "evening", title: "Evening & Night", blurb: "Curated for when the lights go down" },
 ] as const;
 
-function SectionHeading({ title, blurb }: { title: string; blurb?: string }) {
+function CardSkeletons({ count }: { count: number }) {
   return (
-    <div className="mb-3">
-      <h2
-        className="text-[17px] font-bold text-foreground tracking-tight"
-        style={{ fontFamily: "'Poppins', sans-serif" }}
-      >
-        {title}
-      </h2>
-      {blurb && <p className="text-xs text-muted-foreground mt-0.5">{blurb}</p>}
-    </div>
-  );
-}
-
-function RowSkeletons({ count }: { count: number }) {
-  return (
-    <div className="flex flex-col gap-2">
+    <div className="flex gap-[11px] overflow-hidden mb-7">
       {Array.from({ length: count }, (_, i) => (
-        <div key={i} className="h-[76px] rounded-xl bg-card border border-border animate-pulse" />
+        <div key={i} className="w-[220px] min-w-[220px] h-[190px] rounded-[11px] bg-card border border-white/5 animate-pulse" />
       ))}
     </div>
   );
@@ -48,9 +35,10 @@ export default function PlaylistsPage() {
   const router = useRouter();
   const convex = useConvex();
   const { isAuthenticated } = useConvexAuth();
+  // The search box lives in the top bar and writes `?q=` to the URL.
+  const term = (useSearchParams().get("q") ?? "").trim().toLowerCase();
   const [showModal, setShowModal] = useState(false);
   const [filter, setFilter] = useState("All");
-  const [search, setSearch] = useState("");
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
   // "skip" until Clerk's token reaches Convex — otherwise the query runs
@@ -71,16 +59,15 @@ export default function PlaylistsPage() {
     ).sort(),
   ];
 
-  const term = search.trim().toLowerCase();
   function matches(p: PlaylistSummary) {
     return (
       (filter === "All" || p.category === filter) &&
-      (!term || p.name.toLowerCase().includes(term))
+      (!term || `${p.name} ${p.category ?? ""}`.toLowerCase().includes(term))
     );
   }
 
   async function play(playlist: PlaylistSummary) {
-    // Clicking the row that's already in the player pauses/resumes it.
+    // The playlist that's already in the player pauses/resumes instead.
     if (playlist._id === activePlaylistId) {
       togglePlay();
       return;
@@ -96,10 +83,10 @@ export default function PlaylistsPage() {
     }
   }
 
-  function row(p: PlaylistSummary) {
+  function card(p: PlaylistSummary) {
     const active = p._id === activePlaylistId;
     return (
-      <PlaylistRow
+      <PlaylistCard
         key={p._id}
         playlist={p}
         active={active}
@@ -118,111 +105,97 @@ export default function PlaylistsPage() {
     router.push(`/playlists/${id}`);
   }
 
-  const myVisible = (mine ?? []).filter(matches);
   const filtering = filter !== "All" || term !== "";
+  const curatedSections = SECTIONS.map((s) => ({
+    ...s,
+    rows: (curated ?? []).filter((p) => p.section === s.key && matches(p)),
+  })).filter((s) => s.rows.length > 0);
+  const myVisible = (mine ?? []).filter(matches);
+  const nothingFound =
+    filtering && curated !== undefined && mine !== undefined &&
+    curatedSections.length === 0 && myVisible.length === 0;
+
+  const newButton = (
+    <button
+      onClick={() => setShowModal(true)}
+      className="flex items-center gap-1 h-[29px] px-3 rounded-full bg-primary text-primary-foreground text-[11px] font-bold hover:opacity-90 transition-opacity"
+    >
+      <Plus className="w-3 h-3" strokeWidth={3} />
+      New
+    </button>
+  );
 
   return (
     <>
-      <div className="flex flex-col gap-7 w-full pb-12">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Playlists</h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Curated sets for every part of the day, plus your own.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="relative w-full md:w-60">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-              <input
-                type="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search playlists"
-                aria-label="Search playlists"
-                className="w-full rounded-full border border-border bg-secondary py-2 pl-9 pr-4 text-[13px] text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/50"
-              />
-            </div>
-            <button
-              onClick={() => setShowModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-bold hover:opacity-90 transition-opacity shrink-0"
-            >
-              <Plus className="w-4 h-4" />
-              New
-            </button>
-          </div>
-        </div>
-
-        {/* Category chips */}
-        <div className="flex gap-2 overflow-x-auto pb-1 -mb-1">
-          {categories.map((c) => (
+      {/* Genre chips */}
+      <div className="flex gap-1.5 flex-wrap pb-3 mb-[18px] border-b border-primary/[0.08]">
+        {categories.map((c) => {
+          const active = filter === c;
+          return (
             <button
               key={c}
               onClick={() => setFilter(c)}
-              aria-pressed={filter === c}
+              aria-pressed={active}
               className={cn(
-                "px-4 py-1.5 rounded-full text-[13px] font-semibold whitespace-nowrap border transition-colors",
-                filter === c
-                  ? "bg-primary text-[#04201d] border-primary"
-                  : "bg-card text-muted-foreground border-border hover:text-foreground hover:border-primary/40",
+                "px-[13px] py-[5px] rounded-full text-[11px] font-semibold border transition-colors",
+                active
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-secondary text-muted-foreground border-primary/20 hover:border-primary hover:text-foreground",
               )}
             >
               {c}
             </button>
-          ))}
-        </div>
-
-        {/* Curated sections */}
-        {curated === undefined ? (
-          <section>
-            <SectionHeading title={SECTIONS[0].title} blurb={SECTIONS[0].blurb} />
-            <RowSkeletons count={3} />
-          </section>
-        ) : (
-          SECTIONS.map(({ key, title, blurb }) => {
-            const rows = curated.filter((p) => p.section === key && matches(p));
-            if (rows.length === 0) return null;
-            return (
-              <section key={key}>
-                <SectionHeading title={title} blurb={blurb} />
-                <div className="flex flex-col gap-2">{rows.map(row)}</div>
-              </section>
-            );
-          })
-        )}
-
-        {/* The user's own playlists */}
-        <section>
-          <SectionHeading title="My Playlists" />
-          {mine === undefined ? (
-            <RowSkeletons count={2} />
-          ) : myVisible.length > 0 ? (
-            <div className="flex flex-col gap-2">{myVisible.map(row)}</div>
-          ) : filtering ? (
-            <p className="text-sm text-muted-foreground py-4">No playlists of yours match.</p>
-          ) : (
-            <div className="flex items-center gap-4 rounded-xl border border-dashed border-border p-5">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                <ListMusic className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground">No playlists yet</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Build your own mix from the catalogue.
-                </p>
-              </div>
-              <button
-                onClick={() => setShowModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-bold hover:opacity-90 transition-opacity shrink-0"
-              >
-                <Plus className="w-4 h-4" />
-                Create
-              </button>
-            </div>
-          )}
-        </section>
+          );
+        })}
       </div>
+
+      {term && (
+        <p className="text-xs text-muted-foreground mb-4">
+          Showing playlists matching <span className="text-foreground font-semibold">“{term}”</span>
+        </p>
+      )}
+
+      {curated === undefined ? (
+        <CardSkeletons count={5} />
+      ) : (
+        curatedSections.map(({ key, title, blurb, rows }) => (
+          <PlaylistCarousel key={key} title={title} blurb={blurb}>
+            {rows.map(card)}
+          </PlaylistCarousel>
+        ))
+      )}
+
+      {/* The user's own playlists */}
+      {mine === undefined ? (
+        <CardSkeletons count={2} />
+      ) : myVisible.length > 0 ? (
+        <PlaylistCarousel title="My Playlists" blurb="Mixes you've built from the catalogue" action={newButton}>
+          {myVisible.map(card)}
+        </PlaylistCarousel>
+      ) : !filtering ? (
+        <section className="mb-7">
+          <h2 className="text-sm font-bold tracking-tight text-foreground mb-2.5">My Playlists</h2>
+          <div className="flex items-center gap-4 rounded-[11px] border border-dashed border-primary/20 bg-card/50 p-5">
+            <div className="w-11 h-11 rounded-[10px] bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+              <ListMusic className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-bold text-foreground">No playlists yet</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Build your own mix from the catalogue.
+              </p>
+            </div>
+            {newButton}
+          </div>
+        </section>
+      ) : null}
+
+      {nothingFound && (
+        <div className="py-10 text-center rounded-[11px] bg-secondary">
+          <p className="text-[13px] font-bold text-foreground">No playlists found</p>
+          <p className="text-[11px] text-muted-foreground mt-1">Try a genre, mood, or playlist name.</p>
+        </div>
+      )}
 
       {showModal && (
         <PlaylistFormModal

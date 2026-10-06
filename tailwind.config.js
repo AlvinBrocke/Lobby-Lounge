@@ -4,62 +4,48 @@ module.exports = {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
-      animation: {
-        blob: "blob 7s infinite",
-      },
-      // Adding utility for animation delay
-      animationDelay: {
-        2000: "2000ms",
-        4000: "4000ms",
-      },
       keyframes: {
+        // Used by the auth background only.
         blob: {
-          "0%": {
-            transform: "translate(0px, 0px) scale(1)",
-          },
-          "33%": {
-            transform: "translate(30px, -50px) scale(1.1)",
-          },
-          "66%": {
-            transform: "translate(-20px, 20px) scale(0.9)",
-          },
-          "100%": {
-            transform: "translate(0px, 0px) scale(1)",
-          },
+          "0%, 100%": { transform: "translate(0px, 0px) scale(1)" },
+          "33%": { transform: "translate(30px, -50px) scale(1.1)" },
+          "66%": { transform: "translate(-20px, 20px) scale(0.9)" },
         },
         shimmer: {
           "100%": {
             transform: "translateX(100%)",
           },
         },
-        "gradient-xy": {
-          "0%, 100%": {
-            "background-size": "400% 400%",
-            "background-position": "left center",
-          },
-          "50%": {
-            "background-size": "200% 200%",
-            "background-position": "right center",
-          },
-        },
       },
       animation: {
         blob: "blob 7s infinite",
         shimmer: "shimmer 2s infinite",
-        "gradient-xy": "gradient-xy 15s ease infinite",
       },
       fontFamily: {
-        sans: ["var(--font-jakarta)", "var(--font-dm-sans)", "sans-serif"],
-        display: ["var(--font-jakarta)", "var(--font-outfit)", "sans-serif"],
-        jakarta: ["var(--font-jakarta)", "sans-serif"],
+        sans: ["var(--font-geist)", "system-ui", "sans-serif"],
+        display: ["var(--font-geist)", "system-ui", "sans-serif"],
       },
       colors: {
+        // Marketing-site palette (light). Brand navy/teal from the logo kit.
+        ll: {
+          paper: "var(--ll-paper)",
+          "paper-2": "var(--ll-paper-2)",
+          text: "var(--ll-text)",
+          "text-2": "var(--ll-text-2)",
+          line: "var(--ll-line)",
+          navy: "var(--ll-navy)",
+          teal: "var(--ll-teal)",
+          "teal-ink": "var(--ll-teal-ink)",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         surface: "#1A1F26",
+        // App shell (sidebar, player bar) and dim tertiary text.
+        shell: "hsl(var(--shell))",
+        faint: "hsl(var(--faint))",
         "tunify-blue": "#0093E9",
         "tunify-dark": "#0F2027",
         "tunify-dark-blue": "#203A43",

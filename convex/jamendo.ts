@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { energyForCategory } from "./lib/energy";
+import { decodeEntities } from "./lib/text";
 
 const JAMENDO_TRACKS_URL = "https://api.jamendo.com/v3.0/tracks/";
 
@@ -91,12 +92,15 @@ export const syncPlaylist = internalAction({
 
     const trackIds = [];
     for (const track of results) {
-      if (existingNames.has(track.name)) continue;
-      existingNames.add(track.name);
+      // Jamendo HTML-escapes some names ("Dada &amp; the Weathermen"); store plain text.
+      // Decoded before the duplicate check so it matches names stored by earlier syncs.
+      const name = decodeEntities(track.name);
+      if (existingNames.has(name)) continue;
+      existingNames.add(name);
       trackIds.push(
         await ctx.runMutation(internal.tracks.create, {
-          name: track.name,
-          artist: track.artist_name,
+          name,
+          artist: decodeEntities(track.artist_name),
           duration: track.duration,
           audioUrl: track.audio,
           coverImage: track.image,

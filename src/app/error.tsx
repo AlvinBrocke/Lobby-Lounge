@@ -31,7 +31,6 @@ export default function GlobalError({
         {/* Code */}
         <p
           className="text-[88px] font-bold leading-none text-red-400"
-          style={{ fontFamily: "'Poppins', sans-serif" }}
         >
           500
         </p>
@@ -40,7 +39,6 @@ export default function GlobalError({
         <div>
           <h1
             className="text-2xl font-bold text-white mb-2"
-            style={{ fontFamily: "'Poppins', sans-serif" }}
           >
             Something went wrong
           </h1>
