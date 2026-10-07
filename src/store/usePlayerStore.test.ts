@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import usePlayerStore from "./usePlayerStore";
+import usePlayerStore, { shuffle } from "./usePlayerStore";
 import type { Track } from "@/types";
 
 const track1: Track = { id: "1", name: "Blue Bossa", image: "" };
@@ -14,6 +14,7 @@ beforeEach(() => {
     volume: 50,
     queue: [],
     activePlaylistId: null,
+    playlistTracks: [],
   });
 });
 
@@ -74,7 +75,7 @@ describe("nextTrack", () => {
     expect(isPlaying).toBe(true);
   });
 
-  it("stops playback and clears currentTrack when queue is empty", () => {
+  it("stops playback and clears currentTrack when the queue is empty and no playlist is active", () => {
     usePlayerStore.setState({ currentTrack: track1, queue: [], isPlaying: true });
     usePlayerStore.getState().nextTrack();
     const { currentTrack, isPlaying } = usePlayerStore.getState();
@@ -95,15 +96,83 @@ describe("nextTrack", () => {
   });
 });
 
-describe("playQueue", () => {
-  it("plays the first track, queues the rest and remembers the playlist", () => {
+describe("playlist looping", () => {
+  it("refills the queue from the playlist instead of going silent", () => {
+    usePlayerStore.getState().playQueue([track1, track2, track3], "pl_1", 0);
+    usePlayerStore.getState().nextTrack(); // track2
+    usePlayerStore.getState().nextTrack(); // track3 — queue now empty
+    usePlayerStore.getState().nextTrack(); // new pass
+    const { currentTrack, queue, isPlaying } = usePlayerStore.getState();
+    expect(isPlaying).toBe(true);
+    expect(currentTrack).not.toBeNull();
+    expect(queue).toHaveLength(2);
+    // Each pass plays every track exactly once.
+    const pass = [currentTrack, ...queue].map((t) => t.id).sort();
+    expect(pass).toEqual(["1", "2", "3"]);
+  });
+
+  it("never opens a new pass with the track that just finished", () => {
+    for (let i = 0; i < 50; i++) {
+      usePlayerStore.getState().playQueue([track1, track2], "pl_1", 0);
+      usePlayerStore.getState().nextTrack(); // track2, queue empty
+      usePlayerStore.getState().nextTrack(); // new pass
+      expect(usePlayerStore.getState().currentTrack.id).toBe("1");
+    }
+  });
+
+  it("replays a one-track playlist as a new track object", () => {
+    usePlayerStore.getState().playQueue([track1], "pl_1");
+    const before = usePlayerStore.getState().currentTrack;
+    usePlayerStore.getState().nextTrack();
+    const after = usePlayerStore.getState().currentTrack;
+    expect(after).toEqual(track1);
+    expect(after).not.toBe(before); // so the player's effect reloads it
+  });
+
+  it("plays manually queued tracks before starting a new pass", () => {
+    usePlayerStore.getState().playQueue([track1], "pl_1");
     usePlayerStore.getState().addToQueue(track3);
-    usePlayerStore.getState().playQueue([track1, track2], "pl_1");
+    usePlayerStore.getState().nextTrack();
+    expect(usePlayerStore.getState().currentTrack).toEqual(track3);
+  });
+
+  it("stops looping once a single track is picked by hand", () => {
+    usePlayerStore.getState().playQueue([track1], "pl_1");
+    usePlayerStore.getState().setCurrentTrack(track3);
+    usePlayerStore.getState().nextTrack();
+    expect(usePlayerStore.getState().currentTrack).toBeNull();
+  });
+});
+
+describe("shuffle", () => {
+  it("keeps every item exactly once and doesn't mutate the input", () => {
+    const input = [1, 2, 3, 4, 5, 6];
+    const out = shuffle(input);
+    expect([...out].sort()).toEqual(input);
+    expect(input).toEqual([1, 2, 3, 4, 5, 6]);
+  });
+
+  it("doesn't always start with the same item", () => {
+    const firsts = new Set(Array.from({ length: 100 }, () => shuffle([1, 2, 3, 4])[0]));
+    expect(firsts.size).toBeGreaterThan(1);
+  });
+});
+
+describe("playQueue", () => {
+  it("from a start index, plays that track then the rest in order", () => {
+    usePlayerStore.getState().addToQueue(track3);
+    usePlayerStore.getState().playQueue([track1, track2, track3], "pl_1", 1);
     const { currentTrack, queue, isPlaying, activePlaylistId } = usePlayerStore.getState();
-    expect(currentTrack).toEqual(track1);
-    expect(queue).toEqual([track2]); // replaces, doesn't append to, the old queue
+    expect(currentTrack).toEqual(track2);
+    expect(queue).toEqual([track3]); // replaces, doesn't append to, the old queue
     expect(isPlaying).toBe(true);
     expect(activePlaylistId).toBe("pl_1");
+  });
+
+  it("without a start index, shuffles the whole playlist", () => {
+    usePlayerStore.getState().playQueue([track1, track2, track3], "pl_1");
+    const { currentTrack, queue } = usePlayerStore.getState();
+    expect([currentTrack, ...queue].map((t) => t.id).sort()).toEqual(["1", "2", "3"]);
   });
 
   it("does nothing for an empty list", () => {
