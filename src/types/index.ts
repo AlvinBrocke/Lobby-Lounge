@@ -37,10 +37,15 @@ export interface PlayerState {
   queue: Track[];
   /** The playlist the current queue came from, so its row can show as playing. */
   activePlaylistId: string | null;
+  /** The whole active playlist, reshuffled into the queue whenever the queue runs out. */
+  playlistTracks: Track[];
   setIsPlaying: (isPlaying: boolean) => void;
   setCurrentTrack: (track: Track) => void;
-  /** Plays the first track now and queues the rest. */
-  playQueue: (tracks: Track[], playlistId?: string) => void;
+  /**
+   * Plays a playlist: shuffled, or from `startIndex` onward in order. With a
+   * `playlistId` it loops, reshuffling when the queue empties.
+   */
+  playQueue: (tracks: Track[], playlistId?: string, startIndex?: number) => void;
   setVolume: (volume: number) => void;
   addToQueue: (track: Track) => void;
   /** Moves the queued track at `from` to position `to` (drag-and-drop in "Up Next"). */

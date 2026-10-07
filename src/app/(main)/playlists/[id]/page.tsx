@@ -179,7 +179,10 @@ export default function PlaylistDetailPage() {
     .join(" · ");
 
   function playFrom(index: number) {
-    playQueue(toPlayerQueue(tracks.slice(index)), playlistId);
+    // Pass the whole list so the loop can refill from it. toPlayerQueue drops
+    // tracks without audio, so shift the index past the ones before it.
+    const skipped = tracks.slice(0, index).filter((t) => !t.audioUrl).length;
+    playQueue(toPlayerQueue(tracks), playlistId, index - skipped);
   }
 
   async function handleEdit({ name, description }: PlaylistFormValues) {
