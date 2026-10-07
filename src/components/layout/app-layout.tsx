@@ -1,6 +1,8 @@
 "use client";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { AnnouncementPlayer } from "@/components/announcements/AnnouncementPlayer";
+import { useAnnouncementSchedule } from "@/hooks/useAnnouncementSchedule";
 import { useScheduleAutoplay } from "@/hooks/useScheduleAutoplay";
 import { PlayerBar } from "./player-bar";
 import { Sidebar } from "./Sidebar";
@@ -10,6 +12,7 @@ import { TrialBanner } from "./TrialBanner";
 export function AppLayout({ children }: { children: React.ReactNode }) {
   // Lives here, not on /schedule, so the schedule runs on every app page.
   useScheduleAutoplay();
+  useAnnouncementSchedule();
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden">
@@ -17,6 +20,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <Sidebar />
 
         <main className="flex-1 flex flex-col overflow-hidden min-w-0">
+          <AnnouncementPlayer />
           <TrialBanner />
           <Topbar />
           <ScrollArea className="flex-1 h-full w-full">

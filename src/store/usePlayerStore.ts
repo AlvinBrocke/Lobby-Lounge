@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { PlayerState } from "@/types";
 
-const usePlayerStore = create<PlayerState>((set) => ({
+const usePlayerStore = create<PlayerState>((set, get) => ({
   isPlaying: false,
   currentTrack: null,
   volume: 50,
@@ -39,6 +39,26 @@ const usePlayerStore = create<PlayerState>((set) => ({
   previousTrack: () => {
     // No-op for now: restarts the current track by toggling isPlaying.
     // The audio element in PlayerBar handles seeking to 0 on track load.
+  },
+
+  pendingAnnouncements: [],
+  announcing: null,
+  queueAnnouncement: (cue) =>
+    set((state) =>
+      state.pendingAnnouncements.some((c) => c.key === cue.key) || state.announcing?.cue.key === cue.key
+        ? {}
+        : { pendingAnnouncements: [...state.pendingAnnouncements, cue] },
+    ),
+  startAnnouncement: (advanceAfter) =>
+    set((state) => {
+      const [cue, ...rest] = state.pendingAnnouncements;
+      if (!cue || state.announcing) return {};
+      return { announcing: { cue, advanceAfter }, pendingAnnouncements: rest };
+    }),
+  finishAnnouncement: () => {
+    const { announcing, nextTrack } = get();
+    set({ announcing: null });
+    if (announcing?.advanceAfter) nextTrack();
   },
 }));
 

@@ -125,6 +125,9 @@ function Transport({
 
 export function PlayerBar() {
   const { isPlaying, currentTrack, volume, togglePlay, setVolume, nextTrack } = usePlayerStore();
+  // Music holds while an announcement plays, without flipping isPlaying, so
+  // the transport keeps showing "playing" and resumes by itself afterwards.
+  const announcing = usePlayerStore((s) => s.announcing !== null);
 
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -151,14 +154,14 @@ export function PlayerBar() {
     const audio = audioRef.current;
     if (!audio || !currentTrack?.audioUrl) return;
 
-    if (isPlaying) {
+    if (isPlaying && !announcing) {
       audio.play().catch(() => {
         // Autoplay may be blocked; ignore silently
       });
     } else {
       audio.pause();
     }
-  }, [isPlaying, currentTrack]);
+  }, [isPlaying, currentTrack, announcing]);
 
   // Sync volume with store
   useEffect(() => {
@@ -214,7 +217,12 @@ export function PlayerBar() {
           if (el.duration) setProgress((el.currentTime / el.duration) * 100);
         }}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
-        onEnded={nextTrack}
+        onEnded={() => {
+          // Announcements that don't interrupt wait for the song to end.
+          const { pendingAnnouncements, startAnnouncement } = usePlayerStore.getState();
+          if (pendingAnnouncements.length > 0) startAnnouncement(true);
+          else nextTrack();
+        }}
         className="hidden"
       />
 

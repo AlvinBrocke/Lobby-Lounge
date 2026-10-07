@@ -64,4 +64,32 @@ export default defineSchema({
     playlistId: v.optional(v.id("playlists")),
     title: v.optional(v.string()),
   }).index("by_clerk_user", ["clerkUserId"]),
+
+  // Short voice messages played over the music at set times. Rules live in
+  // convex/announcements.ts and are mirrored in src/lib/announcements.ts.
+  announcements: defineTable({
+    clerkUserId: v.string(),
+    title: v.string(),
+    // 'ai': `message` is a script spoken by the browser's text-to-speech.
+    // 'record' | 'upload': the voiceover is an audio file in `storageId`.
+    source: v.union(v.literal("ai"), v.literal("record"), v.literal("upload")),
+    message: v.optional(v.string()),
+    storageId: v.optional(v.id("_storage")),
+    audioName: v.optional(v.string()),
+    audioSeconds: v.optional(v.number()),
+    voiceName: v.optional(v.string()), // SpeechSynthesisVoice.name; falls back to the default voice
+    pitch: v.number(), // 0-100
+    speed: v.number(), // 0-100
+    volumeBoost: v.number(), // dB over the music: 0 | 2 | 4 | 6
+    status: v.union(v.literal("scheduled"), v.literal("draft")),
+    paused: v.boolean(),
+    days: v.array(v.string()), // 'Mon' … 'Sun'
+    // Minutes after midnight. 'once' plays at startMinute; 'multiple' repeats
+    // every `everyMinutes` from startMinute up to and including endMinute.
+    occurrence: v.union(v.literal("once"), v.literal("multiple")),
+    startMinute: v.number(),
+    endMinute: v.optional(v.number()),
+    everyMinutes: v.optional(v.number()),
+    interruptMusic: v.boolean(),
+  }).index("by_clerk_user", ["clerkUserId"]),
 });
