@@ -3,6 +3,7 @@ import "./globals.css";
 import { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ConvexClientProvider } from "./ConvexClientProvider";
+import { Analytics } from "@vercel/analytics/next";
 
 // One family for the whole product — a neutral grotesk close to the wordmark.
 const geist = Geist({
@@ -42,6 +43,7 @@ export default function RootLayout({
             {children}
           </ConvexClientProvider>
         </ClerkProvider>
+        <Analytics />
       </body>
     </html>
   );
