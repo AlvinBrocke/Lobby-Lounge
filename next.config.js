@@ -16,10 +16,14 @@ const nextConfig = {
 turbopack: {
     root: __dirname,
   },
-  // The marketing page moved from /landing-page to /home; keep old links and
-  // search results working (308 = permanent, and keeps the #section anchor).
+  // The marketing page lives at the root (/). It used to be served at
+  // /landing-page and then /home; keep old links and search results working
+  // (308 = permanent, and the browser keeps the #section anchor).
   async redirects() {
-    return [{ source: "/landing-page", destination: "/home", permanent: true }];
+    return [
+      { source: "/landing-page", destination: "/", permanent: true },
+      { source: "/home", destination: "/", permanent: true },
+    ];
   },
 };
 

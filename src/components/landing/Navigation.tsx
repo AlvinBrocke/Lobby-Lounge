@@ -6,10 +6,10 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { label: "Licensing", href: "/home#licensing" },
-  { label: "How it works", href: "/home#how-it-works" },
-  { label: "Business types", href: "/home#business-types" },
-  { label: "Pricing", href: "/home#pricing" },
+  { label: "Licensing", href: "/#licensing" },
+  { label: "How it works", href: "/#how-it-works" },
+  { label: "Business types", href: "/#business-types" },
+  { label: "Pricing", href: "/#pricing" },
   { label: "Blog", href: "/blog" },
   { label: "Help", href: "/help" },
 ];
