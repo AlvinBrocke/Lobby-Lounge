@@ -49,6 +49,8 @@ npx convex env set SOME_KEY value --prod
 npx convex run someModule:someFunction --prod
 ```
 
+Vercel deploys Convex automatically: `vercel.json` sets the build command to `scripts/vercel-build.sh`, which runs `convex deploy --cmd 'pnpm build'` when `CONVEX_DEPLOY_KEY` is set (Vercel env var, a Convex **Production** deploy key, scoped to **Production only**) and plain `pnpm build` otherwise — so preview builds never push functions to production.
+
 After `npx convex deploy`, copy the printed production URL into Vercel's Production environment variables (`NEXT_PUBLIC_CONVEX_URL`, `NEXT_PUBLIC_CONVEX_SITE_URL`) — Vercel cannot reach `127.0.0.1`, so a Vercel-hosted deployment always needs a real cloud Convex deployment, never the anonymous local one.
 
 ## Auth & sessions
