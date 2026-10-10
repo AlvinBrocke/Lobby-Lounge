@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import {
+  AlertTriangle,
+  CalendarClock,
   ListMusic,
   Maximize2,
   Pause,
@@ -14,7 +17,15 @@ import {
 } from "lucide-react";
 import { cn, formatDuration } from "@/lib/utils";
 import usePlayerStore from "@/store/usePlayerStore";
+import { useAccess } from "@/hooks/useAccess";
+import { useMediaSession, useWakeLock } from "@/hooks/useKeepAwake";
+import type { ScheduleStatus } from "@/hooks/useScheduleAutoplay";
 import type { Track } from "@/types";
+
+/** Broken tracks skipped in a row before giving up and saying so. */
+const MAX_FAILURES = 3;
+/** How long playback may sit buffering before the track counts as broken. */
+const STALL_MS = 15_000;
 
 /** Player clock: `formatDuration` shows a dash for 0, but a clock should read 0:00. */
 const clock = (seconds: number) => (seconds >= 1 ? formatDuration(seconds) : "0:00");
@@ -83,6 +94,7 @@ function Transport({
   onPrev,
   onToggle,
   onNext,
+  playLabel,
   big,
 }: {
   playing: boolean;
@@ -90,6 +102,8 @@ function Transport({
   onPrev: () => void;
   onToggle: () => void;
   onNext: () => void;
+  /** Overrides the play button's label, e.g. "Start schedule: Morning Jazz". */
+  playLabel?: string;
   big?: boolean;
 }) {
   const side = "p-1 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40";
@@ -102,7 +116,8 @@ function Transport({
       <button
         onClick={onToggle}
         disabled={disabled}
-        aria-label={playing ? "Pause" : "Play"}
+        aria-label={playing ? "Pause" : (playLabel ?? "Play")}
+        title={playing ? undefined : playLabel}
         className={cn(
           "rounded-full bg-primary text-primary-foreground flex items-center justify-center transition-transform hover:scale-[1.08] disabled:opacity-40 disabled:hover:scale-100",
           big
@@ -123,31 +138,137 @@ function Transport({
   );
 }
 
-export function PlayerBar() {
-  const { isPlaying, currentTrack, volume, togglePlay, setVolume, nextTrack } = usePlayerStore();
+/**
+ * Replaces the now-playing area when the player needs attention. Staff glance
+ * at this from across the room, so it says what's wrong and what to tap.
+ */
+function Notice({
+  tone,
+  title,
+  detail,
+  onClick,
+  href,
+}: {
+  tone: "alert" | "info";
+  title: string;
+  detail: string;
+  onClick?: () => void;
+  href?: string;
+}) {
+  const Icon = tone === "alert" ? AlertTriangle : CalendarClock;
+  const body = (
+    <>
+      <div
+        className={cn(
+          "w-12 h-12 rounded-md shrink-0 flex items-center justify-center",
+          tone === "alert" ? "bg-red-500/15 text-red-400" : "bg-primary/15 text-primary",
+        )}
+      >
+        <Icon className="w-5 h-5" />
+      </div>
+      <div className="min-w-0">
+        <div className="text-xs font-bold text-foreground truncate">{title}</div>
+        <div
+          className={cn(
+            "text-[11px] truncate group-hover:underline",
+            tone === "alert" ? "text-red-400" : "text-primary",
+          )}
+        >
+          {detail}
+        </div>
+      </div>
+    </>
+  );
+  const className = "group w-[30%] min-w-0 flex items-center gap-2.5 pr-5 text-left";
+  return href ? (
+    <Link href={href} role="alert" className={className}>
+      {body}
+    </Link>
+  ) : (
+    <button type="button" onClick={onClick} role={tone === "alert" ? "alert" : undefined} className={className}>
+      {body}
+    </button>
+  );
+}
+
+export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
+  const { isPlaying, currentTrack, volume, togglePlay, setIsPlaying, setVolume, nextTrack } =
+    usePlayerStore();
   // Music holds while an announcement plays, without flipping isPlaying, so
   // the transport keeps showing "playing" and resumes by itself afterwards.
   const announcing = usePlayerStore((s) => s.announcing !== null);
+  const access = useAccess();
+  const expired = access?.access.status === "expired";
 
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [expanded, setExpanded] = useState(false);
   const [showVolume, setShowVolume] = useState(false);
+  // Set after MAX_FAILURES broken tracks in a row; playback is paused.
+  const [stopped, setStopped] = useState(false);
+  const failures = useRef(0);
+  const stallTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const volumeRef = useRef<HTMLDivElement>(null);
+
+  const clearStall = useCallback(() => {
+    if (stallTimer.current) clearTimeout(stallTimer.current);
+    stallTimer.current = null;
+  }, []);
+
+  /**
+   * A track that won't play (404, expired CDN link, unsupported format, or a
+   * stream that hangs) is skipped. Several in a row usually means the network
+   * is down, so stop and say so rather than spinning through the playlist.
+   */
+  const fail = useCallback(
+    (reason: string) => {
+      clearStall();
+      const track = usePlayerStore.getState().currentTrack;
+      console.warn(`Player: skipping "${track?.name}" (${reason})`);
+      failures.current += 1;
+      if (failures.current >= MAX_FAILURES) {
+        setStopped(true);
+        setIsPlaying(false);
+      } else {
+        nextTrack();
+      }
+    },
+    [clearStall, nextTrack, setIsPlaying],
+  );
+
+  function armStall() {
+    const { isPlaying, announcing } = usePlayerStore.getState();
+    if (!isPlaying || announcing || stallTimer.current) return;
+    stallTimer.current = setTimeout(() => fail("stalled"), STALL_MS);
+  }
 
   // Load new track when currentTrack changes
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
+    clearStall();
 
-    const src = currentTrack?.audioUrl ?? "";
-    if (audio.src !== src) {
+    const src = currentTrack?.audioUrl;
+    if (!src) {
+      // `audio.src = ""` would point at the page URL and fire a bogus error.
+      if (audio.hasAttribute("src")) {
+        audio.removeAttribute("src");
+        audio.load();
+      }
+      setProgress(0);
+      setDuration(0);
+      // A track with no audio can't play; treat it like a broken one.
+      if (currentTrack && usePlayerStore.getState().isPlaying) fail("no audio");
+      return;
+    }
+    // Re-assigning reloads an errored element (a one-track playlist retrying).
+    if (audio.src !== src || audio.error) {
       audio.src = src;
       setProgress(0);
       setDuration(0);
     }
-  }, [currentTrack]);
+  }, [currentTrack, clearStall, fail]);
 
   // Sync play/pause with store
   useEffect(() => {
@@ -155,13 +276,24 @@ export function PlayerBar() {
     if (!audio || !currentTrack?.audioUrl) return;
 
     if (isPlaying && !announcing) {
-      audio.play().catch(() => {
-        // Autoplay may be blocked; ignore silently
+      // Any restart (retry, a playlist click, the play button) starts a fresh count.
+      if (stopped) {
+        setStopped(false);
+        failures.current = 0;
+      }
+      audio.play().catch((err: DOMException) => {
+        // The browser wants a tap first: show "paused" so staff know to press play.
+        if (err.name === "NotAllowedError") setIsPlaying(false);
+        // AbortError just means the source changed mid-start; real load
+        // failures arrive as the element's `error` event, handled below.
       });
     } else {
+      clearStall();
       audio.pause();
     }
-  }, [isPlaying, currentTrack, announcing]);
+  }, [isPlaying, currentTrack, announcing, stopped, clearStall, setIsPlaying]);
+
+  useEffect(() => clearStall, [clearStall]);
 
   // Sync volume with store
   useEffect(() => {
@@ -187,8 +319,16 @@ export function PlayerBar() {
     return () => window.removeEventListener("keydown", onKey);
   }, [expanded]);
 
+  const audible = isPlaying && !!currentTrack?.audioUrl;
+  useWakeLock(audible);
+  const play = useCallback(() => setIsPlaying(true), [setIsPlaying]);
+  const pause = useCallback(() => setIsPlaying(false), [setIsPlaying]);
+  useMediaSession(currentTrack, isPlaying, { play, pause, next: nextTrack });
+
   const elapsed = (progress / 100) * duration;
-  const disabled = !currentTrack;
+  // With nothing loaded, play can still start the scheduled playlist.
+  const canStartSchedule = !currentTrack && !!schedule.active && !expired;
+  const disabled = !currentTrack && !canStartSchedule;
 
   function seek(pct: number) {
     const audio = audioRef.current;
@@ -200,13 +340,50 @@ export function PlayerBar() {
   // There's no play history yet, so "previous" restarts the current track.
   const restart = () => seek(0);
 
+  function onToggle() {
+    if (stopped) nextTrack();
+    else if (canStartSchedule) schedule.start();
+    else togglePlay();
+  }
+
   const transport = {
     playing: isPlaying,
     disabled,
     onPrev: restart,
-    onToggle: togglePlay,
+    onToggle,
     onNext: nextTrack,
+    playLabel: canStartSchedule ? `Start schedule: ${schedule.active.title}` : undefined,
   };
+
+  // Most urgent first. Each one replaces the now-playing area.
+  let notice: React.ReactNode = null;
+  if (expired && !currentTrack?.audioUrl) {
+    notice = (
+      <Notice tone="alert" title="Trial ended" detail="Subscribe to keep playing" href="/settings?tab=billing" />
+    );
+  } else if (stopped && !isPlaying) {
+    notice = <Notice tone="alert" title="Music stopped" detail="Tap to retry" onClick={() => nextTrack()} />;
+  } else if (schedule.signedOut) {
+    notice = (
+      <Notice
+        tone="alert"
+        title="Signed out — schedule paused"
+        detail="Tap to sign in again"
+        onClick={() => window.location.reload()}
+      />
+    );
+  } else if (schedule.loadError) {
+    notice = <Notice tone="alert" title={schedule.loadError} detail="Tap to retry" onClick={schedule.start} />;
+  } else if (canStartSchedule) {
+    notice = (
+      <Notice
+        tone="info"
+        title={`Up now: ${schedule.active.title}`}
+        detail="Tap to start the schedule"
+        onClick={schedule.start}
+      />
+    );
+  }
 
   return (
     <>
@@ -215,8 +392,20 @@ export function PlayerBar() {
         onTimeUpdate={(e) => {
           const el = e.currentTarget;
           if (el.duration) setProgress((el.currentTime / el.duration) * 100);
+          clearStall();
         }}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+        onPlaying={() => {
+          clearStall();
+          failures.current = 0;
+        }}
+        onError={() => {
+          if (usePlayerStore.getState().currentTrack?.audioUrl) fail("load error");
+        }}
+        // `waiting`/`stalled` also fire on brief network hiccups, so give the
+        // stream a while to recover before calling the track broken.
+        onWaiting={armStall}
+        onStalled={armStall}
         onEnded={() => {
           // Announcements that don't interrupt wait for the song to end.
           const { pendingAnnouncements, startAnnouncement } = usePlayerStore.getState();
@@ -273,33 +462,35 @@ export function PlayerBar() {
 
       <div className="h-full flex items-center px-5 bg-shell shadow-[0_-8px_40px_rgba(0,0,0,0.55)]">
         {/* Now playing — opens the expanded view */}
-        <button
-          type="button"
-          onClick={() => setExpanded(true)}
-          disabled={disabled}
-          aria-label="Expand now playing"
-          className="group w-[30%] min-w-0 flex items-center gap-2.5 pr-5 text-left disabled:cursor-default"
-        >
-          <div className="relative w-12 h-12 rounded-md overflow-hidden shrink-0 shadow-[0_2px_10px_rgba(0,0,0,0.5)] transition-transform group-enabled:group-hover:scale-105">
-            <Artwork track={currentTrack} className="w-full h-full" />
-            {currentTrack && (
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 flex items-center justify-center transition-colors">
-                <Maximize2 className="w-[13px] h-[13px] text-white opacity-0 group-hover:opacity-90" />
+        {notice ?? (
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            disabled={disabled}
+            aria-label="Expand now playing"
+            className="group w-[30%] min-w-0 flex items-center gap-2.5 pr-5 text-left disabled:cursor-default"
+          >
+            <div className="relative w-12 h-12 rounded-md overflow-hidden shrink-0 shadow-[0_2px_10px_rgba(0,0,0,0.5)] transition-transform group-enabled:group-hover:scale-105">
+              <Artwork track={currentTrack} className="w-full h-full" />
+              {currentTrack && (
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 flex items-center justify-center transition-colors">
+                  <Maximize2 className="w-[13px] h-[13px] text-white opacity-0 group-hover:opacity-90" />
+                </div>
+              )}
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-foreground truncate">
+                {currentTrack?.name ?? "Nothing playing"}
               </div>
-            )}
-          </div>
-          <div className="min-w-0">
-            <div className="text-xs font-bold text-foreground truncate">
-              {currentTrack?.name ?? "Nothing playing"}
+              <div className="text-[11px] text-muted-foreground truncate">
+                {currentTrack ? (currentTrack.artist ?? "Lobby & Lounge") : "Choose a playlist to start"}
+              </div>
+              {currentTrack?.category && (
+                <div className="text-[10px] text-faint truncate mt-px">{currentTrack.category}</div>
+              )}
             </div>
-            <div className="text-[11px] text-muted-foreground truncate">
-              {currentTrack ? (currentTrack.artist ?? "Lobby & Lounge") : "Choose a playlist to start"}
-            </div>
-            {currentTrack?.category && (
-              <div className="text-[10px] text-faint truncate mt-px">{currentTrack.category}</div>
-            )}
-          </div>
-        </button>
+          </button>
+        )}
 
         {/* Transport + progress */}
         <div className="flex-1 flex flex-col items-center justify-center gap-2">
