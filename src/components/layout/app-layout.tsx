@@ -11,7 +11,7 @@ import { TrialBanner } from "./TrialBanner";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   // Lives here, not on /schedule, so the schedule runs on every app page.
-  useScheduleAutoplay();
+  const schedule = useScheduleAutoplay();
   useAnnouncementSchedule();
 
   return (
@@ -32,7 +32,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       <div className="h-[76px] shrink-0 z-50">
-        <PlayerBar />
+        <PlayerBar schedule={schedule} />
       </div>
     </div>
   );
