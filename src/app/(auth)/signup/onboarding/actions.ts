@@ -112,12 +112,17 @@ export async function syncOnboardingClaim(): Promise<OnboardingResult> {
   if (!session) return { ok: false, error: "Not signed in" };
   if (session.onboardingComplete) return { ok: true };
 
-  const token = await getConvexToken();
-  const profile = await fetchQuery(api.userProfiles.get, {}, { token });
-  if (!profile?.onboardingCompleted) {
-    return { ok: false, error: "Onboarding not complete" };
-  }
+  try {
+    const token = await getConvexToken();
+    const profile = await fetchQuery(api.userProfiles.get, {}, { token });
+    if (!profile?.onboardingCompleted) {
+      return { ok: false, error: "Onboarding not complete" };
+    }
 
-  await setOnboardedClaim(session.userId);
-  return { ok: true };
+    await setOnboardedClaim(session.userId);
+    return { ok: true };
+  } catch (e) {
+    console.error("syncOnboardingClaim failed", e);
+    return { ok: false, error: "Could not confirm your onboarding. Please refresh." };
+  }
 }
