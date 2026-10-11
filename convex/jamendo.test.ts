@@ -1,5 +1,5 @@
 import { convexTest } from "convex-test";
-import { describe, it, expect, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { api, internal } from "./_generated/api";
 import schema from "./schema";
 
@@ -27,6 +27,14 @@ function stubJamendo(byTag: Record<string, string[]>) {
 }
 
 describe("jamendo.syncPlaylist", () => {
+  // syncPlaylist pauses before retrying an empty tag; skip the wait in tests.
+  beforeEach(() => {
+    vi.stubGlobal("setTimeout", (fn: () => void) => {
+      fn();
+      return 0;
+    });
+  });
+
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.unstubAllEnvs();
@@ -53,13 +61,34 @@ describe("jamendo.syncPlaylist", () => {
     const inserted = await t.action(internal.jamendo.syncPlaylist, { playlistId });
 
     expect(inserted).toBe(2);
-    expect(requested).toEqual(["electronica", "dance"]);
+    // Each empty tag is retried once before moving on.
+    expect(requested).toEqual(["electronica", "electronica", "dance"]);
     const tracks = await t
       .withIdentity({ subject: "user_x" })
       .query(api.playlists.getTracks, { playlistId });
     // Linked into the playlist in Jamendo's order, tagged with its category.
     expect(tracks.map((x) => x.name)).toEqual(["A", "B"]);
     expect(tracks[0].category).toBe("Energetic");
+  });
+
+  it("retries a tag once when Jamendo returns nothing", async () => {
+    const { t, playlistId } = await setup("Energetic");
+    // Empty on the first request, populated on the second — Jamendo's flakiness.
+    const requested: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string) => {
+        const tag = new URL(input).searchParams.get("tags") ?? "";
+        requested.push(tag);
+        const results = requested.length === 1 ? [] : [track("A")];
+        return new Response(JSON.stringify({ results }));
+      }),
+    );
+
+    const inserted = await t.action(internal.jamendo.syncPlaylist, { playlistId });
+
+    expect(inserted).toBe(1);
+    expect(requested).toEqual(["electronica", "electronica"]);
   });
 
   it("stops at the first tag that returns tracks", async () => {

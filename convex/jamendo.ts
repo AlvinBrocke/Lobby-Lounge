@@ -19,6 +19,11 @@ const CATEGORY_TAGS: Record<string, string[]> = {
   Wellness: ["ambient", "relaxation"],
 };
 
+// An empty result is usually that flakiness rather than a genuinely empty tag, and
+// asking again moments later typically succeeds — so retry once before falling back.
+const EMPTY_RESULT_ATTEMPTS = 2;
+const EMPTY_RESULT_RETRY_MS = 500;
+
 interface JamendoTrack {
   name: string;
   artist_name: string;
@@ -50,31 +55,35 @@ export const syncPlaylist = internalAction({
 
     let tag = tags[0];
     let results: JamendoTrack[] = [];
-    for (tag of tags) {
-      const url = new URL(JAMENDO_TRACKS_URL);
-      url.searchParams.set("client_id", clientId);
-      url.searchParams.set("format", "json");
-      url.searchParams.set("limit", String(args.limit ?? 15));
-      url.searchParams.set("tags", tag);
-      url.searchParams.set("audioformat", "mp32");
-      url.searchParams.set("order", "popularity_total");
+    search: for (tag of tags) {
+      for (let attempt = 1; attempt <= EMPTY_RESULT_ATTEMPTS; attempt++) {
+        if (attempt > 1) await new Promise((r) => setTimeout(r, EMPTY_RESULT_RETRY_MS));
+        const url = new URL(JAMENDO_TRACKS_URL);
+        url.searchParams.set("client_id", clientId);
+        url.searchParams.set("format", "json");
+        url.searchParams.set("limit", String(args.limit ?? 15));
+        url.searchParams.set("tags", tag);
+        url.searchParams.set("audioformat", "mp32");
+        url.searchParams.set("order", "popularity_total");
 
-      const res = await fetch(url.toString());
-      if (!res.ok) {
-        throw new Error(`Jamendo request failed: ${res.status} ${res.statusText}`);
+        const res = await fetch(url.toString());
+        if (!res.ok) {
+          throw new Error(`Jamendo request failed: ${res.status} ${res.statusText}`);
+        }
+        const data: { headers?: unknown; results: JamendoTrack[] } = await res.json();
+        if (!Array.isArray(data.results)) {
+          throw new Error(`Jamendo returned an unexpected response shape for tag "${tag}"`);
+        }
+        results = data.results;
+        if (results.length > 0) break search;
+        // Jamendo's `headers` block carries its own status/warnings — useful if an
+        // empty result ever turns out to be something other than search flakiness.
+        console.warn(
+          `syncPlaylist "${playlist.name}": tag=${tag} returned 0 tracks ` +
+            `(attempt ${attempt}/${EMPTY_RESULT_ATTEMPTS})`,
+          JSON.stringify(data.headers),
+        );
       }
-      const data: { headers?: unknown; results: JamendoTrack[] } = await res.json();
-      if (!Array.isArray(data.results)) {
-        throw new Error(`Jamendo returned an unexpected response shape for tag "${tag}"`);
-      }
-      results = data.results;
-      if (results.length > 0) break;
-      // Jamendo's `headers` block carries its own status/warnings — useful if an
-      // empty result ever turns out to be something other than search flakiness.
-      console.warn(
-        `syncPlaylist "${playlist.name}": tag=${tag} returned 0 tracks`,
-        JSON.stringify(data.headers),
-      );
     }
 
     const energy = energyForCategory(playlist.category);
