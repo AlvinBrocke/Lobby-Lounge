@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
+import posthog from "posthog-js";
 
 export default function GlobalError({
   error,
@@ -13,6 +14,13 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     console.error(error);
+
+    if (
+      process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN &&
+      process.env.NEXT_PUBLIC_POSTHOG_HOST
+    ) {
+      posthog.captureException(error);
+    }
   }, [error]);
 
   return (

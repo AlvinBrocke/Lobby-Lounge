@@ -58,3 +58,4 @@ local.db
 
 # convex
 .convex
+.env.local

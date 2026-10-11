@@ -19,6 +19,11 @@ import { PasswordCard } from "@/components/settings/PasswordCard";
 import { cn } from "@/lib/utils";
 import { useAccess } from "@/hooks/useAccess";
 import { PLAN_NAME } from "@/lib/billing";
+import posthog from "posthog-js";
+
+const posthogConfigured = Boolean(
+  process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN && process.env.NEXT_PUBLIC_POSTHOG_HOST,
+);
 
 interface SessionInfo {
   id: string;
@@ -117,6 +122,9 @@ export default function SettingsPage() {
     setIsSaving(true);
     try {
       await saveProfile({ venueName: venueName || undefined });
+      if (posthogConfigured) {
+        posthog.capture("venue_name_updated", { has_venue_name: Boolean(venueName) });
+      }
       setSavedFeedback(true);
       setTimeout(() => setSavedFeedback(false), 2000);
     } catch {

@@ -7,6 +7,11 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { formatDuration } from "@/lib/utils";
 import { Modal } from "./Modal";
+import posthog from "posthog-js";
+
+const posthogConfigured = Boolean(
+  process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN && process.env.NEXT_PUBLIC_POSTHOG_HOST,
+);
 
 interface AddSongsDialogProps {
   playlistId: Id<"playlists">;
@@ -33,6 +38,7 @@ export function AddSongsDialog({ playlistId, existingTrackIds, onClose }: AddSon
     setPending((prev) => new Set(prev).add(trackId));
     try {
       await addTrack({ playlistId, trackId });
+      if (posthogConfigured) posthog.capture("playlist_track_added");
     } finally {
       setPending((prev) => {
         const next = new Set(prev);

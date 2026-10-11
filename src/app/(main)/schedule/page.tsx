@@ -21,6 +21,11 @@ import {
   todayKey,
   type Day,
 } from "@/lib/schedule";
+import posthog from "posthog-js";
+
+const posthogConfigured = Boolean(
+  process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN && process.env.NEXT_PUBLIC_POSTHOG_HOST,
+);
 
 const ROW_HEIGHT = 64; // px per hour
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -91,14 +96,27 @@ export default function SchedulePage() {
     if (modal?.mode === "edit") {
       // An empty title is sent as "" (not omitted) so the server clears it.
       await updateBlock({ id: modal.block._id, ...values });
+      if (posthogConfigured) {
+        posthog.capture("schedule_block_updated", {
+          day: values.day,
+          duration_hours: values.duration,
+        });
+      }
     } else {
       await createBlock({ ...values, title: values.title || undefined });
+      if (posthogConfigured) {
+        posthog.capture("schedule_block_created", {
+          day: values.day,
+          duration_hours: values.duration,
+        });
+      }
     }
     setModal(null);
   }
 
   async function handleDelete(id: Id<"scheduleBlocks">) {
     await removeBlock({ id });
+    if (posthogConfigured) posthog.capture("schedule_block_deleted");
     setModal(null);
   }
 

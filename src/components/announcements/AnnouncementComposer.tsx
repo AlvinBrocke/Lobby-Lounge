@@ -22,6 +22,11 @@ import {
 import { DAYS } from "@/lib/schedule";
 import { englishVoices, speak, speechSupported } from "@/lib/speech";
 import { cn, formatDuration } from "@/lib/utils";
+import posthog from "posthog-js";
+
+const posthogConfigured = Boolean(
+  process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN && process.env.NEXT_PUBLIC_POSTHOG_HOST,
+);
 
 type Source = "ai" | "record" | "upload";
 
@@ -261,6 +266,14 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
       };
       if (editing) await update({ id: editing._id, ...values });
       else await create(values);
+      if (posthogConfigured) {
+        posthog.capture("announcement_saved", {
+          action: editing ? "updated" : "created",
+          status,
+          source,
+          occurrence,
+        });
+      }
       onSaved(status, days);
     } catch (err) {
       // ConvexError messages are written for users; anything else is not.

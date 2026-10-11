@@ -16,6 +16,11 @@ import { AddSongsDialog } from "@/components/playlists/AddSongsDialog";
 import { ConfirmDialog } from "@/components/playlists/ConfirmDialog";
 import { PlaylistCover } from "@/components/playlists/PlaylistCover";
 import { PlaylistFormModal, type PlaylistFormValues } from "@/components/playlists/PlaylistFormModal";
+import posthog from "posthog-js";
+
+const posthogConfigured = Boolean(
+  process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN && process.env.NEXT_PUBLIC_POSTHOG_HOST,
+);
 
 type PlaylistTrack = FunctionReturnType<typeof api.playlists.getTracks>[number];
 
@@ -187,6 +192,9 @@ export default function PlaylistDetailPage() {
 
   async function handleEdit({ name, description }: PlaylistFormValues) {
     await updatePlaylist({ id: playlistId, name, description });
+    if (posthogConfigured) {
+      posthog.capture("playlist_updated", { has_description: Boolean(description) });
+    }
     setModal(null);
   }
 
@@ -198,7 +206,13 @@ export default function PlaylistDetailPage() {
       setDeleting(false);
       throw err;
     }
+    if (posthogConfigured) posthog.capture("playlist_deleted");
     router.replace("/playlists");
+  }
+
+  async function handleRemoveTrack(playlistTrackId: Id<"playlistTracks">) {
+    await removeTrack({ playlistTrackId });
+    if (posthogConfigured) posthog.capture("playlist_track_removed");
   }
 
   return (
@@ -284,7 +298,7 @@ export default function PlaylistDetailPage() {
               canEdit={canEdit}
               onPlay={() => playFrom(i)}
               onQueue={track.audioUrl ? () => addToQueue(toPlayerTrack(track)) : undefined}
-              onRemove={() => removeTrack({ playlistTrackId: track.playlistTrackId })}
+              onRemove={() => handleRemoveTrack(track.playlistTrackId)}
             />
           ))}
         </div>

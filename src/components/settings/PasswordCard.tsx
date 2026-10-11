@@ -11,6 +11,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import posthog from "posthog-js";
+
+const posthogConfigured = Boolean(
+  process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN && process.env.NEXT_PUBLIC_POSTHOG_HOST,
+);
 
 const inputClass =
   "w-full bg-transparent border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50";
@@ -54,6 +59,9 @@ export function PasswordCard() {
         ...(hasPassword ? { currentPassword } : {}),
         signOutOfOtherSessions: true,
       });
+      if (posthogConfigured) {
+        posthog.capture("password_updated", { action: hasPassword ? "changed" : "set" });
+      }
       setCurrentPassword("");
       setNewPassword("");
       setConfirm("");

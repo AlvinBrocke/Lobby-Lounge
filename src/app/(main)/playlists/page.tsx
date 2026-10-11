@@ -13,6 +13,11 @@ import { PlaylistFormModal, type PlaylistFormValues } from "@/components/playlis
 import { cn } from "@/lib/utils";
 import { toPlayerQueue } from "@/lib/playlists";
 import usePlayerStore from "@/store/usePlayerStore";
+import posthog from "posthog-js";
+
+const posthogConfigured = Boolean(
+  process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN && process.env.NEXT_PUBLIC_POSTHOG_HOST,
+);
 
 type PlaylistSummary = FunctionReturnType<typeof api.playlists.listCurated>[number];
 
@@ -102,6 +107,9 @@ export default function PlaylistsPage() {
       name,
       description: description || undefined,
     });
+    if (posthogConfigured) {
+      posthog.capture("playlist_created", { has_description: Boolean(description) });
+    }
     router.push(`/playlists/${id}`);
   }
 

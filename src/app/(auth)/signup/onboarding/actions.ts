@@ -4,6 +4,11 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 import { getSession, getConvexToken } from "@/lib/session";
+import {
+  flushPostHogLogs,
+  logPostHogOnboardingClaimSynced,
+  logPostHogOnboardingCompleted,
+} from "../../../../../instrumentation";
 
 // Every field is optional so "Skip for now" can submit a mostly blank payload.
 type OnboardingInput = {
@@ -92,6 +97,8 @@ export async function completeOnboarding(
 
     // 2. Then the claim. If this fails, syncOnboardingClaim heals it next visit.
     await setOnboardedClaim(session.userId);
+    logPostHogOnboardingCompleted();
+    await flushPostHogLogs();
     return { ok: true };
   } catch (e) {
     console.error("completeOnboarding failed", e);
@@ -120,6 +127,8 @@ export async function syncOnboardingClaim(): Promise<OnboardingResult> {
     }
 
     await setOnboardedClaim(session.userId);
+    logPostHogOnboardingClaimSynced();
+    await flushPostHogLogs();
     return { ok: true };
   } catch (e) {
     console.error("syncOnboardingClaim failed", e);
