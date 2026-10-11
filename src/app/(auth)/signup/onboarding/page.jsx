@@ -577,9 +577,11 @@ function MainComponent() {
   // Users who finished onboarding before the JWT claim existed land here because
   // middleware doesn't see the claim yet. Their Convex profile is the source of
   // truth, so sync the claim and send them on without showing the wizard.
+  // Skip while finish() is running: its own mutation flips `profile` to onboarded
+  // mid-save, and racing it here aborts one of the two requests on navigation.
   const alreadyOnboarded = profile?.onboardingCompleted === true;
   useEffect(() => {
-    if (!alreadyOnboarded || !user) return;
+    if (!alreadyOnboarded || !user || saving) return;
     let cancelled = false;
     (async () => {
       try {
@@ -595,7 +597,7 @@ function MainComponent() {
     return () => {
       cancelled = true;
     };
-  }, [alreadyOnboarded, user]);
+  }, [alreadyOnboarded, user, saving]);
 
 
   const nextStep = () => {
