@@ -16,7 +16,6 @@ import type * as lib_billing from "../lib/billing.js";
 import type * as lib_curated from "../lib/curated.js";
 import type * as lib_energy from "../lib/energy.js";
 import type * as lib_text from "../lib/text.js";
-import type * as migrations from "../migrations.js";
 import type * as playlists from "../playlists.js";
 import type * as scheduleBlocks from "../scheduleBlocks.js";
 import type * as tracks from "../tracks.js";
@@ -37,7 +36,6 @@ declare const fullApi: ApiFromModules<{
   "lib/curated": typeof lib_curated;
   "lib/energy": typeof lib_energy;
   "lib/text": typeof lib_text;
-  migrations: typeof migrations;
   playlists: typeof playlists;
   scheduleBlocks: typeof scheduleBlocks;
   tracks: typeof tracks;
