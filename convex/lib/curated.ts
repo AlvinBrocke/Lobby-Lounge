@@ -78,6 +78,11 @@ export const CURATED_PLAYLISTS: {
   },
 ];
 
+/** Section for a curated playlist name, falling back to daytime. */
+export function sectionFor(name: string): "daytime" | "evening" {
+  return CURATED_PLAYLISTS.find((p) => p.name === name)?.section ?? "daytime";
+}
+
 /** Appends tracks to the end of a playlist, skipping ones already in it. */
 export async function appendTracksTo(
   ctx: MutationCtx,
