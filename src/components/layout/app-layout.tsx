@@ -5,7 +5,7 @@ import { AnnouncementPlayer } from "@/components/announcements/AnnouncementPlaye
 import { useAnnouncementSchedule } from "@/hooks/useAnnouncementSchedule";
 import { useScheduleAutoplay } from "@/hooks/useScheduleAutoplay";
 import { PlayerBar } from "./player-bar";
-import { Sidebar } from "./Sidebar";
+import { MobileNav, Sidebar } from "./Sidebar";
 import { Topbar } from "./topbar";
 import { TrialBanner } from "./TrialBanner";
 
@@ -15,7 +15,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   useAnnouncementSchedule();
 
   return (
-    <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden">
+    // `h-dvh`, not `h-screen`: on iPad Safari 100vh includes the area behind the
+    // browser toolbar, which would push the player bar off the bottom.
+    // The safe-area insets keep clear of the status bar and home indicator
+    // when the app is launched from the home screen (see viewport in app/layout).
+    <div className="app-shell h-dvh flex flex-col bg-background text-foreground overflow-hidden pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
       <div className="flex-1 flex overflow-hidden">
         <Sidebar />
 
@@ -31,8 +35,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
-      <div className="h-[76px] shrink-0 z-50">
+      <div className="app-chrome shrink-0 z-50 bg-shell pb-[env(safe-area-inset-bottom)]">
         <PlayerBar schedule={schedule} />
+        <MobileNav />
       </div>
     </div>
   );

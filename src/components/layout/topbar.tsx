@@ -58,7 +58,8 @@ function PlaylistSearch() {
         }}
         placeholder="What do you want to play?"
         aria-label="Search playlists"
-        className="w-full rounded-full border border-primary/20 bg-secondary py-[7px] pl-8 pr-8 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors"
+        // 16px on touch: iOS zooms the whole page when focusing a smaller input.
+        className="w-full rounded-full border border-primary/20 bg-secondary py-[7px] touch:py-2.5 pl-8 pr-8 touch:pr-11 text-xs touch:text-base text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors"
       />
       {value && (
         <button
@@ -68,7 +69,7 @@ function PlaylistSearch() {
             if (onPlaylists) go("", true);
           }}
           aria-label="Clear search"
-          className="absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground"
+          className="absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 touch:w-9 touch:h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground"
         >
           <X className="w-3 h-3" />
         </button>
@@ -100,7 +101,7 @@ function AccountMenu() {
   const initials = initialsOf(name);
 
   const item =
-    "w-full flex items-center gap-2.5 px-2 py-2 rounded-md text-xs font-semibold text-foreground hover:bg-white/5 transition-colors";
+    "w-full flex items-center gap-2.5 px-2 py-2 touch:py-3 rounded-md text-xs touch:text-sm font-semibold text-foreground hover:bg-white/5 transition-colors";
 
   return (
     <div ref={ref} className="relative">
@@ -108,7 +109,7 @@ function AccountMenu() {
         onClick={() => setOpen((o) => !o)}
         aria-label="Open account menu"
         aria-expanded={open}
-        className="w-[30px] h-[30px] rounded-full bg-primary text-primary-foreground text-[9px] font-black flex items-center justify-center hover:ring-4 hover:ring-primary/15 transition-shadow"
+        className="w-[30px] h-[30px] touch:w-11 touch:h-11 rounded-full bg-primary text-primary-foreground text-[9px] touch:text-xs font-black flex items-center justify-center hover:ring-4 hover:ring-primary/15 transition-shadow"
       >
         {initials}
       </button>
@@ -150,13 +151,13 @@ function AccountMenu() {
 
 export function Topbar() {
   return (
-    <header className="relative shrink-0 flex items-center gap-3.5 px-5 py-[13px] border-b border-primary/[0.08]">
+    <header className="app-chrome relative shrink-0 flex items-center gap-3.5 px-5 py-[13px] touch:py-2 border-b border-primary/[0.08]">
       <div className="flex-1" />
       <Link
         href="/playlists"
         title="Playlist home"
         aria-label="Playlist home"
-        className="w-[30px] h-[30px] rounded-full flex items-center justify-center text-foreground hover:text-primary transition-colors shrink-0"
+        className="w-[30px] h-[30px] touch:w-11 touch:h-11 rounded-full flex items-center justify-center text-foreground hover:text-primary transition-colors shrink-0"
       >
         <Home className="w-5 h-5" />
       </Link>
