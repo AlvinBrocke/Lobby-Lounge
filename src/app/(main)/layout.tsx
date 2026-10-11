@@ -1,4 +1,5 @@
 import React from "react";
+import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/session";
 import { MainShell } from "@/components/layout/MainShell";
 
@@ -9,6 +10,9 @@ export default async function MainLayout({
 }: {
   children: React.ReactNode;
 }) {
-  await verifySession();
+  const session = await verifySession();
+  // Mirrors the onboarding gate in src/proxy.ts. Users whose Convex profile is
+  // complete but whose claim isn't set yet get it backfilled on that page.
+  if (!session.onboardingComplete) redirect("/signup/onboarding");
   return <MainShell>{children}</MainShell>;
 }
