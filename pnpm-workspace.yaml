@@ -5,7 +5,7 @@ onlyBuiltDependencies:
 
 allowBuilds:
   '@clerk/shared': true
-  core-js: set this to true or false
+  core-js: false
   esbuild: true
   sharp: true
 
