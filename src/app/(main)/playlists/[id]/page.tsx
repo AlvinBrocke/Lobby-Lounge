@@ -24,8 +24,10 @@ const posthogConfigured = Boolean(
 
 type PlaylistTrack = FunctionReturnType<typeof api.playlists.getTracks>[number];
 
-// # · Title · Artist · Time · actions
-const GRID = "grid grid-cols-[28px_minmax(0,1fr)_minmax(0,1fr)_52px_auto] items-center gap-3";
+// # · Title · Artist · Time · actions. Below `lg` (tablet portrait) the
+// Artist column folds under the title so the title isn't squeezed.
+const GRID =
+  "grid grid-cols-[28px_minmax(0,1fr)_52px_auto] lg:grid-cols-[28px_minmax(0,1fr)_minmax(0,1fr)_52px_auto] items-center gap-3";
 
 const ghostButton =
   "flex items-center gap-1.5 h-[31px] px-2.5 rounded-md border border-primary/20 text-xs text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors";
@@ -53,8 +55,8 @@ function TrackRow({
       onClick={onPlay}
       className={cn(
         GRID,
-        "group px-5 py-[9px] cursor-pointer border-b border-primary/[0.04] transition-colors",
-        isCurrent ? "bg-primary/10" : "hover:bg-white/[0.03]",
+        "group px-5 py-[9px] touch:py-3 cursor-pointer border-b border-primary/[0.04] transition-colors",
+        isCurrent ? "bg-primary/10" : "can-hover:hover:bg-white/[0.03] active:bg-white/[0.05]",
       )}
     >
       <span
@@ -65,20 +67,27 @@ function TrackRow({
       >
         {isCurrent ? "▶" : (
           <>
-            <span className="group-hover:hidden">{index + 1}</span>
-            <Play className="w-3 h-3 mx-auto fill-current text-primary hidden group-hover:block" />
+            <span className="can-hover:group-hover:hidden">{index + 1}</span>
+            <Play className="w-3 h-3 mx-auto fill-current text-primary hidden can-hover:group-hover:block" />
           </>
         )}
       </span>
 
       <div className="flex items-center gap-[9px] min-w-0">
         <PlaylistCover src={track.coverImage} alt="" className="w-[30px] h-[30px] rounded-[3px] shrink-0" iconClassName="w-3 h-3" />
-        <span className={cn("text-xs font-semibold truncate", isCurrent ? "text-primary" : "text-foreground")}>
-          {track.name}
+        <span className="min-w-0">
+          <span className={cn("block text-xs touch:text-sm font-semibold truncate", isCurrent ? "text-primary" : "text-foreground")}>
+            {track.name}
+          </span>
+          <span className="block lg:hidden text-[11px] touch:text-xs text-muted-foreground truncate">
+            {track.artist ?? "Unknown Artist"}
+          </span>
         </span>
       </div>
 
-      <span className="text-[11px] text-muted-foreground truncate">{track.artist ?? "Unknown Artist"}</span>
+      <span className="hidden lg:block text-[11px] touch:text-xs text-muted-foreground truncate">
+        {track.artist ?? "Unknown Artist"}
+      </span>
 
       <span className="text-[11px] font-mono text-faint">{formatDuration(track.duration)}</span>
 
@@ -92,7 +101,7 @@ function TrackRow({
             }}
             title="Add to queue"
             aria-label={`Add ${track.name} to queue`}
-            className="w-7 h-7 rounded-md border border-primary/20 flex items-center justify-center text-primary hover:bg-primary/10 transition-colors"
+            className="w-7 h-7 touch:w-10 touch:h-10 rounded-md border border-primary/20 flex items-center justify-center text-primary hover:bg-primary/10 transition-colors"
           >
             <ListPlus className="w-3.5 h-3.5" />
           </button>
@@ -104,7 +113,7 @@ function TrackRow({
               onRemove();
             }}
             aria-label={`Remove ${track.name} from playlist`}
-            className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
+            className="w-7 h-7 touch:w-10 touch:h-10 rounded-md flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors can-hover:opacity-0 can-hover:group-hover:opacity-100 can-hover:focus:opacity-100"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -283,6 +292,7 @@ export default function PlaylistDetailPage() {
                 className={cn(
                   "text-[10px] font-semibold uppercase tracking-[0.1em] text-faint",
                   h === "#" && "text-center",
+                  h === "Artist" && "hidden lg:block",
                 )}
               >
                 {h}

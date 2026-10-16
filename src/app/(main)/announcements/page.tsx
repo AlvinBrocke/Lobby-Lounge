@@ -11,6 +11,11 @@ import { useNow } from "@/hooks/useNow";
 import { formatNextPlay, formatTiming, isLiveToday } from "@/lib/announcements";
 import { todayKey } from "@/lib/schedule";
 import { cn } from "@/lib/utils";
+import posthog from "posthog-js";
+
+const posthogConfigured = Boolean(
+  process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN && process.env.NEXT_PUBLIC_POSTHOG_HOST,
+);
 
 type Announcement = Doc<"announcements"> & { audioUrl: string | null };
 type Filter = "live" | "scheduled" | "draft";
@@ -161,7 +166,12 @@ export default function AnnouncementsPage() {
                 <div className="flex items-center gap-1 shrink-0">
                   {a.status !== "draft" && (
                     <button
-                      onClick={() => setPaused({ id: a._id, paused: !a.paused })}
+                      onClick={async () => {
+                        await setPaused({ id: a._id, paused: !a.paused });
+                        if (posthogConfigured) {
+                          posthog.capture(a.paused ? "announcement_resumed" : "announcement_paused");
+                        }
+                      }}
                       title={a.paused ? "Resume" : "Pause"}
                       aria-label={a.paused ? `Resume ${a.title}` : `Pause ${a.title}`}
                       className={cn(iconButton, a.paused ? "text-primary" : "text-faint")}
@@ -254,6 +264,7 @@ export default function AnnouncementsPage() {
           onClose={() => setDeleting(null)}
           onConfirm={async () => {
             await remove({ id: deleting._id });
+            if (posthogConfigured) posthog.capture("announcement_deleted");
             setDeleting(null);
           }}
         />
