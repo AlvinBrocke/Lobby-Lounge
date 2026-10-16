@@ -19,6 +19,8 @@ import { cn, formatDuration } from "@/lib/utils";
 import usePlayerStore from "@/store/usePlayerStore";
 import { useAccess } from "@/hooks/useAccess";
 import { useMediaSession, useWakeLock } from "@/hooks/useKeepAwake";
+import { useVolumeSupported } from "@/hooks/useVolumeSupported";
+import { UpNext } from "@/components/player/UpNext";
 import type { ScheduleStatus } from "@/hooks/useScheduleAutoplay";
 import type { Track } from "@/types";
 
@@ -45,7 +47,12 @@ function Artwork({ track, className }: { track: Track | null; className: string 
   );
 }
 
-/** Click-to-seek bar. `big` is the variant used in the expanded view. */
+/**
+ * Seek bar. Pointer events cover mouse, finger and pen alike: press anywhere to
+ * jump, drag to scrub. While dragging only the bar moves; the audio seeks once
+ * on release. The visible track is a few px, but the hit area is 24px+ tall so
+ * it can be grabbed on a tablet. `big` is the variant used in the expanded view.
+ */
 function Progress({
   progress,
   onSeek,
@@ -55,35 +62,64 @@ function Progress({
   onSeek: (pct: number) => void;
   big?: boolean;
 }) {
+  const [drag, setDrag] = useState<number | null>(null);
+  const shown = drag ?? progress;
+
+  const pctAt = (e: React.PointerEvent<HTMLDivElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    return Math.max(0, Math.min(100, ((e.clientX - r.left) / r.width) * 100));
+  };
+
   return (
     <div
       role="slider"
       aria-label="Seek"
       aria-valuemin={0}
       aria-valuemax={100}
-      aria-valuenow={Math.round(progress)}
+      aria-valuenow={Math.round(shown)}
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === "ArrowRight") onSeek(Math.min(100, progress + 5));
         if (e.key === "ArrowLeft") onSeek(Math.max(0, progress - 5));
       }}
-      onClick={(e) => {
-        const r = e.currentTarget.getBoundingClientRect();
-        onSeek(Math.max(0, Math.min(100, ((e.clientX - r.left) / r.width) * 100)));
+      onPointerDown={(e) => {
+        // Capture keeps the moves coming even when the finger leaves the bar.
+        e.currentTarget.setPointerCapture(e.pointerId);
+        setDrag(pctAt(e));
       }}
+      onPointerMove={(e) => {
+        if (drag !== null) setDrag(pctAt(e));
+      }}
+      onPointerUp={(e) => {
+        if (drag === null) return;
+        onSeek(pctAt(e));
+        setDrag(null);
+      }}
+      onPointerCancel={() => setDrag(null)}
+      // `touch-none`: a horizontal drag here scrubs instead of scrolling the page.
       className={cn(
-        "relative flex-1 rounded-sm cursor-pointer",
-        big ? "h-1 bg-muted-foreground/30" : "h-[3px] bg-muted-foreground/20",
+        "group/seek relative flex-1 flex items-center cursor-pointer touch-none",
+        big ? "h-8" : "h-6",
       )}
     >
-      <div className="absolute inset-y-0 left-0 bg-primary rounded-sm" style={{ width: `${progress}%` }} />
       <div
         className={cn(
-          "absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary pointer-events-none",
-          big ? "w-[13px] h-[13px] shadow-[0_0_8px_hsl(var(--primary))]" : "w-2.5 h-2.5",
+          "relative w-full rounded-sm",
+          big ? "h-1 bg-muted-foreground/30" : "h-[3px] touch:h-1 bg-muted-foreground/20",
         )}
-        style={{ left: `${progress}%` }}
-      />
+      >
+        <div className="absolute inset-y-0 left-0 bg-primary rounded-sm" style={{ width: `${shown}%` }} />
+        <div
+          className={cn(
+            "absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary pointer-events-none transition-transform",
+            big
+              ? "w-[13px] h-[13px] touch:w-4 touch:h-4 shadow-[0_0_8px_hsl(var(--primary))]"
+              : "w-2.5 h-2.5 touch:w-3.5 touch:h-3.5",
+            drag !== null && "scale-125",
+          )}
+          style={{ left: `${shown}%` }}
+        />
+      </div>
     </div>
   );
 }
@@ -106,10 +142,11 @@ function Transport({
   playLabel?: string;
   big?: boolean;
 }) {
-  const side = "p-1 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40";
-  const icon = big ? "w-[22px] h-[22px]" : "w-4 h-4";
+  const side =
+    "p-1 touch:p-3 rounded-full text-muted-foreground hover:text-foreground active:bg-white/5 transition-colors disabled:opacity-40";
+  const icon = big ? "w-[22px] h-[22px] touch:w-7 touch:h-7" : "w-4 h-4 touch:w-5 touch:h-5";
   return (
-    <div className={cn("flex items-center", big ? "gap-[22px]" : "gap-3.5")}>
+    <div className={cn("flex items-center", big ? "gap-[22px] touch:gap-6" : "gap-3.5 touch:gap-2")}>
       <button onClick={onPrev} disabled={disabled} title="Restart track" aria-label="Restart track" className={side}>
         <SkipBack className={cn(icon, "fill-current")} />
       </button>
@@ -119,16 +156,16 @@ function Transport({
         aria-label={playing ? "Pause" : (playLabel ?? "Play")}
         title={playing ? undefined : playLabel}
         className={cn(
-          "rounded-full bg-primary text-primary-foreground flex items-center justify-center transition-transform hover:scale-[1.08] disabled:opacity-40 disabled:hover:scale-100",
+          "rounded-full bg-primary text-primary-foreground flex items-center justify-center transition-transform can-hover:hover:scale-[1.08] active:scale-95 disabled:opacity-40 disabled:hover:scale-100",
           big
-            ? "w-[54px] h-[54px] shadow-[0_4px_24px_hsl(var(--primary)/0.45)]"
-            : "w-10 h-10 shadow-[0_2px_16px_hsl(var(--primary)/0.4)]",
+            ? "w-[54px] h-[54px] touch:w-[72px] touch:h-[72px] shadow-[0_4px_24px_hsl(var(--primary)/0.45)]"
+            : "w-10 h-10 touch:w-12 touch:h-12 shadow-[0_2px_16px_hsl(var(--primary)/0.4)]",
         )}
       >
         {playing ? (
-          <Pause className={cn(big ? "w-[18px] h-[18px]" : "w-3.5 h-3.5", "fill-current")} />
+          <Pause className={cn(big ? "w-[18px] h-[18px] touch:w-6 touch:h-6" : "w-3.5 h-3.5 touch:w-[18px] touch:h-[18px]", "fill-current")} />
         ) : (
-          <Play className={cn(big ? "w-[18px] h-[18px]" : "w-3.5 h-3.5", "fill-current ml-0.5")} />
+          <Play className={cn(big ? "w-[18px] h-[18px] touch:w-6 touch:h-6" : "w-3.5 h-3.5 touch:w-[18px] touch:h-[18px]", "fill-current ml-0.5")} />
         )}
       </button>
       <button onClick={onNext} disabled={disabled} title="Next" aria-label="Next track" className={side}>
@@ -160,17 +197,17 @@ function Notice({
     <>
       <div
         className={cn(
-          "w-12 h-12 rounded-md shrink-0 flex items-center justify-center",
+          "w-12 h-12 touch:w-14 touch:h-14 rounded-md shrink-0 flex items-center justify-center",
           tone === "alert" ? "bg-red-500/15 text-red-400" : "bg-primary/15 text-primary",
         )}
       >
         <Icon className="w-5 h-5" />
       </div>
       <div className="min-w-0">
-        <div className="text-xs font-bold text-foreground truncate">{title}</div>
+        <div className="text-xs touch:text-sm font-bold text-foreground truncate">{title}</div>
         <div
           className={cn(
-            "text-[11px] truncate group-hover:underline",
+            "text-[11px] touch:text-[13px] truncate group-hover:underline",
             tone === "alert" ? "text-red-400" : "text-primary",
           )}
         >
@@ -204,6 +241,9 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
   const [duration, setDuration] = useState(0);
   const [expanded, setExpanded] = useState(false);
   const [showVolume, setShowVolume] = useState(false);
+  // The queue sheet: Up Next for screens where the sidebar is a narrow rail.
+  const [showQueue, setShowQueue] = useState(false);
+  const volumeSupported = useVolumeSupported();
   // Set after MAX_FAILURES broken tracks in a row; playback is paused.
   const [stopped, setStopped] = useState(false);
   const failures = useRef(0);
@@ -313,11 +353,15 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
   }, [showVolume]);
 
   useEffect(() => {
-    if (!expanded) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setExpanded(false);
+    if (!expanded && !showQueue) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setExpanded(false);
+      setShowQueue(false);
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [expanded]);
+  }, [expanded, showQueue]);
 
   const audible = isPlaying && !!currentTrack?.audioUrl;
   useWakeLock(audible);
@@ -425,32 +469,32 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
             role="dialog"
             aria-label="Now playing"
             onClick={(e) => e.stopPropagation()}
-            className="relative w-[360px] flex flex-col items-center gap-4 px-8 pt-7 pb-6 rounded-[18px] bg-secondary border border-white/10 shadow-[0_32px_80px_rgba(0,0,0,0.75)]"
+            className="relative w-[360px] touch:w-[min(520px,90vw)] flex flex-col items-center gap-4 touch:gap-6 px-8 pt-7 pb-6 touch:pb-8 rounded-[18px] bg-secondary border border-white/10 shadow-[0_32px_80px_rgba(0,0,0,0.75)]"
           >
             <button
               onClick={() => setExpanded(false)}
               aria-label="Close"
-              className="absolute top-3.5 right-3.5 w-[26px] h-[26px] rounded-full bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
+              className="absolute top-3.5 right-3.5 w-[26px] h-[26px] touch:w-11 touch:h-11 rounded-full bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-3.5 h-3.5 touch:w-5 touch:h-5" />
             </button>
-            <Artwork track={currentTrack} className="w-[200px] h-[200px] rounded-xl shadow-[0_8px_36px_rgba(0,0,0,0.65)]" />
+            <Artwork track={currentTrack} className="w-[200px] h-[200px] touch:w-[min(300px,40dvh)] touch:h-[min(300px,40dvh)] rounded-xl shadow-[0_8px_36px_rgba(0,0,0,0.65)]" />
             <div className="text-center w-full">
-              <div className="text-[17px] font-bold tracking-tight text-foreground truncate">
+              <div className="text-[17px] touch:text-2xl font-bold tracking-tight text-foreground truncate">
                 {currentTrack.name}
               </div>
               {currentTrack.artist && (
-                <div className="text-xs text-muted-foreground mt-1">{currentTrack.artist}</div>
+                <div className="text-xs touch:text-base text-muted-foreground mt-1">{currentTrack.artist}</div>
               )}
               {currentTrack.category && (
-                <div className="text-[11px] text-faint">{currentTrack.category}</div>
+                <div className="text-[11px] touch:text-sm text-faint">{currentTrack.category}</div>
               )}
             </div>
             <div className="w-full">
               <div className="flex">
                 <Progress progress={progress} onSeek={seek} big />
               </div>
-              <div className="flex justify-between mt-2 text-[10px] font-mono text-faint">
+              <div className="flex justify-between mt-1 text-[10px] touch:text-sm font-mono text-faint">
                 <span>{clock(elapsed)}</span>
                 <span>{clock(duration)}</span>
               </div>
@@ -460,88 +504,141 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
         </div>
       )}
 
-      <div className="h-full flex items-center px-5 bg-shell shadow-[0_-8px_40px_rgba(0,0,0,0.55)]">
-        {/* Now playing — opens the expanded view */}
-        {notice ?? (
-          <button
-            type="button"
-            onClick={() => setExpanded(true)}
-            disabled={disabled}
-            aria-label="Expand now playing"
-            className="group w-[30%] min-w-0 flex items-center gap-2.5 pr-5 text-left disabled:cursor-default"
-          >
-            <div className="relative w-12 h-12 rounded-md overflow-hidden shrink-0 shadow-[0_2px_10px_rgba(0,0,0,0.5)] transition-transform group-enabled:group-hover:scale-105">
-              <Artwork track={currentTrack} className="w-full h-full" />
-              {currentTrack && (
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 flex items-center justify-center transition-colors">
-                  <Maximize2 className="w-[13px] h-[13px] text-white opacity-0 group-hover:opacity-90" />
-                </div>
-              )}
-            </div>
-            <div className="min-w-0">
-              <div className="text-xs font-bold text-foreground truncate">
-                {currentTrack?.name ?? "Nothing playing"}
-              </div>
-              <div className="text-[11px] text-muted-foreground truncate">
-                {currentTrack ? (currentTrack.artist ?? "Lobby & Lounge") : "Choose a playlist to start"}
-              </div>
-              {currentTrack?.category && (
-                <div className="text-[10px] text-faint truncate mt-px">{currentTrack.category}</div>
-              )}
-            </div>
-          </button>
-        )}
-
-        {/* Transport + progress */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-2">
-          <Transport {...transport} />
-          <div className="flex items-center gap-2 w-full max-w-[260px]">
-            <span className="text-[10px] font-mono text-faint shrink-0 tabular-nums">
-              {clock(elapsed)}
-            </span>
-            <Progress progress={progress} onSeek={seek} />
-            <span className="text-[10px] font-mono text-faint shrink-0 tabular-nums">
-              {clock(duration)}
-            </span>
-          </div>
-        </div>
-
-        {/* Volume */}
-        <div className="w-[30%] flex justify-end pl-5">
-          <div ref={volumeRef} className="relative">
+      {/* Nothing loaded and nothing to flag: hide the bar. The <audio> above
+          stays mounted either way, so playback starts the moment a track loads. */}
+      {(currentTrack || notice) && (
+        <div className="h-[76px] touch:h-[88px] flex items-center px-3 sm:px-5 bg-shell shadow-[0_-8px_40px_rgba(0,0,0,0.55)]">
+          {/* Now playing — opens the expanded view */}
+          {notice ?? (
             <button
-              onClick={() => setShowVolume((v) => !v)}
-              title="Volume"
-              aria-label="Volume"
-              aria-expanded={showVolume}
-              className={cn(
-                "px-[7px] py-1.5 rounded-md border transition-colors",
-                showVolume
-                  ? "bg-primary/10 border-primary/25 text-primary"
-                  : "border-transparent text-faint hover:text-foreground",
-              )}
+              type="button"
+              onClick={() => setExpanded(true)}
+              disabled={disabled}
+              aria-label="Expand now playing"
+              className="group w-[30%] min-w-0 flex items-center gap-2.5 touch:gap-3 pr-3 sm:pr-5 text-left disabled:cursor-default"
             >
-              {volume === 0 ? <VolumeX className="w-[15px] h-[15px]" /> : <Volume1 className="w-[15px] h-[15px]" />}
-            </button>
-            {showVolume && (
-              <div className="absolute bottom-[calc(100%+10px)] left-1/2 -translate-x-1/2 w-9 px-2.5 py-3.5 flex flex-col items-center gap-2 rounded-[10px] bg-secondary border border-white/10 shadow-[0_-8px_28px_rgba(0,0,0,0.55)] z-50">
-                <span className="text-[9px] font-bold font-mono text-primary/60">{volume}</span>
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  value={volume}
-                  onChange={(e) => setVolume(Number(e.target.value))}
-                  aria-label="Volume level"
-                  // Vertical slider; `direction: rtl` puts 100 at the top.
-                  style={{ writingMode: "vertical-lr", direction: "rtl" }}
-                  className="h-20 w-3.5 cursor-pointer accent-primary"
-                />
+              <div className="relative w-12 h-12 touch:w-14 touch:h-14 rounded-md overflow-hidden shrink-0 shadow-[0_2px_10px_rgba(0,0,0,0.5)] transition-transform can-hover:group-enabled:group-hover:scale-105">
+                <Artwork track={currentTrack} className="w-full h-full" />
+                {currentTrack && (
+                  // With a mouse the expand icon appears on hover; with no hover it
+                  // sits in the corner permanently so it's clear the art is tappable.
+                  <div className="absolute inset-0 flex items-end justify-end p-1 can-hover:items-center can-hover:justify-center can-hover:p-0 can-hover:group-hover:bg-black/40 transition-colors">
+                    <Maximize2 className="w-[13px] h-[13px] text-white opacity-90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] can-hover:opacity-0 can-hover:group-hover:opacity-90" />
+                  </div>
+                )}
               </div>
-            )}
+              <div className="min-w-0">
+                <div className="text-xs touch:text-[15px] font-bold text-foreground truncate">
+                  {currentTrack?.name ?? "Nothing playing"}
+                </div>
+                <div className="text-[11px] touch:text-[13px] text-muted-foreground truncate">
+                  {currentTrack ? (currentTrack.artist ?? "Lobby & Lounge") : "Choose a playlist to start"}
+                </div>
+                {currentTrack?.category && (
+                  <div className="text-[10px] touch:text-xs text-faint truncate mt-px">{currentTrack.category}</div>
+                )}
+              </div>
+            </button>
+          )}
+
+          {/* Transport + progress */}
+          <div className="flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5">
+            <Transport {...transport} />
+            <div className="flex items-center gap-2 w-full max-w-[260px] touch:max-w-[340px]">
+              <span className="text-[10px] touch:text-xs font-mono text-faint shrink-0 tabular-nums">
+                {clock(elapsed)}
+              </span>
+              <Progress progress={progress} onSeek={seek} />
+              <span className="text-[10px] touch:text-xs font-mono text-faint shrink-0 tabular-nums">
+                {clock(duration)}
+              </span>
+            </div>
+          </div>
+
+          {/* Queue (where the sidebar can't show it) + volume */}
+          <div className="w-[30%] flex items-center justify-end gap-1 pl-3 sm:pl-5">
+            <button
+              onClick={() => setShowQueue(true)}
+              title="Up next"
+              aria-label="Show up next"
+              className="lg:hidden p-2 touch:p-3 rounded-md text-faint hover:text-foreground active:bg-white/5 transition-colors"
+            >
+              <ListMusic className="w-[15px] h-[15px] touch:w-5 touch:h-5" />
+            </button>
+            <div ref={volumeRef} className="relative">
+              <button
+                onClick={() => setShowVolume((v) => !v)}
+                title="Volume"
+                aria-label="Volume"
+                aria-expanded={showVolume}
+                className={cn(
+                  "px-[7px] py-1.5 touch:p-3 rounded-md border transition-colors",
+                  showVolume
+                    ? "bg-primary/10 border-primary/25 text-primary"
+                    : "border-transparent text-faint hover:text-foreground",
+                )}
+              >
+                {volume === 0 && volumeSupported ? (
+                  <VolumeX className="w-[15px] h-[15px] touch:w-5 touch:h-5" />
+                ) : (
+                  <Volume1 className="w-[15px] h-[15px] touch:w-5 touch:h-5" />
+                )}
+              </button>
+              {showVolume &&
+                (volumeSupported ? (
+                  // Vertical strip with a mouse; on touch a wider horizontal slider
+                  // is far easier to drag. Anchored right so it stays on screen.
+                  <div className="absolute bottom-[calc(100%+10px)] left-1/2 -translate-x-1/2 w-9 px-2.5 py-3.5 flex flex-col items-center gap-2 touch:left-auto touch:right-0 touch:translate-x-0 touch:w-auto touch:flex-row-reverse touch:px-4 touch:py-3 touch:gap-3 rounded-[10px] bg-secondary border border-white/10 shadow-[0_-8px_28px_rgba(0,0,0,0.55)] z-50">
+                    <span className="text-[9px] touch:text-xs touch:w-6 touch:text-right font-bold font-mono text-primary/60">{volume}</span>
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={volume}
+                      onChange={(e) => setVolume(Number(e.target.value))}
+                      aria-label="Volume level"
+                      // Vertical slider; `direction: rtl` puts 100 at the top.
+                      className="h-20 w-3.5 touch:h-8 touch:w-44 cursor-pointer accent-primary [writing-mode:vertical-lr] [direction:rtl] touch:[writing-mode:horizontal-tb] touch:[direction:ltr]"
+                    />
+                  </div>
+                ) : (
+                  // iPad/iPhone: the browser can't change the volume, only the buttons can.
+                  <div
+                    role="note"
+                    className="absolute bottom-[calc(100%+10px)] right-0 w-56 px-4 py-3 rounded-[10px] bg-secondary border border-white/10 shadow-[0_-8px_28px_rgba(0,0,0,0.55)] z-50 text-[13px] leading-snug text-muted-foreground"
+                  >
+                    <span className="font-semibold text-foreground">Use the tablet&apos;s volume buttons.</span>{" "}
+                    iPad doesn&apos;t let web apps change the volume.
+                  </div>
+                ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {showQueue && (
+        <div className="fixed inset-0 z-[300] lg:hidden" onClick={() => setShowQueue(false)}>
+          <div className="absolute inset-0 bg-[rgba(5,10,22,0.6)] backdrop-blur-[6px]" />
+          <div
+            role="dialog"
+            aria-label="Up next"
+            onClick={(e) => e.stopPropagation()}
+            className="app-chrome absolute inset-y-0 right-0 w-[min(380px,92vw)] flex flex-col gap-3 p-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-shell shadow-[-12px_0_40px_rgba(0,0,0,0.6)]"
+          >
+            <div className="flex items-center justify-between px-1">
+              <span className="text-sm font-bold text-foreground">Up next</span>
+              <button
+                onClick={() => setShowQueue(false)}
+                aria-label="Close"
+                className="w-11 h-11 -mr-1 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground active:bg-white/5"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <UpNext />
+          </div>
+        </div>
+      )}
     </>
   );
 }

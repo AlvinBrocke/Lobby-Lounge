@@ -58,7 +58,7 @@ export function PlaylistCard({
         href={`/playlists/${playlist._id}`}
         className={cn(
           "block overflow-hidden rounded-[11px] border bg-card transition-all duration-150",
-          "shadow-[0_4px_14px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(0,0,0,0.5)]",
+          "shadow-[0_4px_14px_rgba(0,0,0,0.3)] can-hover:hover:-translate-y-0.5 can-hover:hover:shadow-[0_12px_28px_rgba(0,0,0,0.5)]",
           active ? "border-primary/30" : "border-white/5",
         )}
       >
@@ -66,7 +66,7 @@ export function PlaylistCard({
           <PlaylistCover
             src={playlist.coverImage}
             alt=""
-            className="w-full h-full opacity-90 transition-all duration-300 group-hover:opacity-70 group-hover:scale-[1.035]"
+            className="w-full h-full opacity-90 transition-all duration-300 can-hover:group-hover:opacity-70 can-hover:group-hover:scale-[1.035]"
           />
           <span className="absolute inset-0 bg-gradient-to-b from-transparent from-45% to-background/80" />
           {active && (
@@ -100,19 +100,20 @@ export function PlaylistCard({
           aria-label={active && playing ? `Pause ${playlist.name}` : `Play ${playlist.name}`}
           className={cn(
             "absolute right-[9px] top-[73px] w-[30px] h-[30px] rounded-full bg-primary text-primary-foreground",
+            "touch:top-[63px] touch:w-10 touch:h-10",
             "flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.35)] transition-all duration-150",
-            "focus-visible:opacity-100 focus-visible:translate-y-0",
-            active || loading
-              ? "opacity-100 translate-y-0"
-              : "opacity-0 translate-y-[5px] group-hover:opacity-100 group-hover:translate-y-0",
+            // Hidden until hover only where hover exists — on a tablet it's
+            // always shown, or there'd be no way to play from the card.
+            !(active || loading) &&
+              "can-hover:opacity-0 can-hover:translate-y-[5px] can-hover:group-hover:opacity-100 can-hover:group-hover:translate-y-0 can-hover:focus-visible:opacity-100 can-hover:focus-visible:translate-y-0",
           )}
         >
           {loading ? (
-            <Loader2 className="w-3 h-3 animate-spin" />
+            <Loader2 className="w-3 h-3 touch:w-4 touch:h-4 animate-spin" />
           ) : active && playing ? (
-            <Pause className="w-[11px] h-[11px] fill-current" />
+            <Pause className="w-[11px] h-[11px] touch:w-3.5 touch:h-3.5 fill-current" />
           ) : (
-            <Play className="w-[11px] h-[11px] fill-current ml-px" />
+            <Play className="w-[11px] h-[11px] touch:w-3.5 touch:h-3.5 fill-current ml-px" />
           )}
         </button>
       )}

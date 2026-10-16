@@ -1,6 +1,6 @@
 import { Geist } from "next/font/google";
 import "./globals.css";
-import { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ConvexClientProvider } from "./ConvexClientProvider";
 import { Analytics } from "@vercel/analytics/next";
@@ -20,7 +20,22 @@ export const metadata: Metadata = {
       { url: "/favicon-16-white.png", sizes: "16x16" },
       { url: "/favicon-32-white.png", sizes: "32x32" },
     ],
+    apple: [{ url: "/icons/icon-180.png", sizes: "180x180" }],
   },
+  // Home-screen launch on iPad: full-screen, status bar drawn over the app.
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Lobby & Lounge",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  // Draw edge to edge; the app pads itself with env(safe-area-inset-*).
+  viewportFit: "cover",
+  themeColor: "#0d1628",
 };
 
 export default function RootLayout({
