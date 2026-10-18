@@ -53,7 +53,7 @@ export function PlaylistCard({
     .join(" · ");
 
   return (
-    <div className="group relative w-[220px] min-w-[220px] snap-start">
+    <div data-tour="playlist-card" className="group relative w-[220px] min-w-[220px] snap-start">
       <Link
         href={`/playlists/${playlist._id}`}
         className={cn(

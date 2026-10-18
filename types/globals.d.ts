@@ -17,4 +17,9 @@ declare global {
   interface OrganizationPublicMetadata {
     venueOwnerId?: string;
   }
+
+  // Written from the browser by GuidedTour when the tour is finished or skipped.
+  interface UserUnsafeMetadata {
+    tourCompletedAt?: number;
+  }
 }

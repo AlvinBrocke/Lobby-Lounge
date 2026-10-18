@@ -94,6 +94,7 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               title={item.name}
+              data-tour={`nav${item.href.replace("/", "-")}`}
               aria-current={active ? "page" : undefined}
               className={cn(
                 "relative flex items-center rounded-md transition-colors",
@@ -139,6 +140,7 @@ export function MobileNav() {
           <Link
             key={item.href}
             href={item.href}
+            data-tour={`nav${item.href.replace("/", "-")}`}
             aria-current={active ? "page" : undefined}
             className={cn(
               "relative flex-1 h-14 flex flex-col items-center justify-center gap-1 text-[10px] font-medium",
