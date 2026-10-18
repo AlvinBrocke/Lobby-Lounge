@@ -7,6 +7,7 @@ import { ListMusic, Plus } from "lucide-react";
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { FunctionReturnType } from "convex/server";
+import { CATEGORY_TAGS } from "@convex/lib/energy";
 import { PlaylistCard } from "@/components/playlists/PlaylistCard";
 import { PlaylistCarousel } from "@/components/playlists/PlaylistCarousel";
 import { PlaylistFormModal, type PlaylistFormValues } from "@/components/playlists/PlaylistFormModal";
@@ -34,6 +35,11 @@ function CardSkeletons({ count }: { count: number }) {
       ))}
     </div>
   );
+}
+
+/** Name, category and the category's genre tags, so a genre chip (`?q=jazz`) finds Dinner Jazz. */
+function searchText(p: PlaylistSummary) {
+  return [p.name, p.category, ...(CATEGORY_TAGS[p.category ?? ""] ?? [])].join(" ").toLowerCase();
 }
 
 export default function PlaylistsPage() {
@@ -67,7 +73,7 @@ export default function PlaylistsPage() {
   function matches(p: PlaylistSummary) {
     return (
       (filter === "All" || p.category === filter) &&
-      (!term || `${p.name} ${p.category ?? ""}`.toLowerCase().includes(term))
+      (!term || searchText(p).includes(term))
     );
   }
 
