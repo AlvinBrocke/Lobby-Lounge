@@ -14,9 +14,10 @@ export type StaffResult = { ok: boolean; orgId?: string; error?: string };
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
- * Turns a solo account into a venue team: a Clerk organization whose
+ * Makes sure the caller has a venue team: a Clerk organization whose
  * `publicMetadata.venueOwnerId` is the caller. Venue data stays keyed by the
- * owner's user id, so nothing has to be migrated.
+ * owner's user id, so nothing has to be migrated. Idempotent — returns the
+ * existing org if there is one — so onboarding and `ActivateVenue` can both call it.
  */
 export async function createVenueTeam(): Promise<StaffResult> {
   const session = await getSession();
@@ -24,11 +25,14 @@ export async function createVenueTeam(): Promise<StaffResult> {
 
   try {
     const client = await clerkClient();
-    // One venue per account: staff of another venue can't spin up their own.
-    const { totalCount } = await client.users.getOrganizationMembershipList({ userId: session.userId });
-    if (totalCount > 0) return { ok: false, error: "You're already part of a venue team." };
+    // One venue per account: staff of another venue get that venue, not one of their own.
+    const { data } = await client.users.getOrganizationMembershipList({ userId: session.userId, limit: 1 });
+    if (data.length > 0) return { ok: true, orgId: data[0].organization.id };
 
+    // Name the org after the cafe, so wait until onboarding has saved it.
     const profile = await fetchQuery(api.userProfiles.get, {}, { token: await getConvexToken() });
+    if (!profile?.onboardingCompleted) return { ok: false, error: "Finish setting up your venue first." };
+    // shortcut: two tabs loading at once could each create an org; add a Convex flag/lock if that shows up.
     const org = await client.organizations.createOrganization({
       name: profile?.venueName || "My venue",
       createdBy: session.userId, // becomes the org's first admin
@@ -38,7 +42,7 @@ export async function createVenueTeam(): Promise<StaffResult> {
     return { ok: true, orgId: org.id };
   } catch (e) {
     console.error("createVenueTeam failed", e);
-    return { ok: false, error: "Could not set up your team. Please try again." };
+    return { ok: false, error: describeClerkError(e) };
   }
 }
 
