@@ -34,6 +34,9 @@ export function useScheduleAutoplay(): ScheduleStatus {
   const convex = useConvex();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const blocks = useQuery(api.scheduleBlocks.listByUser, isAuthenticated ? {} : "skip");
+  // Settings → Preferences → "Follow the schedule automatically" (on unless turned off).
+  const profile = useQuery(api.userProfiles.get, isAuthenticated ? {} : "skip");
+  const follow = profile?.sound?.followSchedule ?? true;
   const now = useNow(30_000);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -75,10 +78,10 @@ export function useScheduleAutoplay(): ScheduleStatus {
     if (previous === undefined || previous === key || !playlistId) return;
 
     const { isPlaying, activePlaylistId } = usePlayerStore.getState();
-    if (!isPlaying || activePlaylistId === playlistId) return;
+    if (!follow || !isPlaying || activePlaylistId === playlistId) return;
 
     load(playlistId, key);
-  }, [key, playlistId, blocks, load]);
+  }, [key, playlistId, blocks, load, follow]);
 
   const start = useCallback(() => {
     if (playlistId) load(playlistId, key);

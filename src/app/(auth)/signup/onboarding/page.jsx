@@ -6,6 +6,7 @@ import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { COUNTRIES, US_STATES, PINNED_COUNTRY_COUNT } from "@/lib/countries";
+import { BUSINESS_TYPES, GENRES, GUEST_DEMOGRAPHICS, MOODS } from "@/lib/preferences";
 import { completeOnboarding, syncOnboardingClaim } from "./actions";
 
 // Where to send the user once onboarding is done. Middleware passes the page
@@ -338,28 +339,6 @@ function Step1({ business, setBusiness }) {
 
 // ─── Step 2 — Your guests ─────────────────────────────────────────────────────
 
-const BUSINESS_TYPES = [
-  "Restaurant",
-  "Café",
-  "Bar & Lounge",
-  "Hotel",
-  "Retail",
-  "Spa & Wellness",
-  "Gym",
-  "Office",
-  "Other",
-];
-
-const GUEST_DEMOGRAPHICS = [
-  "Families",
-  "Young professionals",
-  "Tourists",
-  "Business travellers",
-  "Students",
-  "Regulars & locals",
-  "Mixed",
-];
-
 function Step2({ guests, setGuests }) {
   const toggleDemographic = (d) =>
     setGuests((g) => ({
@@ -410,24 +389,6 @@ function Step2({ guests, setGuests }) {
 }
 
 // ─── Step 3 — Your sound ──────────────────────────────────────────────────────
-
-const GENRES = [
-  { id: "jazz", name: "Jazz" },
-  { id: "lo-fi", name: "Lo-Fi" },
-  { id: "classical", name: "Classical" },
-  { id: "pop", name: "Pop" },
-  { id: "acoustic", name: "Acoustic" },
-  { id: "electronic", name: "Electronic" },
-  { id: "ambient", name: "Ambient" },
-  { id: "rnb", name: "R&B" },
-];
-
-const MOODS = [
-  { id: "relaxed", name: "Relaxed", emoji: "😌", description: "Calm & unhurried" },
-  { id: "upbeat", name: "Upbeat", emoji: "⚡", description: "Energetic & lively" },
-  { id: "elegant", name: "Elegant", emoji: "🎻", description: "Refined & polished" },
-  { id: "focused", name: "Focused", emoji: "🎯", description: "Productive & clear" },
-];
 
 function MoodCard({ mood, selected, onSelect }) {
   const [hovered, setHovered] = useState(false);
@@ -598,7 +559,6 @@ function MainComponent() {
       cancelled = true;
     };
   }, [alreadyOnboarded, user, saving]);
-
 
   const nextStep = () => {
     if (currentStep < totalSteps) setCurrentStep(currentStep + 1);

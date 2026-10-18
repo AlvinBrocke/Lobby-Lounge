@@ -198,3 +198,23 @@ describe("saveBrand", () => {
     expect((await asUser.query(api.userProfiles.get, {}))?.logoUrl).toBeNull();
   });
 });
+
+describe("preferences", () => {
+  it("saves tempo and sound settings", async () => {
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    const asUser = t.withIdentity({ subject: USER });
+    await asUser.mutation(api.userProfiles.createOrUpdate, { genres: ["jazz"] });
+    const sound = { defaultVolume: 70, fadeSeconds: 6, followSchedule: false };
+    await asUser.mutation(api.userProfiles.createOrUpdate, { tempo: "low", sound });
+    expect(await asUser.query(api.userProfiles.get, {})).toMatchObject({ genres: ["jazz"], tempo: "low", sound });
+  });
+
+  it("rejects out-of-range sound settings", async () => {
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    const asUser = t.withIdentity({ subject: USER });
+    const save = (sound: { defaultVolume: number; fadeSeconds: number; followSchedule: boolean }) =>
+      asUser.mutation(api.userProfiles.createOrUpdate, { sound });
+    await expect(save({ defaultVolume: 140, fadeSeconds: 0, followSchedule: true })).rejects.toThrow("Default volume");
+    await expect(save({ defaultVolume: 50, fadeSeconds: 7, followSchedule: true })).rejects.toThrow("fade length");
+  });
+});

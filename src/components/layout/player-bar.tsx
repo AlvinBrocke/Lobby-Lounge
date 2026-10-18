@@ -15,7 +15,7 @@ import {
   VolumeX,
   X,
 } from "lucide-react";
-import { cn, formatDuration } from "@/lib/utils";
+import { cn, fadeGain, formatDuration } from "@/lib/utils";
 import usePlayerStore from "@/store/usePlayerStore";
 import { useAccess } from "@/hooks/useAccess";
 import { useMediaSession, useWakeLock } from "@/hooks/useKeepAwake";
@@ -338,12 +338,28 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
 
   useEffect(() => clearStall, [clearStall]);
 
-  // Sync volume with store
-  useEffect(() => {
+  const sound = access?.profile?.sound;
+  const fadeSeconds = sound?.fadeSeconds ?? 0;
+  // 0-1 multiplier for "Fade between songs": dips the volume over the first
+  // and last `fadeSeconds` of each track. A single <audio> can't overlap two
+  // tracks, so this fades out and back in rather than truly crossfading.
+  const fade = useRef(1);
+
+  const applyVolume = useCallback(() => {
     const audio = audioRef.current;
-    if (!audio) return;
-    audio.volume = volume / 100;
-  }, [volume]);
+    if (audio) audio.volume = (usePlayerStore.getState().volume / 100) * fade.current;
+  }, []);
+
+  // Sync volume with store
+  useEffect(applyVolume, [volume, applyVolume]);
+
+  // The venue's default volume (Settings → Preferences), once per session.
+  const seededVolume = useRef(false);
+  useEffect(() => {
+    if (seededVolume.current || sound?.defaultVolume === undefined) return;
+    seededVolume.current = true;
+    setVolume(sound.defaultVolume);
+  }, [sound?.defaultVolume, setVolume]);
 
   // Close the volume popover on an outside click, and the expanded view on Escape.
   useEffect(() => {
@@ -439,6 +455,11 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
         onTimeUpdate={(e) => {
           const el = e.currentTarget;
           if (el.duration) setProgress((el.currentTime / el.duration) * 100);
+          const gain = fadeGain(el.currentTime, el.duration, fadeSeconds);
+          if (gain !== fade.current) {
+            fade.current = gain;
+            applyVolume();
+          }
           clearStall();
         }}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}

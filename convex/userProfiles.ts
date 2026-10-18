@@ -4,6 +4,7 @@ import type { MutationCtx } from "./_generated/server";
 import { requireUser } from "./lib/auth";
 import { TRIAL_DAYS } from "./lib/billing";
 import { BRAND_COLORS, MAX_LOGO_BYTES } from "./lib/brand";
+import { FADE_OPTIONS, soundSettings } from "./lib/sound";
 
 export const createOrUpdate = mutation({
   args: {
@@ -17,9 +18,18 @@ export const createOrUpdate = mutation({
     region: v.optional(v.string()),
     locationCount: v.optional(v.number()),
     guestDemographics: v.optional(v.array(v.string())),
+    tempo: v.optional(v.union(v.literal("low"), v.literal("mid"), v.literal("high"))),
+    sound: v.optional(soundSettings),
   },
   handler: async (ctx, args) => {
     const clerkUserId = await requireUser(ctx);
+    if (args.sound) {
+      const { defaultVolume, fadeSeconds } = args.sound;
+      if (!Number.isInteger(defaultVolume) || defaultVolume < 0 || defaultVolume > 100) {
+        throw new ConvexError("Default volume must be between 0 and 100.");
+      }
+      if (!FADE_OPTIONS.includes(fadeSeconds)) throw new ConvexError("Pick a fade length from the list.");
+    }
 
     const existing = await ctx.db
       .query("userProfiles")
@@ -42,6 +52,8 @@ export const createOrUpdate = mutation({
         ...(args.guestDemographics !== undefined && {
           guestDemographics: args.guestDemographics,
         }),
+        ...(args.tempo !== undefined && { tempo: args.tempo }),
+        ...(args.sound !== undefined && { sound: args.sound }),
       });
       return existing._id;
     }
@@ -59,6 +71,8 @@ export const createOrUpdate = mutation({
       region: args.region,
       locationCount: args.locationCount,
       guestDemographics: args.guestDemographics,
+      tempo: args.tempo,
+      sound: args.sound,
     });
   },
 });
