@@ -67,7 +67,7 @@ This requires one manual Clerk Dashboard setting on **every** instance (dev and 
 
 ## Venue staff (Clerk Organizations)
 
-A venue's team is a Clerk **organization**. Settings → Zone & staff → "Set up your team" calls `createVenueTeam` (`src/app/(main)/settings/actions.ts`), which creates the org with `publicMetadata.venueOwnerId` = the owner's user id. Only the Backend API can write that metadata. Roles are Clerk's built-ins: `org:admin` is "Admin" and `org:member` is "Curator". "Owner" is the admin whose id matches `venueOwnerId`. Curators don't see Zone & staff or Plan & billing.
+A venue's team is a Clerk **organization**, created by `createVenueTeam` (`src/app/(main)/settings/actions.ts`) with the venue name and `publicMetadata.venueOwnerId` = the owner's user id. It's idempotent (returns an existing membership's org) and runs automatically at the end of `completeOnboarding`; `ActivateVenue` calls it on page load for onboarded accounts that still have no org (older accounts, or a failed onboarding call). Settings → Zone & staff → "Set up your team" is the manual fallback. Only the Backend API can write that metadata. Roles are Clerk's built-ins: `org:admin` is "Admin" and `org:member` is "Curator". "Owner" is the admin whose id matches `venueOwnerId`. Curators don't see Zone & staff or Plan & billing.
 
 **No data migration.** Every row stays keyed by the owner's user id. `requireUser()` returns the token's `venue_owner` claim when there is one, so staff read and write the owner's rows; otherwise it returns `identity.subject`. `ActivateVenue` (`src/app/ConvexClientProvider.tsx`) makes a staff member's venue org active, because the claim only exists while it is.
 

@@ -4,6 +4,7 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 import { getSession, getConvexToken } from "@/lib/session";
+import { createVenueTeam } from "@/app/(main)/settings/actions";
 import {
   flushPostHogLogs,
   logPostHogOnboardingClaimSynced,
@@ -97,6 +98,9 @@ export async function completeOnboarding(
 
     // 2. Then the claim. If this fails, syncOnboardingClaim heals it next visit.
     await setOnboardedClaim(session.userId);
+    // 3. The venue team, named after the venue. Best-effort: ActivateVenue retries on the next page load.
+    const team = await createVenueTeam();
+    if (!team.ok) console.error("completeOnboarding: venue team not created", team.error);
     logPostHogOnboardingCompleted();
     await flushPostHogLogs();
     return { ok: true };

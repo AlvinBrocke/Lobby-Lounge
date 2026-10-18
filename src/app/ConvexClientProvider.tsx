@@ -5,6 +5,7 @@ import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { useAuth, useOrganization, useOrganizationList, useUser } from "@clerk/nextjs";
 import posthog from "posthog-js";
 import { ReactNode, useEffect, useRef } from "react";
+import { createVenueTeam } from "@/app/(main)/settings/actions";
 
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
 const convex = convexUrl ? new ConvexReactClient(convexUrl) : null;
@@ -47,15 +48,24 @@ function PostHogUserIdentification() {
  * Staff only see their venue's data while its organization is active on the
  * session (that's what puts `venue_owner` in the Convex token), and Clerk
  * doesn't always activate it after an invite is accepted. So pick it up here.
+ * Owners with no org yet (accounts from before venue teams) get one created.
  */
 function ActivateVenue() {
+  const { isSignedIn } = useAuth();
   const { isLoaded, organization } = useOrganization();
   const { isLoaded: listLoaded, setActive, userMemberships } = useOrganizationList({ userMemberships: true });
   const firstOrgId = userMemberships.data?.[0]?.organization.id;
+  const tried = useRef(false); // once per page load, so a not-yet-onboarded user doesn't loop
 
   useEffect(() => {
-    if (isLoaded && listLoaded && !organization && firstOrgId) void setActive({ organization: firstOrgId });
-  }, [isLoaded, listLoaded, organization, firstOrgId, setActive]);
+    if (!isSignedIn || !isLoaded || !listLoaded || organization || userMemberships.isLoading) return;
+    if (firstOrgId) {
+      void setActive({ organization: firstOrgId });
+    } else if (!tried.current) {
+      tried.current = true;
+      void createVenueTeam().then((res) => res.ok && setActive({ organization: res.orgId }));
+    }
+  }, [isSignedIn, isLoaded, listLoaded, organization, userMemberships.isLoading, firstOrgId, setActive]);
 
   return null;
 }
