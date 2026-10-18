@@ -11,4 +11,10 @@ declare global {
       onboardingComplete?: boolean;
     };
   }
+
+  // Set only by `createVenueTeam` (src/app/(main)/settings/actions.ts) through
+  // the Backend API. The "convex" JWT template copies it into `venue_owner`.
+  interface OrganizationPublicMetadata {
+    venueOwnerId?: string;
+  }
 }

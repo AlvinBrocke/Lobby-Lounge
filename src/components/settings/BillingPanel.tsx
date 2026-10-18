@@ -4,6 +4,7 @@ import { CreditCard } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAccess } from "@/hooks/useAccess";
+import { useVenueOwnerId } from "@/hooks/useVenueOwnerId";
 import { PLAN_NAME, PLAN_PRICE, customerPortalUrl, subscribeUrl } from "@/lib/billing";
 import type { AccessStatus } from "@convex/lib/billing";
 
@@ -27,10 +28,12 @@ const primaryButton =
 /** Plan status and the Stripe links (subscribe / manage). Formerly the /account page. */
 export function BillingPanel() {
   const { user } = useUser();
+  const venueOwnerId = useVenueOwnerId();
   const state = useAccess();
 
   const email = user?.primaryEmailAddress?.emailAddress;
-  const subscribeHref = user ? subscribeUrl(user.id, email) : null;
+  // The plan lives on the venue owner's profile, so a payment by another admin is still credited to it.
+  const subscribeHref = venueOwnerId ? subscribeUrl(venueOwnerId, email) : null;
 
   let statusLine = "";
   if (state) {

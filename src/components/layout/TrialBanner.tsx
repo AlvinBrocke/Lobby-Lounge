@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { useAccess } from "@/hooks/useAccess";
 import { subscribeUrl } from "@/lib/billing";
+import { useVenueOwnerId } from "@/hooks/useVenueOwnerId";
 
 /** Start nudging this many days before the trial ends. */
 const WARN_DAYS = 7;
@@ -12,13 +13,14 @@ const WARN_DAYS = 7;
 export function TrialBanner() {
   const state = useAccess();
   const { user } = useUser();
+  const venueOwnerId = useVenueOwnerId();
 
   if (!state || !user) return null;
   const { access, daysLeft } = state;
   if (access.status === "active") return null;
   if (access.status === "trial" && daysLeft > WARN_DAYS) return null;
 
-  const href = subscribeUrl(user.id, user.primaryEmailAddress?.emailAddress) ?? "/settings?tab=billing";
+  const href = subscribeUrl(venueOwnerId ?? user.id, user.primaryEmailAddress?.emailAddress) ?? "/settings?tab=billing";
 
   if (access.status === "expired") {
     return (

@@ -65,6 +65,25 @@ Clerk issues the session JWT; the app never mints its own tokens. Authorization 
 
 This requires one manual Clerk Dashboard setting on **every** instance (dev and prod), or every user loops back to onboarding: Configure → Sessions → Customize session token → `{ "metadata": "{{user.public_metadata}}" }`. Session inactivity timeout / maximum lifetime are also configured there — the client-side `useIdleTimeout` hook is UX only.
 
+## Venue staff (Clerk Organizations)
+
+A venue's team is a Clerk **organization**. Settings → Zone & staff → "Set up your team" calls `createVenueTeam` (`src/app/(main)/settings/actions.ts`), which creates the org with `publicMetadata.venueOwnerId` = the owner's user id. Only the Backend API can write that metadata. Roles are Clerk's built-ins: `org:admin` is "Admin" and `org:member` is "Curator". "Owner" is the admin whose id matches `venueOwnerId`. Curators don't see Zone & staff or Plan & billing.
+
+**No data migration.** Every row stays keyed by the owner's user id. `requireUser()` returns the token's `venue_owner` claim when there is one, so staff read and write the owner's rows; otherwise it returns `identity.subject`. `ActivateVenue` (`src/app/ConvexClientProvider.tsx`) makes a staff member's venue org active, because the claim only exists while it is.
+
+Invitations are sent by `inviteStaff` with `redirectUrl` = `/signup`. That page and `/signin` redeem the `__clerk_ticket`. Invitees then land on onboarding, see the venue's finished profile, and are passed straight through.
+
+Manual Clerk Dashboard setup, on **every** instance (dev and prod):
+
+1. Configure → Organizations → enable Organizations. Turn **off** "Allow users to create organizations": venues are only created by `createVenueTeam`.
+2. Configure → JWT templates → `convex` → add this claim to the existing ones:
+   ```json
+   "venue_owner": "{{org.public_metadata.venueOwnerId}}"
+   ```
+   Without it, staff see an empty account of their own instead of the venue.
+
+Known limit: someone who is **signed in** when they click an invite link is bounced off `/signup` by `proxy.ts`, which drops the ticket. They need to sign out first, then click the link again.
+
 ## Environment variables
 
 Required in `.env.local`:

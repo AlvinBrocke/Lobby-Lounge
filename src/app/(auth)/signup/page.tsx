@@ -62,6 +62,19 @@ export default function SignupPage() {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Set when arriving from a team invitation email (Settings → Zone & staff).
+  const [ticket, setTicket] = useState<string | null>(null);
+
+  // Clerk appends `__clerk_status`: "sign_up" for a new email, "sign_in" when it
+  // already has an account, "complete" once the invitation is accepted.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get("__clerk_ticket");
+    if (!t) return;
+    const status = params.get("__clerk_status");
+    if (status === "sign_up") setTicket(t);
+    else router.replace(status === "sign_in" ? `/signin?${params}` : "/signin");
+  }, [router]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +83,10 @@ export default function SignupPage() {
     setError(null);
 
     try {
-      const result = await signUp.create({ emailAddress: email, password });
+      // The ticket carries the (already verified) email, so invitees skip the code step.
+      const result = ticket
+        ? await signUp.create({ strategy: "ticket", ticket, password })
+        : await signUp.create({ emailAddress: email, password });
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
         router.push("/signup/onboarding");
@@ -178,10 +194,12 @@ export default function SignupPage() {
                   marginBottom: 8,
                 }}
               >
-                Create your account
+                {ticket ? "Join your team" : "Create your account"}
               </h1>
               <p style={{ fontFamily: "var(--ll-font-body)", fontSize: 14, color: "var(--ll-on-ink-3)" }}>
-                Free for your first month. No credit card required.
+                {ticket
+                  ? "Choose a password to accept your invitation."
+                  : "Free for your first month. No credit card required."}
               </p>
             </>
           ) : (
@@ -224,7 +242,7 @@ export default function SignupPage() {
         {step === "signup" ? (
           <>
             <form onSubmit={handleSignup} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <div>
+              {!ticket && <div>
                 <label style={labelStyle}>Email Address</label>
                 <div style={{ position: "relative" }}>
                   <Mail style={iconStyle} />
@@ -239,7 +257,7 @@ export default function SignupPage() {
                     onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,.1)")}
                   />
                 </div>
-              </div>
+              </div>}
 
               <div>
                 <label style={labelStyle}>Password</label>
@@ -290,6 +308,8 @@ export default function SignupPage() {
               </p>
             </form>
 
+            {/* An OAuth sign-up wouldn't redeem the invitation ticket, so invitees only get the password form. */}
+            {!ticket && <>
             {/* Divider */}
             <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "24px 0" }}>
               <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,.08)" }} />
@@ -364,6 +384,7 @@ export default function SignupPage() {
                 Sign In
               </Link>
             </p>
+            </>}
           </>
         ) : (
           <form onSubmit={handleVerify} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
