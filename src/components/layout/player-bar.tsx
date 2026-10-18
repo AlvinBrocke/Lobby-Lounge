@@ -20,6 +20,7 @@ import usePlayerStore from "@/store/usePlayerStore";
 import { useAccess } from "@/hooks/useAccess";
 import { useMediaSession, useWakeLock } from "@/hooks/useKeepAwake";
 import { useVolumeSupported } from "@/hooks/useVolumeSupported";
+import { TrackReactions, useSyncBlockedTracks } from "@/components/player/TrackReactions";
 import { DevicesButton } from "@/components/player/DevicesButton";
 import { UpNext } from "@/components/player/UpNext";
 import type { ScheduleStatus } from "@/hooks/useScheduleAutoplay";
@@ -245,6 +246,7 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
   // The queue sheet: Up Next for screens where the sidebar is a narrow rail.
   const [showQueue, setShowQueue] = useState(false);
   const volumeSupported = useVolumeSupported();
+  useSyncBlockedTracks();
   // Set after MAX_FAILURES broken tracks in a row; playback is paused.
   const [stopped, setStopped] = useState(false);
   const failures = useRef(0);
@@ -491,6 +493,7 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
                 <div className="text-[11px] touch:text-sm text-faint">{currentTrack.category}</div>
               )}
             </div>
+            <TrackReactions track={currentTrack} />
             <div className="w-full">
               <div className="flex">
                 <Progress progress={progress} onSeek={seek} big />

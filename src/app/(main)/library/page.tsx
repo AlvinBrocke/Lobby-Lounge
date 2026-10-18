@@ -2,16 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useConvexAuth, useQuery } from "convex/react";
-import { ChevronLeft, ChevronRight, Moon, Music, Sun, User } from "lucide-react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { Ban, ChevronLeft, ChevronRight, Heart, Moon, Music, Sun, User, X } from "lucide-react";
 import { api } from "@convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { PlaylistCover } from "@/components/playlists/PlaylistCover";
 import { ENERGY_LABELS } from "@/lib/playlists";
-import { formatTotalDuration } from "@/lib/utils";
+import { formatDuration, formatTotalDuration } from "@/lib/utils";
 
 type PlaylistSummary = FunctionReturnType<typeof api.playlists.listCurated>[number];
-type SectionKey = "mine" | "daytime" | "evening" | "genres";
+type SectionKey = "mine" | "daytime" | "evening" | "genres" | "liked" | "blocked";
+type ReactionRow = FunctionReturnType<typeof api.trackReactions.listMine>[number];
 
 const card =
   "bg-secondary border border-white/5 rounded-xl shadow-[0_2px_14px_rgba(0,0,0,0.4)] transition-all duration-150";
@@ -46,10 +47,43 @@ function PlaylistList({ playlists }: { playlists: PlaylistSummary[] }) {
   );
 }
 
+/** Loved or blocked songs, each with a button to take the reaction back. */
+function TrackList({ tracks, empty, undoLabel }: { tracks: ReactionRow[]; empty: string; undoLabel: string }) {
+  const setReaction = useMutation(api.trackReactions.set);
+  if (tracks.length === 0) return <p className="text-sm text-muted-foreground py-6">{empty}</p>;
+  return (
+    <div className="flex flex-col gap-2">
+      {tracks.map((t) => (
+        <div
+          key={t.trackId}
+          className="flex items-center gap-3.5 px-3.5 py-2.5 rounded-[10px] bg-secondary border border-white/5 shadow-[0_2px_10px_rgba(0,0,0,0.3)]"
+        >
+          <PlaylistCover src={t.coverImage} alt="" className="w-[44px] h-[44px] rounded-md shrink-0" iconClassName="w-4 h-4" />
+          <div className="flex-1 min-w-0">
+            <div className="text-[13px] font-bold text-foreground truncate">{t.name}</div>
+            <div className="text-[11px] text-faint truncate mt-0.5">
+              {[t.artist, t.duration ? formatDuration(t.duration) : null].filter(Boolean).join(" · ")}
+            </div>
+          </div>
+          <button
+            onClick={() => setReaction({ trackId: t.trackId, kind: null })}
+            aria-label={`${undoLabel} ${t.name}`}
+            title={undoLabel}
+            className="shrink-0 w-8 h-8 touch:w-11 touch:h-11 rounded-md border border-primary/20 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function LibraryPage() {
   const { isAuthenticated } = useConvexAuth();
   const curated = useQuery(api.playlists.listCurated, isAuthenticated ? {} : "skip");
   const mine = useQuery(api.playlists.listByUser, isAuthenticated ? {} : "skip");
+  const reactions = useQuery(api.trackReactions.listMine, isAuthenticated ? {} : "skip");
   const [section, setSection] = useState<SectionKey | null>(null);
   const [genre, setGenre] = useState<string | null>(null);
 
@@ -67,7 +101,10 @@ export default function LibraryPage() {
     }, new Map<string, { name: string; count: number; cover?: string }>()).values(),
   ).sort((a, b) => a.name.localeCompare(b.name));
 
-  const loading = curated === undefined || mine === undefined;
+  const liked = (reactions ?? []).filter((r) => r.kind === "like");
+  const blocked = (reactions ?? []).filter((r) => r.kind === "block");
+
+  const loading = curated === undefined || mine === undefined || reactions === undefined;
   const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
   const SECTIONS = [
@@ -75,6 +112,8 @@ export default function LibraryPage() {
     { key: "daytime", label: "Daytime Sets", count: plural(daytime.length, "playlist"), accent: "#27E0C5", icon: Sun },
     { key: "evening", label: "Evening & Night", count: plural(evening.length, "playlist"), accent: "#4A9EFF", icon: Moon },
     { key: "genres", label: "Genres", count: plural(genres.length, "genre"), accent: "#7C3AED", icon: Music },
+    { key: "liked", label: "Liked Songs", count: plural(liked.length, "song"), accent: "#FF4B6E", icon: Heart },
+    { key: "blocked", label: "Blocked Songs", count: plural(blocked.length, "song"), accent: "#F59E0B", icon: Ban },
   ] as const;
 
   // ── Detail views ───────────────────────────────────────────────────────────
@@ -98,6 +137,12 @@ export default function LibraryPage() {
         {section === "mine" && <PlaylistList playlists={mine ?? []} />}
         {section === "daytime" && <PlaylistList playlists={daytime} />}
         {section === "evening" && <PlaylistList playlists={evening} />}
+        {section === "liked" && (
+          <TrackList tracks={liked} undoLabel="Unlove" empty="Tap the heart in the expanded player to save songs here." />
+        )}
+        {section === "blocked" && (
+          <TrackList tracks={blocked} undoLabel="Unblock" empty="Blocked songs are skipped everywhere. None yet." />
+        )}
         {section === "genres" &&
           (genre ? (
             <PlaylistList playlists={all.filter((p) => p.category === genre)} />

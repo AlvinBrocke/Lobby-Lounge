@@ -65,6 +65,16 @@ export default defineSchema({
     title: v.optional(v.string()),
   }).index("by_clerk_user", ["clerkUserId"]),
 
+  // A venue's "love" or "block" on a track. One row per user + track: blocking
+  // a loved track replaces the love. Blocked tracks are skipped by the player.
+  trackReactions: defineTable({
+    clerkUserId: v.string(),
+    trackId: v.id("tracks"),
+    kind: v.union(v.literal("like"), v.literal("block")),
+  })
+    .index("by_clerk_user", ["clerkUserId"])
+    .index("by_user_and_track", ["clerkUserId", "trackId"]),
+
   // Short voice messages played over the music at set times. Rules live in
   // convex/announcements.ts and are mirrored in src/lib/announcements.ts.
   announcements: defineTable({

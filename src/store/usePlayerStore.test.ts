@@ -15,6 +15,8 @@ beforeEach(() => {
     queue: [],
     activePlaylistId: null,
     playlistTracks: [],
+    blockedIds: [],
+    repeat: true,
   });
 });
 
@@ -186,5 +188,46 @@ describe("playQueue", () => {
     usePlayerStore.getState().playQueue([track1], "pl_1");
     usePlayerStore.getState().setCurrentTrack(track2);
     expect(usePlayerStore.getState().activePlaylistId).toBeNull();
+  });
+});
+
+describe("blocked tracks", () => {
+  it("are left out of a shuffled playlist", () => {
+    usePlayerStore.getState().setBlockedIds(["2"]);
+    usePlayerStore.getState().playQueue([track1, track2, track3], "pl");
+    const { currentTrack, queue } = usePlayerStore.getState();
+    expect([currentTrack, ...queue].map((t) => t!.id).sort()).toEqual(["1", "3"]);
+  });
+
+  it("are skipped when reached in the queue", () => {
+    usePlayerStore.setState({ currentTrack: track1, queue: [track2, track3] });
+    usePlayerStore.getState().setBlockedIds(["2"]);
+    usePlayerStore.getState().nextTrack();
+    expect(usePlayerStore.getState().currentTrack?.id).toBe("3");
+  });
+
+  it("still play when picked by hand", () => {
+    usePlayerStore.getState().setBlockedIds(["2"]);
+    usePlayerStore.getState().playQueue([track1, track2, track3], "pl", 1);
+    const { currentTrack, queue } = usePlayerStore.getState();
+    expect(currentTrack?.id).toBe("2");
+    expect(queue.map((t) => t.id)).toEqual(["3"]);
+  });
+});
+
+describe("repeat", () => {
+  it("off: the playlist plays once, then stops on its last track", () => {
+    usePlayerStore.getState().toggleRepeat();
+    usePlayerStore.setState({ currentTrack: track3, queue: [], playlistTracks: [track1, track2, track3], isPlaying: true });
+    usePlayerStore.getState().nextTrack();
+    const { currentTrack, isPlaying } = usePlayerStore.getState();
+    expect(isPlaying).toBe(false);
+    expect(currentTrack?.id).toBe("3");
+  });
+
+  it("on: the playlist starts another pass", () => {
+    usePlayerStore.setState({ currentTrack: track3, queue: [], playlistTracks: [track1, track2, track3], isPlaying: true });
+    usePlayerStore.getState().nextTrack();
+    expect(usePlayerStore.getState().isPlaying).toBe(true);
   });
 });

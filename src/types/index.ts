@@ -39,11 +39,17 @@ export interface PlayerState {
   activePlaylistId: string | null;
   /** The whole active playlist, reshuffled into the queue whenever the queue runs out. */
   playlistTracks: Track[];
+  /** Tracks the venue blocked; never queued, skipped if reached. Synced from Convex. */
+  blockedIds: string[];
+  setBlockedIds: (ids: string[]) => void;
+  /** On: a playlist loops forever (reshuffled each pass). Off: it plays through once and stops. */
+  repeat: boolean;
+  toggleRepeat: () => void;
   setIsPlaying: (isPlaying: boolean) => void;
   setCurrentTrack: (track: Track) => void;
   /**
    * Plays a playlist: shuffled, or from `startIndex` onward in order. With a
-   * `playlistId` it loops, reshuffling when the queue empties.
+   * `playlistId` it loops (while `repeat` is on), reshuffling when the queue empties.
    */
   playQueue: (tracks: Track[], playlistId?: string, startIndex?: number) => void;
   setVolume: (volume: number) => void;

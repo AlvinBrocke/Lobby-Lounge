@@ -18,6 +18,7 @@ import type * as lib_energy from "../lib/energy.js";
 import type * as lib_text from "../lib/text.js";
 import type * as playlists from "../playlists.js";
 import type * as scheduleBlocks from "../scheduleBlocks.js";
+import type * as trackReactions from "../trackReactions.js";
 import type * as tracks from "../tracks.js";
 import type * as userProfiles from "../userProfiles.js";
 
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   "lib/text": typeof lib_text;
   playlists: typeof playlists;
   scheduleBlocks: typeof scheduleBlocks;
+  trackReactions: typeof trackReactions;
   tracks: typeof tracks;
   userProfiles: typeof userProfiles;
 }>;
