@@ -21,6 +21,7 @@ import { useAccess } from "@/hooks/useAccess";
 import { useMediaSession, useWakeLock } from "@/hooks/useKeepAwake";
 import { useVolumeSupported } from "@/hooks/useVolumeSupported";
 import { TrackReactions, useSyncBlockedTracks } from "@/components/player/TrackReactions";
+import { DevicesButton } from "@/components/player/DevicesButton";
 import { UpNext } from "@/components/player/UpNext";
 import type { ScheduleStatus } from "@/hooks/useScheduleAutoplay";
 import type { Track } from "@/types";
@@ -558,7 +559,7 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
             </div>
           </div>
 
-          {/* Queue (where the sidebar can't show it) + volume */}
+          {/* Queue (where the sidebar can't show it) + devices + volume */}
           <div className="w-[30%] flex items-center justify-end gap-1 pl-3 sm:pl-5">
             <button
               onClick={() => setShowQueue(true)}
@@ -568,6 +569,7 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
             >
               <ListMusic className="w-[15px] h-[15px] touch:w-5 touch:h-5" />
             </button>
+            <DevicesButton audioRef={audioRef} disabled={!currentTrack} />
             <div ref={volumeRef} className="relative">
               <button
                 onClick={() => setShowVolume((v) => !v)}
