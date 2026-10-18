@@ -143,3 +143,58 @@ describe("userProfiles", () => {
     ).rejects.toThrow("No profile");
   });
 });
+
+describe("saveBrand", () => {
+  async function setup() {
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    const asUser = t.withIdentity({ subject: USER });
+    await asUser.mutation(api.userProfiles.createOrUpdate, { venueName: "Old Name" });
+    const upload = (type: string, bytes = 10) =>
+      t.run((ctx) => ctx.storage.store(new Blob([new Uint8Array(bytes)], { type })));
+    return { t, asUser, upload };
+  }
+
+  it("saves name, location, colour and logo, and returns a logo URL", async () => {
+    const { asUser, upload } = await setup();
+    const logo = await upload("image/png");
+    await asUser.mutation(api.userProfiles.saveBrand, {
+      venueName: "  Purple Spoon ",
+      country: "US",
+      region: "NC",
+      brandColor: "purple",
+      logo,
+    });
+    const profile = await asUser.query(api.userProfiles.get, {});
+    expect(profile).toMatchObject({ venueName: "Purple Spoon", country: "US", region: "NC", brandColor: "purple" });
+    expect(profile?.logoUrl).toEqual(expect.any(String));
+  });
+
+  it("rejects colours outside the list, including prototype keys", async () => {
+    const { asUser } = await setup();
+    for (const brandColor of ["#ff0000", "toString"]) {
+      await expect(asUser.mutation(api.userProfiles.saveBrand, { venueName: "X", brandColor })).rejects.toThrow(
+        "Pick a colour",
+      );
+    }
+  });
+
+  it("rejects logos over 2 MB", async () => {
+    const { asUser, upload } = await setup();
+    const huge = await upload("image/png", 2 * 1024 * 1024 + 1);
+    await expect(
+      asUser.mutation(api.userProfiles.saveBrand, { venueName: "X", brandColor: "teal", logo: huge }),
+    ).rejects.toThrow("smaller than 2 MB");
+  });
+
+  it("deletes the old logo file when it's replaced or removed", async () => {
+    const { t, asUser, upload } = await setup();
+    const first = await upload("image/png");
+    await asUser.mutation(api.userProfiles.saveBrand, { venueName: "X", brandColor: "teal", logo: first });
+    const second = await upload("image/jpeg");
+    await asUser.mutation(api.userProfiles.saveBrand, { venueName: "X", brandColor: "teal", logo: second });
+    expect(await t.run((ctx) => ctx.db.system.get(first))).toBeNull();
+    await asUser.mutation(api.userProfiles.saveBrand, { venueName: "X", brandColor: "teal", logo: null });
+    expect(await t.run((ctx) => ctx.db.system.get(second))).toBeNull();
+    expect((await asUser.query(api.userProfiles.get, {}))?.logoUrl).toBeNull();
+  });
+});

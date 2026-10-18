@@ -7,16 +7,7 @@ import { useClerk, useUser } from "@clerk/nextjs";
 import { CreditCard, Home, LogOut, Search, Settings, X } from "lucide-react";
 import { useAccess } from "@/hooks/useAccess";
 import { SearchBrowse } from "@/components/layout/SearchBrowse";
-
-function initialsOf(name: string) {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
+import { VenueAvatar } from "@/components/layout/VenueAvatar";
 
 /**
  * Search lives in the URL (`/playlists?q=…`) rather than in React state, so the
@@ -137,8 +128,9 @@ function AccountMenu() {
 
   const venue = access?.profile?.venueName;
   const name = venue || user?.fullName || user?.firstName || "Your venue";
-  const email = user?.primaryEmailAddress?.emailAddress ?? "";
-  const initials = initialsOf(name);
+  // The business type says more about a venue than the login email does.
+  const subtitle = access?.profile?.businessType || user?.primaryEmailAddress?.emailAddress || "";
+  const logoUrl = access?.profile?.logoUrl;
 
   const item =
     "w-full flex items-center gap-2.5 px-2 py-2 touch:py-3 rounded-md text-xs touch:text-sm font-semibold text-foreground hover:bg-white/5 transition-colors";
@@ -149,19 +141,21 @@ function AccountMenu() {
         onClick={() => setOpen((o) => !o)}
         aria-label="Open account menu"
         aria-expanded={open}
-        className="w-[30px] h-[30px] touch:w-11 touch:h-11 rounded-full bg-primary text-primary-foreground text-[9px] touch:text-xs font-black flex items-center justify-center hover:ring-4 hover:ring-primary/15 transition-shadow"
+        className="rounded-full hover:ring-4 hover:ring-primary/15 transition-shadow"
       >
-        {initials}
+        <VenueAvatar
+          name={name}
+          logoUrl={logoUrl}
+          className="w-[30px] h-[30px] touch:w-11 touch:h-11 rounded-full text-[9px] touch:text-xs"
+        />
       </button>
       {open && (
         <div className="absolute right-0 top-[calc(100%+9px)] w-[240px] p-2.5 rounded-[11px] bg-popover border border-white/10 shadow-[0_18px_48px_rgba(0,0,0,0.62)] z-[60]">
           <div className="flex items-center gap-2.5 px-1.5 pt-1 pb-3 border-b border-white/5">
-            <span className="w-[34px] h-[34px] rounded-full bg-primary text-primary-foreground text-[10px] font-black flex items-center justify-center shrink-0">
-              {initials}
-            </span>
+            <VenueAvatar name={name} logoUrl={logoUrl} className="w-[34px] h-[34px] rounded-full text-[10px] shrink-0" />
             <div className="min-w-0">
               <div className="text-xs font-bold text-foreground truncate">{name}</div>
-              <div className="text-[10px] text-muted-foreground truncate mt-0.5">{email}</div>
+              <div className="text-[10px] text-muted-foreground truncate mt-0.5">{subtitle}</div>
             </div>
           </div>
           <div className="pt-1.5 flex flex-col">
