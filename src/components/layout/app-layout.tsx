@@ -7,6 +7,7 @@ import { useScheduleAutoplay } from "@/hooks/useScheduleAutoplay";
 import { PlayerBar } from "./player-bar";
 import { MobileNav, Sidebar } from "./Sidebar";
 import { Topbar } from "./topbar";
+import { TourMap } from "./TourMap";
 import { TrialBanner } from "./TrialBanner";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -23,15 +24,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="flex-1 flex overflow-hidden">
         <Sidebar />
 
-        <main className="flex-1 flex flex-col overflow-hidden min-w-0">
+        <main className="relative flex-1 flex flex-col overflow-hidden min-w-0">
           <AnnouncementPlayer />
           <TrialBanner />
           <Topbar />
           <ScrollArea className="flex-1 h-full w-full">
-            <div className="px-5 py-[18px] md:px-7 md:py-6 max-w-[1600px] mx-auto w-full pb-10">
+            <div className="px-5 py-[18px] md:px-7 md:py-6 max-w-[1600px] mx-auto w-full pb-20">
               {children}
             </div>
           </ScrollArea>
+          {/* Pinned to <main>, not the viewport, so it sits above the player bar on every breakpoint.
+              The extra bottom padding above lets the last row scroll clear of it. */}
+          <TourMap />
         </main>
       </div>
 
