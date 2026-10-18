@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useClerk, useUser } from "@clerk/nextjs";
 import { CreditCard, Home, LogOut, Search, Settings, X } from "lucide-react";
 import { useAccess } from "@/hooks/useAccess";
+import { SearchBrowse } from "@/components/layout/SearchBrowse";
 
 function initialsOf(name: string) {
   return name
@@ -27,6 +28,18 @@ function PlaylistSearch() {
   const params = useSearchParams();
   const onPlaylists = pathname === "/playlists";
   const [value, setValue] = useState(onPlaylists ? (params.get("q") ?? "") : "");
+  const [browsing, setBrowsing] = useState(false);
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  // Close the pop-up on a click anywhere outside the search box + pop-up.
+  useEffect(() => {
+    if (!browsing) return;
+    const onDown = (e: MouseEvent) => {
+      if (!boxRef.current?.contains(e.target as Node)) setBrowsing(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [browsing]);
 
   // Leaving /playlists clears the box, so it doesn't look like a filter is active elsewhere.
   useEffect(() => {
@@ -40,40 +53,67 @@ function PlaylistSearch() {
     else router.push(url);
   }
 
+  function pick(term: string) {
+    setValue(term);
+    setBrowsing(false);
+    go(term, false);
+  }
+
   return (
-    <form
-      role="search"
-      onSubmit={(e) => {
-        e.preventDefault();
-        go(value, false);
-      }}
+    <div
+      ref={boxRef}
       className="relative flex-1 max-w-[380px]"
+      // Keyboard users tabbing out of the search area close the pop-up too.
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setBrowsing(false);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") setBrowsing(false);
+      }}
     >
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-[13px] h-[13px] text-faint pointer-events-none" />
-      <input
-        value={value}
-        onChange={(e) => {
-          setValue(e.target.value);
-          if (onPlaylists) go(e.target.value, true);
+      <form
+        role="search"
+        onSubmit={(e) => {
+          e.preventDefault();
+          setBrowsing(false);
+          go(value, false);
         }}
-        placeholder="What do you want to play?"
-        aria-label="Search playlists"
-        className="w-full rounded-full border border-primary/20 bg-secondary py-[7px] pl-8 pr-8 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors"
-      />
-      {value && (
-        <button
-          type="button"
-          onClick={() => {
-            setValue("");
-            if (onPlaylists) go("", true);
+        className="relative"
+      >
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-[13px] h-[13px] text-faint pointer-events-none" />
+        <input
+          value={value}
+          onChange={(e) => {
+            setValue(e.target.value);
+            if (onPlaylists) go(e.target.value, true);
           }}
-          aria-label="Clear search"
-          className="absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground"
-        >
-          <X className="w-3 h-3" />
-        </button>
+          onFocus={() => setBrowsing(true)}
+          onClick={() => setBrowsing(true)}
+          placeholder="What do you want to play?"
+          aria-label="Search playlists"
+          aria-expanded={browsing && !value}
+          aria-controls="search-browse"
+          className="w-full rounded-full border border-primary/20 bg-secondary py-[7px] pl-8 pr-8 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors"
+        />
+        {value && (
+          <button
+            type="button"
+            onClick={() => {
+              setValue("");
+              if (onPlaylists) go("", true);
+            }}
+            aria-label="Clear search"
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        )}
+      </form>
+      {/* Only while the box is empty: once typing starts, the Playlists page filters live. */}
+      {browsing && !value && (
+        <SearchBrowse id="search-browse" onPick={pick} onNavigate={() => setBrowsing(false)} />
       )}
-    </form>
+    </div>
   );
 }
 

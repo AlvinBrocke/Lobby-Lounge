@@ -13,6 +13,20 @@ export const CATEGORY_ENERGY: Record<string, Energy> = {
   Energetic: "high",
 };
 
+// Maps this app's curated playlist categories to Jamendo's genre/mood tags, best first.
+// Jamendo's tag search is intermittently flaky: a tag that returns 150 tracks one
+// hour can return 0 the next (seen with "electronic", "electronica" and "jazz").
+// So each category lists fallbacks, and we move to the next one on an empty result.
+// The search pop-up's "Browse by genre" chips are built from these tags too.
+export const CATEGORY_TAGS: Record<string, string[]> = {
+  Relaxing: ["chillout", "lounge"],
+  Upbeat: ["pop", "dance"],
+  Productivity: ["instrumental", "ambient"],
+  Elegant: ["jazz", "lounge"],
+  Energetic: ["electronica", "dance", "house"],
+  Wellness: ["ambient", "relaxation"],
+};
+
 export type Energy = "low" | "mid" | "high";
 
 /** Energy for a playlist/track category, defaulting to "mid" for unknown ones. */

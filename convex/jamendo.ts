@@ -1,23 +1,10 @@
 import { v } from "convex/values";
 import { internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { energyForCategory } from "./lib/energy";
+import { CATEGORY_TAGS, energyForCategory } from "./lib/energy";
 import { decodeEntities } from "./lib/text";
 
 const JAMENDO_TRACKS_URL = "https://api.jamendo.com/v3.0/tracks/";
-
-// Maps this app's curated playlist categories to Jamendo's genre/mood tags, best first.
-// Jamendo's tag search is intermittently flaky: a tag that returns 150 tracks one
-// hour can return 0 the next (seen with "electronic", "electronica" and "jazz").
-// So each category lists fallbacks, and we move to the next one on an empty result.
-const CATEGORY_TAGS: Record<string, string[]> = {
-  Relaxing: ["chillout", "lounge"],
-  Upbeat: ["pop", "dance"],
-  Productivity: ["instrumental", "ambient"],
-  Elegant: ["jazz", "lounge"],
-  Energetic: ["electronica", "dance", "house"],
-  Wellness: ["ambient", "relaxation"],
-};
 
 // An empty result is usually that flakiness rather than a genuinely empty tag, and
 // asking again moments later typically succeeds — so retry once before falling back.
