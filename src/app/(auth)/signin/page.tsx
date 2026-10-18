@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth, useSignIn } from "@clerk/nextjs";
@@ -31,6 +31,24 @@ function LoginForm() {
   useEffect(() => {
     if (isSignedIn) router.replace(afterSignInUrl);
   }, [isSignedIn, afterSignInUrl, router]);
+
+  // Team invitation for an existing account (forwarded by /signup): the ticket
+  // signs them in and joins the venue in one step. Tickets are single-use, so
+  // the ref stops React's dev double-effect from spending it twice.
+  const ticket = searchParams.get("__clerk_ticket");
+  const ticketUsed = useRef(false);
+  useEffect(() => {
+    if (!ticket || !isLoaded || isSignedIn || ticketUsed.current) return;
+    ticketUsed.current = true;
+    signIn
+      .create({ strategy: "ticket", ticket })
+      .then(async (result) => {
+        if (result.status !== "complete") throw new Error("incomplete");
+        await setActive({ session: result.createdSessionId });
+        router.push("/dashboard");
+      })
+      .catch((err) => setError(`${describeClerkError(err)} Sign in below to continue.`));
+  }, [ticket, isLoaded, isSignedIn, signIn, setActive, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

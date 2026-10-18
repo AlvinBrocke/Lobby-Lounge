@@ -2,16 +2,20 @@ import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { accessFor } from "./billing";
 
 /**
- * Identity of the caller, taken from the verified Clerk JWT.
+ * The Clerk user id whose venue the caller is acting on, taken from the
+ * verified Clerk JWT. This is what the `by_clerk_user` indexes are keyed on.
  *
- * `identity.subject` is the Clerk user id ("user_2abc..."), which is what the
- * `by_clerk_user` indexes are keyed on. Do not use `tokenIdentifier` — it is
- * issuer-prefixed and will not match stored values.
+ * Venue staff share the owner's data: when the active Clerk organization is a
+ * venue, the "convex" JWT template copies its `publicMetadata.venueOwnerId`
+ * into a `venue_owner` claim (see CLAUDE.md → Venue staff). Without one, it's
+ * the caller's own id (`identity.subject`). Do not use `tokenIdentifier` — it
+ * is issuer-prefixed and will not match stored values.
  */
 export async function requireUser(ctx: QueryCtx | MutationCtx): Promise<string> {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) throw new Error("Not authenticated");
-  return identity.subject;
+  const venueOwner = identity.venue_owner;
+  return typeof venueOwner === "string" && venueOwner !== "" ? venueOwner : identity.subject;
 }
 
 /**

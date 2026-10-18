@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useClerk, useUser } from "@clerk/nextjs";
+import { useAuth, useClerk, useUser } from "@clerk/nextjs";
 import { CreditCard, Home, LogOut, Search, Settings, X } from "lucide-react";
 import { useAccess } from "@/hooks/useAccess";
 import { SearchBrowse } from "@/components/layout/SearchBrowse";
@@ -131,6 +131,7 @@ function AccountMenu() {
   // The business type says more about a venue than the login email does.
   const subtitle = access?.profile?.businessType || user?.primaryEmailAddress?.emailAddress || "";
   const logoUrl = access?.profile?.logoUrl;
+  const isCurator = useAuth().orgRole === "org:member"; // see the settings tabs
 
   const item =
     "w-full flex items-center gap-2.5 px-2 py-2 touch:py-3 rounded-md text-xs touch:text-sm font-semibold text-foreground hover:bg-white/5 transition-colors";
@@ -163,10 +164,12 @@ function AccountMenu() {
               <Settings className="w-3.5 h-3.5 text-primary" />
               Venue &amp; settings
             </Link>
-            <Link href="/settings?tab=billing" onClick={() => setOpen(false)} className={item}>
-              <CreditCard className="w-3.5 h-3.5 text-primary" />
-              Plan &amp; billing
-            </Link>
+            {!isCurator && (
+              <Link href="/settings?tab=billing" onClick={() => setOpen(false)} className={item}>
+                <CreditCard className="w-3.5 h-3.5 text-primary" />
+                Plan &amp; billing
+              </Link>
+            )}
             <button
               // Let Clerk own the redirect: it clears the session cookie *then*
               // navigates, so middleware never sees a stale session.
