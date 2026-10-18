@@ -20,3 +20,13 @@ export function formatTotalDuration(seconds: number): string {
   if (minutes < 60) return `${minutes}m`;
   return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
 }
+
+/**
+ * Volume multiplier (0-1) for fading over the first and last `fadeSeconds`
+ * of a track. 1 when fading is off or the length isn't known yet.
+ */
+export function fadeGain(currentTime: number, duration: number, fadeSeconds: number): number {
+  if (fadeSeconds <= 0 || !duration) return 1;
+  const edge = Math.min(currentTime, duration - currentTime);
+  return Math.min(1, Math.max(0, edge / fadeSeconds));
+}

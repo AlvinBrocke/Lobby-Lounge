@@ -2,11 +2,13 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { BillingPanel } from "@/components/settings/BillingPanel";
+import { PreferencesPanel } from "@/components/settings/PreferencesPanel";
 import { VenuePanel } from "@/components/settings/VenuePanel";
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { key: "venue", label: "Venue details" },
+  { key: "preferences", label: "Preferences" },
   { key: "billing", label: "Plan & billing" },
 ] as const;
 type TabKey = (typeof TABS)[number]["key"];
@@ -46,6 +48,7 @@ export default function SettingsPage() {
 
       <div className="px-5 md:px-7 pt-[22px] pb-8">
         {tab === "venue" && <VenuePanel />}
+        {tab === "preferences" && <PreferencesPanel />}
         {tab === "billing" && <BillingPanel />}
       </div>
     </div>
