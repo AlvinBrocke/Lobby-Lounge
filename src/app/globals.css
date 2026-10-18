@@ -270,3 +270,28 @@
 /* Hide a scroll container's scrollbar but keep it scrollable (carousels, panes). */
 .scrollbar-hide { scrollbar-width: none; }
 .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+/* ---- Touch (tablets run most venues) ----
+   `manipulation` drops the double-tap-to-zoom wait, so taps fire immediately;
+   the grey iOS tap flash is replaced by each control's own pressed state. */
+a, button, [role="button"], [role="slider"], input, select, label {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The app shell: no pull-to-refresh (it would reload the page and stop the
+   music) and no long-press text selection on chrome like the nav and player. */
+html:has(.app-shell),
+html:has(.app-shell) body {
+  overscroll-behavior: none;
+}
+/* Inner panes keep their bounce but don't hand the gesture up to the page. */
+.app-shell .overflow-auto,
+.app-shell .overflow-y-auto {
+  overscroll-behavior: contain;
+}
+.app-chrome {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
