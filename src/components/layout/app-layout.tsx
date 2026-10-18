@@ -4,6 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { AnnouncementPlayer } from "@/components/announcements/AnnouncementPlayer";
 import { useAnnouncementSchedule } from "@/hooks/useAnnouncementSchedule";
 import { useScheduleAutoplay } from "@/hooks/useScheduleAutoplay";
+import { GuidedTour } from "@/components/tour/GuidedTour";
 import { PlayerBar } from "./player-bar";
 import { MobileNav, Sidebar } from "./Sidebar";
 import { Topbar } from "./topbar";
@@ -40,9 +41,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       <div className="app-chrome shrink-0 z-50 bg-shell pb-[env(safe-area-inset-bottom)]">
-        <PlayerBar schedule={schedule} />
+        <div data-tour="player-bar">
+          <PlayerBar schedule={schedule} />
+        </div>
         <MobileNav />
       </div>
+
+      <GuidedTour />
     </div>
   );
 }

@@ -53,6 +53,7 @@ function PlaylistSearch() {
   return (
     <div
       ref={boxRef}
+      data-tour="search"
       className="relative flex-1 max-w-[380px]"
       // Keyboard users tabbing out of the search area close the pop-up too.
       onBlur={(e) => {

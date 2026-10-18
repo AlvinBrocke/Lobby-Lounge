@@ -21,6 +21,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Modal } from "@/components/playlists/Modal";
+import { useTour } from "@/components/tour/tour";
 import { supportHref } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -75,6 +76,7 @@ const guides: { label: string; href: string; icon: LucideIcon }[] = [
  */
 export function TourMap() {
   const [open, setOpen] = useState(false);
+  const startTour = useTour((s) => s.start);
   const pathname = usePathname();
   const isHere = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
@@ -82,6 +84,7 @@ export function TourMap() {
     <>
       <button
         onClick={() => setOpen(true)}
+        data-tour="help-button"
         aria-label="Open the tour map: what each page does, guides and FAQs"
         title="Help & tour map"
         className="app-chrome absolute bottom-4 right-4 md:bottom-5 md:right-6 z-[3] w-10 h-10 touch:w-12 touch:h-12 rounded-full bg-primary text-primary-foreground shadow-[0_6px_20px_rgba(0,0,0,0.5)] flex items-center justify-center hover:ring-4 hover:ring-primary/20 transition-shadow"
@@ -101,6 +104,18 @@ export function TourMap() {
             <p className="text-xs text-muted-foreground -mt-3 mb-4">
               Where everything lives. Tap a stop to go there.
             </p>
+
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                startTour();
+              }}
+              className="w-full flex items-center justify-center gap-2 mb-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition-opacity"
+            >
+              <PlayCircle className="w-4 h-4" />
+              Take the guided tour
+            </button>
 
             <nav aria-label="App pages" className="grid sm:grid-cols-2 gap-2">
               {stops.map(({ name, href, icon: Icon, blurb }) => {
