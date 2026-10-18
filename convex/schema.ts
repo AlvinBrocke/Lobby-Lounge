@@ -20,6 +20,9 @@ export default defineSchema({
     region: v.optional(v.string()), // state / province / free text
     locationCount: v.optional(v.number()),
     guestDemographics: v.optional(v.array(v.string())),
+    // Brand profile (Settings → Venue details → Edit brand).
+    logoStorageId: v.optional(v.id("_storage")),
+    brandColor: v.optional(v.string()), // a key of BRAND_COLORS in convex/lib/brand.ts
   }).index("by_clerk_user", ["clerkUserId"]),
 
   tracks: defineTable({

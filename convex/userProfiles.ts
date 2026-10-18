@@ -1,8 +1,9 @@
+import { ConvexError, v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
-import { v } from "convex/values";
 import { requireUser } from "./lib/auth";
 import { TRIAL_DAYS } from "./lib/billing";
+import { BRAND_COLORS, MAX_LOGO_BYTES } from "./lib/brand";
 
 export const createOrUpdate = mutation({
   args: {
@@ -66,10 +67,69 @@ export const get = query({
   args: {},
   handler: async (ctx) => {
     const clerkUserId = await requireUser(ctx);
-    return await ctx.db
+    const profile = await ctx.db
       .query("userProfiles")
       .withIndex("by_clerk_user", (q) => q.eq("clerkUserId", clerkUserId))
       .unique();
+    if (!profile) return null;
+    const logoUrl = profile.logoStorageId ? await ctx.storage.getUrl(profile.logoStorageId) : null;
+    return { ...profile, logoUrl };
+  },
+});
+
+/** Step one of a logo upload: a short-lived URL the browser POSTs the image to. */
+export const generateLogoUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    await requireUser(ctx);
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+/**
+ * Saves the brand profile. `logo`: a new upload's storage id, `null` to
+ * remove the logo, or omitted to keep it. A replaced logo's file is deleted.
+ */
+export const saveBrand = mutation({
+  args: {
+    venueName: v.string(),
+    country: v.optional(v.string()),
+    region: v.optional(v.string()),
+    brandColor: v.string(),
+    logo: v.optional(v.union(v.id("_storage"), v.null())),
+  },
+  handler: async (ctx, args) => {
+    const clerkUserId = await requireUser(ctx);
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_clerk_user", (q) => q.eq("clerkUserId", clerkUserId))
+      .unique();
+    if (!profile) throw new ConvexError("Finish onboarding before editing your brand.");
+    if (!Object.hasOwn(BRAND_COLORS, args.brandColor)) throw new ConvexError("Pick a colour from the list.");
+    const venueName = args.venueName.trim();
+    if (!venueName || venueName.length > 80) throw new ConvexError("Company name must be 1–80 characters.");
+
+    if (args.logo) {
+      // `_storage` is a system table: it has each file's size and content type.
+      const file = await ctx.db.system.get(args.logo);
+      if (!file) throw new ConvexError("That logo upload has expired. Add it again.");
+      // contentType is only known when the upload sent one; the app always does.
+      // shortcut: a rejected upload stays in storage (deleting it here would roll back with the throw); add a cleanup cron if it matters.
+      if ((file.contentType && !file.contentType.startsWith("image/")) || file.size > MAX_LOGO_BYTES) {
+        throw new ConvexError("The logo must be an image smaller than 2 MB.");
+      }
+    }
+    if (args.logo !== undefined && profile.logoStorageId && profile.logoStorageId !== args.logo) {
+      await ctx.storage.delete(profile.logoStorageId);
+    }
+
+    await ctx.db.patch(profile._id, {
+      venueName,
+      country: args.country || undefined,
+      region: args.region?.trim() || undefined,
+      brandColor: args.brandColor,
+      ...(args.logo !== undefined && { logoStorageId: args.logo ?? undefined }),
+    });
   },
 });
 
