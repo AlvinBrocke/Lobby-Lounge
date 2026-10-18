@@ -56,7 +56,7 @@ const stops: Stop[] = [
     name: "Settings",
     href: "/settings",
     icon: Settings,
-    blurb: "Venue details, signed-in devices, and your plan & billing.",
+    blurb: "Venue details and your plan & billing. Forgot your password? Use “Forgot password” on the sign-in page.",
   },
 ];
 
