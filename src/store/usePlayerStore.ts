@@ -27,20 +27,27 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
   queue: [],
   activePlaylistId: null,
   playlistTracks: [],
+  blockedIds: [],
+  repeat: true,
 
+  setBlockedIds: (blockedIds) => set({ blockedIds }),
+  toggleRepeat: () => set((state) => ({ repeat: !state.repeat })),
   setIsPlaying: (isPlaying) => set({ isPlaying }),
   // A single hand-picked track isn't "playing a playlist" any more.
   setCurrentTrack: (track) =>
     set({ currentTrack: track, isPlaying: true, activePlaylistId: null, playlistTracks: [] }),
   playQueue: (tracks, playlistId, startIndex) => {
     // A picked track plays first, then the list continues in order from it;
-    // otherwise the whole playlist is shuffled.
+    // otherwise the whole playlist is shuffled. Blocked tracks are left out,
+    // except one the venue picked by hand.
+    const blocked = new Set(get().blockedIds);
     const order = startIndex === undefined ? shuffle(tracks) : tracks.slice(startIndex);
-    const [first, ...rest] = order;
+    const [first, ...rest] = startIndex === undefined ? order.filter((t) => !blocked.has(t.id)) : order;
+    const queue = rest.filter((t) => !blocked.has(t.id));
     if (!first) return;
     set({
       currentTrack: first,
-      queue: rest,
+      queue,
       isPlaying: true,
       activePlaylistId: playlistId ?? null,
       playlistTracks: playlistId ? tracks : [],
@@ -61,10 +68,13 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
 
   nextTrack: () =>
     set((state) => {
-      // A playlist loops: when the queue runs dry, start a new shuffled pass.
-      const queue =
-        state.queue.length > 0 ? state.queue : reshuffle(state.playlistTracks, state.currentTrack);
-      if (queue.length === 0) return { isPlaying: false, currentTrack: null };
+      const blocked = new Set(state.blockedIds);
+      // With repeat on, a playlist loops: when the queue runs dry, start a new shuffled pass.
+      const queue = (
+        state.queue.length > 0 || !state.repeat ? state.queue : reshuffle(state.playlistTracks, state.currentTrack)
+      ).filter((t) => !blocked.has(t.id));
+      // Repeat off and the playlist is done: stop on the last track rather than hiding the bar.
+      if (queue.length === 0) return state.repeat ? { isPlaying: false, currentTrack: null } : { isPlaying: false };
       const [next, ...rest] = queue;
       // A copy, so a one-track playlist still counts as a new track and replays.
       return { currentTrack: { ...next }, queue: rest, isPlaying: true };
