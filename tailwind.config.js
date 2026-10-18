@@ -166,6 +166,14 @@ module.exports = {
         },
       },
     },
-    plugins: [],
   },
+  plugins: [
+    // Style by input, not width: an iPad Pro is laptop-wide but has no mouse.
+    // `touch:` = finger is the main input; `can-hover:` = a real hover exists,
+    // so hover-revealed controls stay visible everywhere else.
+    ({ addVariant }) => {
+      addVariant("touch", "@media (pointer: coarse)");
+      addVariant("can-hover", "@media (hover: hover)");
+    },
+  ],
 };
