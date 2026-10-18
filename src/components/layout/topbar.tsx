@@ -78,23 +78,41 @@ function PlaylistSearch() {
           setBrowsing(false);
           go(value, false);
         }}
-        placeholder="What do you want to play?"
-        aria-label="Search playlists"
-        // 16px on touch: iOS zooms the whole page when focusing a smaller input.
-        className="w-full rounded-full border border-primary/20 bg-secondary py-[7px] touch:py-2.5 pl-8 pr-8 touch:pr-11 text-xs touch:text-base text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors"
-      />
-      {value && (
-        <button
-          type="button"
-          onClick={() => {
-            setValue("");
-            if (onPlaylists) go("", true);
+        className="relative"
+      >
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-[13px] h-[13px] text-faint pointer-events-none" />
+        <input
+          value={value}
+          onChange={(e) => {
+            setValue(e.target.value);
+            if (onPlaylists) go(e.target.value, true);
           }}
-          aria-label="Clear search"
-          className="absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 touch:w-9 touch:h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground"
-        >
-          <X className="w-3 h-3" />
-        </button>
+          onFocus={() => setBrowsing(true)}
+          onClick={() => setBrowsing(true)}
+          placeholder="What do you want to play?"
+          aria-label="Search playlists"
+          aria-expanded={browsing && !value}
+          aria-controls="search-browse"
+          // 16px on touch: iOS zooms the whole page when focusing a smaller input.
+          className="w-full rounded-full border border-primary/20 bg-secondary py-[7px] touch:py-2.5 pl-8 pr-8 touch:pr-11 text-xs touch:text-base text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors"
+        />
+        {value && (
+          <button
+            type="button"
+            onClick={() => {
+              setValue("");
+              if (onPlaylists) go("", true);
+            }}
+            aria-label="Clear search"
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 touch:w-9 touch:h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        )}
+      </form>
+      {/* Only while the box is empty: once typing starts, the Playlists page filters live. */}
+      {browsing && !value && (
+        <SearchBrowse id="search-browse" onPick={pick} onNavigate={() => setBrowsing(false)} />
       )}
     </div>
   );
