@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { cn, formatDuration, formatTotalDuration } from "./utils";
+import { cn, fadeGain, formatDuration, formatTotalDuration } from "./utils";
 
 describe("cn", () => {
   it("returns a single class unchanged", () => {
@@ -45,5 +45,19 @@ describe("formatTotalDuration", () => {
     expect(formatTotalDuration(0)).toBe("0m");
     expect(formatTotalDuration(58 * 60)).toBe("58m");
     expect(formatTotalDuration(72 * 60)).toBe("1h 12m");
+  });
+});
+
+describe("fadeGain", () => {
+  it("is 1 when fading is off or the duration is unknown", () => {
+    expect(fadeGain(0, 200, 0)).toBe(1);
+    expect(fadeGain(0, NaN, 6)).toBe(1);
+  });
+  it("ramps up over the first seconds and down over the last", () => {
+    expect(fadeGain(0, 200, 6)).toBe(0);
+    expect(fadeGain(3, 200, 6)).toBe(0.5);
+    expect(fadeGain(100, 200, 6)).toBe(1);
+    expect(fadeGain(197, 200, 6)).toBe(0.5);
+    expect(fadeGain(200, 200, 6)).toBe(0);
   });
 });

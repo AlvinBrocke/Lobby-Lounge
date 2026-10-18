@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { soundSettings } from "./lib/sound";
 
 export default defineSchema({
   userProfiles: defineTable({
@@ -23,6 +24,9 @@ export default defineSchema({
     // Brand profile (Settings → Venue details → Edit brand).
     logoStorageId: v.optional(v.id("_storage")),
     brandColor: v.optional(v.string()), // a key of BRAND_COLORS in convex/lib/brand.ts
+    // Settings → Preferences. Tempo matches track `energy`.
+    tempo: v.optional(v.union(v.literal("low"), v.literal("mid"), v.literal("high"))),
+    sound: v.optional(soundSettings),
   }).index("by_clerk_user", ["clerkUserId"]),
 
   tracks: defineTable({
