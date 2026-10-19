@@ -111,4 +111,14 @@ export default defineSchema({
     everyMinutes: v.optional(v.number()),
     interruptMusic: v.boolean(),
   }).index("by_clerk_user", ["clerkUserId"]),
+
+  // Settings → Activity log. Append-only, written by `logActivity` in
+  // convex/lib/activity.ts after a venue's mutation succeeds.
+  // shortcut: rows are never pruned, add a cron that deletes rows older than 90 days once tables grow.
+  activity: defineTable({
+    clerkUserId: v.string(), // venue owner (what requireUser returns)
+    actorId: v.string(), // identity.subject of the person who did it
+    actorName: v.string(),
+    summary: v.string(), // e.g. 'Moved "Morning Jazz" to Tue 9 am'
+  }).index("by_clerk_user", ["clerkUserId"]),
 });

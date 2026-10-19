@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
+import { ActivityPanel } from "@/components/settings/ActivityPanel";
 import { BillingPanel } from "@/components/settings/BillingPanel";
 import { StaffPanel } from "@/components/settings/StaffPanel";
 import { PreferencesPanel } from "@/components/settings/PreferencesPanel";
@@ -53,6 +54,7 @@ export default function SettingsPage() {
         {tab === "staff" && <StaffPanel />}
         {tab === "preferences" && <PreferencesPanel />}
         {tab === "billing" && <BillingPanel />}
+        {tab === "activity" && <ActivityPanel />}
       </div>
     </div>
   );

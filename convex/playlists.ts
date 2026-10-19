@@ -2,6 +2,7 @@ import { internalMutation, internalQuery, mutation, query } from "./_generated/s
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
+import { logActivity } from "./lib/activity";
 import { assertOwner, canPlay, requireUser } from "./lib/auth";
 import { energyForCategory, type Energy } from "./lib/energy";
 import { CURATED_PLAYLISTS, appendTracksTo } from "./lib/curated";
@@ -144,13 +145,16 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const clerkUserId = await requireUser(ctx);
-    return await ctx.db.insert("playlists", {
+    const name = cleanName(args.name);
+    const id = await ctx.db.insert("playlists", {
       clerkUserId,
-      name: cleanName(args.name),
+      name,
       description: cleanDescription(args.description),
       coverImage: args.coverImage,
       isPublic: args.isPublic ?? false,
     });
+    await logActivity(ctx, clerkUserId, `Created playlist "${name}"`);
+    return id;
   },
 });
 
@@ -166,7 +170,7 @@ export const update = mutation({
     const clerkUserId = await requireUser(ctx);
     const { id, ...fields } = args;
 
-    await ownedPlaylist(ctx, id, clerkUserId);
+    const playlist = await ownedPlaylist(ctx, id, clerkUserId);
 
     if (fields.name !== undefined) fields.name = cleanName(fields.name);
     fields.description = cleanDescription(fields.description);
@@ -175,6 +179,7 @@ export const update = mutation({
       Object.entries(fields).filter(([, v]) => v !== undefined),
     );
     await ctx.db.patch(id, patch);
+    await logActivity(ctx, clerkUserId, `Updated playlist "${fields.name ?? playlist.name}"`);
   },
 });
 
@@ -182,7 +187,7 @@ export const remove = mutation({
   args: { id: v.id("playlists") },
   handler: async (ctx, args) => {
     const clerkUserId = await requireUser(ctx);
-    await ownedPlaylist(ctx, args.id, clerkUserId);
+    const playlist = await ownedPlaylist(ctx, args.id, clerkUserId);
 
     // Remove all tracks from playlist first
     const tracks = await ctx.db
@@ -193,6 +198,7 @@ export const remove = mutation({
       await ctx.db.delete(t._id);
     }
     await ctx.db.delete(args.id);
+    await logActivity(ctx, clerkUserId, `Deleted playlist "${playlist.name}"`);
   },
 });
 

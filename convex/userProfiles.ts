@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
+import { logActivity } from "./lib/activity";
 import { requireUser } from "./lib/auth";
 import { TRIAL_DAYS } from "./lib/billing";
 import { BRAND_COLORS, MAX_LOGO_BYTES } from "./lib/brand";
@@ -150,6 +151,7 @@ export const saveBrand = mutation({
       brandColor: args.brandColor,
       ...(args.logo !== undefined && { logoStorageId: args.logo ?? undefined }),
     });
+    await logActivity(ctx, clerkUserId, "Updated the venue brand");
   },
 });
 
