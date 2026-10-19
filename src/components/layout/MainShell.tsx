@@ -6,12 +6,14 @@ import { BRAND_COLORS, type BrandColor } from "@convex/lib/brand";
 import { AppLayout } from "@/components/layout/app-layout";
 import { useAccess } from "@/hooks/useAccess";
 import { useIdleTimeout } from "@/hooks/useIdleTimeout";
+import { useApplyTheme } from "@/hooks/useTheme";
 
 // Client half of the (main) layout: hooks live here so the layout itself can
 // stay a Server Component and verify the session before rendering anything.
 export function MainShell({ children }: { children: React.ReactNode }) {
   useIdleTimeout();
   useBrandColor();
+  useApplyTheme();
   return <AppLayout>{children}</AppLayout>;
 }
 

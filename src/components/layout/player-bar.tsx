@@ -145,7 +145,7 @@ function Transport({
   big?: boolean;
 }) {
   const side =
-    "p-1 touch:p-3 rounded-full text-muted-foreground hover:text-foreground active:bg-white/5 transition-colors disabled:opacity-40";
+    "p-1 touch:p-3 rounded-full text-muted-foreground hover:text-foreground active:bg-foreground/5 transition-colors disabled:opacity-40";
   const icon = big ? "w-[22px] h-[22px] touch:w-7 touch:h-7" : "w-4 h-4 touch:w-5 touch:h-5";
   return (
     <div className={cn("flex items-center", big ? "gap-[22px] touch:gap-6" : "gap-3.5 touch:gap-2")}>
@@ -493,12 +493,12 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
             role="dialog"
             aria-label="Now playing"
             onClick={(e) => e.stopPropagation()}
-            className="relative w-[360px] touch:w-[min(520px,90vw)] flex flex-col items-center gap-4 touch:gap-6 px-8 pt-7 pb-6 touch:pb-8 rounded-[18px] bg-secondary border border-white/10 shadow-[0_32px_80px_rgba(0,0,0,0.75)]"
+            className="relative w-[360px] touch:w-[min(520px,90vw)] flex flex-col items-center gap-4 touch:gap-6 px-8 pt-7 pb-6 touch:pb-8 rounded-[18px] bg-secondary border border-foreground/10 shadow-[0_32px_80px_rgba(0,0,0,0.75)]"
           >
             <button
               onClick={() => setExpanded(false)}
               aria-label="Close"
-              className="absolute top-3.5 right-3.5 w-[26px] h-[26px] touch:w-11 touch:h-11 rounded-full bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
+              className="absolute top-3.5 right-3.5 w-[26px] h-[26px] touch:w-11 touch:h-11 rounded-full bg-foreground/5 hover:bg-foreground/10 text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
             >
               <X className="w-3.5 h-3.5 touch:w-5 touch:h-5" />
             </button>
@@ -586,7 +586,7 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
               onClick={() => setShowQueue(true)}
               title="Up next"
               aria-label="Show up next"
-              className="lg:hidden p-2 touch:p-3 rounded-md text-faint hover:text-foreground active:bg-white/5 transition-colors"
+              className="lg:hidden p-2 touch:p-3 rounded-md text-faint hover:text-foreground active:bg-foreground/5 transition-colors"
             >
               <ListMusic className="w-[15px] h-[15px] touch:w-5 touch:h-5" />
             </button>
@@ -614,7 +614,7 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
                 (volumeSupported ? (
                   // Vertical strip with a mouse; on touch a wider horizontal slider
                   // is far easier to drag. Anchored right so it stays on screen.
-                  <div className="absolute bottom-[calc(100%+10px)] left-1/2 -translate-x-1/2 w-9 px-2.5 py-3.5 flex flex-col items-center gap-2 touch:left-auto touch:right-0 touch:translate-x-0 touch:w-auto touch:flex-row-reverse touch:px-4 touch:py-3 touch:gap-3 rounded-[10px] bg-secondary border border-white/10 shadow-[0_-8px_28px_rgba(0,0,0,0.55)] z-50">
+                  <div className="absolute bottom-[calc(100%+10px)] left-1/2 -translate-x-1/2 w-9 px-2.5 py-3.5 flex flex-col items-center gap-2 touch:left-auto touch:right-0 touch:translate-x-0 touch:w-auto touch:flex-row-reverse touch:px-4 touch:py-3 touch:gap-3 rounded-[10px] bg-secondary border border-foreground/10 shadow-[0_-8px_28px_rgba(0,0,0,0.55)] z-50">
                     <span className="text-[9px] touch:text-xs touch:w-6 touch:text-right font-bold font-mono text-primary/60">{volume}</span>
                     <input
                       type="range"
@@ -631,7 +631,7 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
                   // iPad/iPhone: the browser can't change the volume, only the buttons can.
                   <div
                     role="note"
-                    className="absolute bottom-[calc(100%+10px)] right-0 w-56 px-4 py-3 rounded-[10px] bg-secondary border border-white/10 shadow-[0_-8px_28px_rgba(0,0,0,0.55)] z-50 text-[13px] leading-snug text-muted-foreground"
+                    className="absolute bottom-[calc(100%+10px)] right-0 w-56 px-4 py-3 rounded-[10px] bg-secondary border border-foreground/10 shadow-[0_-8px_28px_rgba(0,0,0,0.55)] z-50 text-[13px] leading-snug text-muted-foreground"
                   >
                     <span className="font-semibold text-foreground">Use the tablet&apos;s volume buttons.</span>{" "}
                     iPad doesn&apos;t let web apps change the volume.
@@ -656,7 +656,7 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
               <button
                 onClick={() => setShowQueue(false)}
                 aria-label="Close"
-                className="w-11 h-11 -mr-1 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground active:bg-white/5"
+                className="w-11 h-11 -mr-1 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground active:bg-foreground/5"
               >
                 <X className="w-5 h-5" />
               </button>

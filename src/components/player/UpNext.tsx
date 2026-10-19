@@ -8,7 +8,7 @@ import usePlayerStore from "@/store/usePlayerStore";
 
 /** Shared look for the two stacked panels (nav + queue). */
 export const panel =
-  "rounded-[10px] border border-white/5 bg-card shadow-[0_2px_12px_rgba(0,0,0,0.35)]";
+  "rounded-[10px] border border-foreground/5 bg-card shadow-[0_2px_12px_rgba(0,0,0,0.35)]";
 
 function Cover({ src, alt, className }: { src: string; alt: string; className: string }) {
   return (
@@ -89,7 +89,7 @@ export function UpNext({ className }: { className?: string }) {
             }}
             onDragEnd={() => setDragged(null)}
             className={cn(
-              "flex items-center gap-[7px] px-1.5 py-[5px] mb-[3px] rounded-md border-t border-transparent hover:bg-white/5 transition-colors",
+              "flex items-center gap-[7px] px-1.5 py-[5px] mb-[3px] rounded-md border-t border-transparent hover:bg-foreground/5 transition-colors",
               dragged === i ? "opacity-40 cursor-grabbing" : "cursor-grab",
               dragged !== null && dragged !== i && "border-primary/20",
             )}

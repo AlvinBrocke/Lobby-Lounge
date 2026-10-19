@@ -28,7 +28,7 @@ export default function AppNotFound() {
 
       <Link
         href="/dashboard"
-        className="px-5 py-2.5 bg-primary text-[#04201d] rounded-xl text-sm font-bold hover:opacity-90 transition-opacity"
+        className="px-5 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-bold hover:opacity-90 transition-opacity"
       >
         Back to Dashboard
       </Link>

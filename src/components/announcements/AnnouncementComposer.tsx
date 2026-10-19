@@ -45,17 +45,17 @@ const SOURCES: { id: Source; label: string; detail: string }[] = [
 ];
 
 const field =
-  "w-full px-3 py-2.5 bg-card border border-white/[0.08] rounded-lg text-xs text-foreground placeholder:text-faint outline-none focus:ring-2 focus:ring-primary/40 transition";
+  "w-full px-3 py-2.5 bg-card border border-foreground/[0.08] rounded-lg text-xs text-foreground placeholder:text-faint outline-none focus:ring-2 focus:ring-primary/40 transition";
 const label = "block mb-1.5 text-[9px] font-bold text-muted-foreground";
 const choice = (active: boolean) =>
   cn(
     "text-left rounded-lg border transition-colors",
-    active ? "border-primary bg-primary/10" : "border-white/[0.07] bg-card hover:border-white/15",
+    active ? "border-primary bg-primary/10" : "border-foreground/[0.07] bg-card hover:border-foreground/15",
   );
 const primary =
   "px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-[11px] font-extrabold hover:opacity-90 transition-opacity disabled:opacity-45 disabled:cursor-not-allowed";
 const secondary =
-  "px-3 py-[9px] rounded-lg border border-white/10 text-[11px] text-muted-foreground hover:text-foreground transition-colors disabled:opacity-45 disabled:cursor-not-allowed";
+  "px-3 py-[9px] rounded-lg border border-foreground/10 text-[11px] text-muted-foreground hover:text-foreground transition-colors disabled:opacity-45 disabled:cursor-not-allowed";
 
 /** Reads an audio blob's length in seconds, or null if the browser can't decode it. */
 function audioSeconds(url: string): Promise<number | null> {
@@ -293,7 +293,7 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
     <Modal
       title={editing ? "Edit announcement" : "New announcement"}
       onClose={close}
-      className="bg-secondary border-white/[0.08] max-w-[560px] max-h-[85vh] overflow-y-auto"
+      className="bg-secondary border-foreground/[0.08] max-w-[560px] max-h-[85vh] overflow-y-auto"
     >
       {/* Steps */}
       <div className="flex items-center gap-2 mb-[18px]">
@@ -310,7 +310,7 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
             <span className={cn("text-[10px] font-bold", step === n ? "text-foreground" : "text-faint")}>
               {n === 1 ? "Create message" : "Schedule"}
             </span>
-            {n === 1 && <span className={cn("flex-1 h-px", step === 2 ? "bg-primary/25" : "bg-white/[0.07]")} />}
+            {n === 1 && <span className={cn("flex-1 h-px", step === 2 ? "bg-primary/25" : "bg-foreground/[0.07]")} />}
           </Fragment>
         ))}
       </div>
@@ -423,7 +423,7 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
           )}
 
           {source === "record" && (
-            <div className="p-3.5 rounded-[10px] bg-card border border-white/[0.06]">
+            <div className="p-3.5 rounded-[10px] bg-card border border-foreground/[0.06]">
               <span className={cn(label, "mb-2")}>Maximum recording time</span>
               <div className="flex gap-[7px] mb-3.5">
                 {RECORDING_LIMITS.map((seconds) => (
@@ -440,7 +440,7 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
                       "flex-1 p-2 rounded-[7px] border text-[10px] font-extrabold disabled:cursor-default",
                       recordingLimit === seconds
                         ? "border-primary bg-primary/10 text-primary"
-                        : "border-white/[0.07] bg-secondary text-muted-foreground",
+                        : "border-foreground/[0.07] bg-secondary text-muted-foreground",
                     )}
                   >
                     {seconds} sec
@@ -490,7 +490,7 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
           )}
 
           {source === "upload" && (
-            <div className="p-3.5 rounded-[10px] bg-card border border-white/[0.06]">
+            <div className="p-3.5 rounded-[10px] bg-card border border-foreground/[0.06]">
               <div className="text-[11px] font-extrabold text-foreground">Upload a short voiceover</div>
               <div className="text-[8.5px] text-muted-foreground leading-normal mt-1">
                 MP3, WAV, M4A, or WebM · up to {MAX_AUDIO_SECONDS} seconds · maximum 10 MB
@@ -600,7 +600,7 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
                     onClick={() => setDays((d) => (active ? d.filter((x) => x !== day) : [...d, day]))}
                     className={cn(
                       "flex-1 py-2 rounded-[7px] border text-[9px] font-extrabold",
-                      active ? "border-primary bg-primary/10 text-primary" : "border-white/[0.07] bg-card text-faint",
+                      active ? "border-primary bg-primary/10 text-primary" : "border-foreground/[0.07] bg-card text-faint",
                     )}
                   >
                     {day}

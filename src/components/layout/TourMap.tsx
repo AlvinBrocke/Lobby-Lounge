@@ -130,7 +130,7 @@ export function TourMap() {
                       "flex gap-3 p-3 rounded-xl border transition-colors",
                       here
                         ? "border-primary/40 bg-primary/10"
-                        : "border-white/5 bg-secondary hover:border-primary/30",
+                        : "border-foreground/5 bg-secondary hover:border-primary/30",
                     )}
                   >
                     <span className="w-9 h-9 shrink-0 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
@@ -150,7 +150,7 @@ export function TourMap() {
                   </Link>
                 );
               })}
-              <div className="flex gap-3 p-3 rounded-xl border border-dashed border-white/10">
+              <div className="flex gap-3 p-3 rounded-xl border border-dashed border-foreground/10">
                 <span className="w-9 h-9 shrink-0 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
                   <PlayCircle className="w-[18px] h-[18px]" strokeWidth={1.8} />
                 </span>

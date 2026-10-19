@@ -132,7 +132,7 @@ export function MobileNav() {
   const liveCount = useLiveAnnouncementCount();
 
   return (
-    <nav className="app-chrome md:hidden flex border-t border-white/5 bg-shell">
+    <nav className="app-chrome md:hidden flex border-t border-foreground/5 bg-shell">
       {navItems.map((item) => {
         const Icon = item.icon;
         const active = isActive(item.href);

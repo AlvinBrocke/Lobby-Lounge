@@ -59,7 +59,7 @@ export function PlaylistCard({
         className={cn(
           "block overflow-hidden rounded-[11px] border bg-card transition-all duration-150",
           "shadow-[0_4px_14px_rgba(0,0,0,0.3)] can-hover:hover:-translate-y-0.5 can-hover:hover:shadow-[0_12px_28px_rgba(0,0,0,0.5)]",
-          active ? "border-primary/30" : "border-white/5",
+          active ? "border-primary/30" : "border-foreground/5",
         )}
       >
         <span className="relative block h-28 overflow-hidden bg-secondary">
