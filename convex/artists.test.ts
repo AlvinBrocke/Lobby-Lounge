@@ -2,6 +2,7 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
+import { SCAN_LIMIT } from "./artists";
 
 const USER = "user_artists1";
 
@@ -95,6 +96,17 @@ describe("artists", () => {
     expect(res!.tracks.map((tr) => tr.name)).toEqual(["N1", "N2", "N3", "N4"]);
     expect(res!.artist.trackCount).toBe(4);
     expect((await asUser.query(api.artists.albums, {}))[0]).toMatchObject({ album: "Blue", trackCount: 2 });
+  });
+
+  it("stops scanning at SCAN_LIMIT so a huge catalogue degrades instead of throwing", async () => {
+    const { t, asUser } = await setup();
+    await t.run(async (ctx) => {
+      for (let i = 0; i < SCAN_LIMIT; i++) await ctx.db.insert("tracks", { name: `F${i}`, artist: "Filler" });
+      await ctx.db.insert("tracks", { name: "Late", artist: "Latecomer" }); // past the cap
+    });
+    const names = (await asUser.query(api.artists.list, { limit: 50 })).map((a) => a.name);
+    expect(names).toContain("Nora");
+    expect(names).not.toContain("Latecomer");
   });
 
   it("requires sign-in", async () => {

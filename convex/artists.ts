@@ -25,10 +25,17 @@ function firstOfEachSong<T extends { name: string }>(tracks: T[]): T[] {
   return tracks.filter((t) => !seen.has(t.name) && Boolean(seen.add(t.name)));
 }
 
-// shortcut: scans the whole catalogue (~1–2k rows) per call, precompute an artists table in the Jamendo sync if it passes ~10k.
+/**
+ * Most tracks `list`, `related` and `albums` read per call. Convex fails a query
+ * past 16,384 documents, which would take the Playlists and Library pages down
+ * with it; past this cap they show a partial list instead.
+ */
+export const SCAN_LIMIT = 8000;
+
+// shortcut: scans up to SCAN_LIMIT tracks per call, precompute an artists table in the Jamendo sync before the catalogue nears it.
 async function allArtists(ctx: QueryCtx): Promise<ArtistSummary[]> {
   const byName = new Map<string, ArtistSummary & { songs: Set<string> }>();
-  for (const track of await ctx.db.query("tracks").collect()) {
+  for (const track of await ctx.db.query("tracks").take(SCAN_LIMIT)) {
     if (!track.artist) continue;
     const artist = byName.get(track.artist) ?? { name: track.artist, trackCount: 0, categories: [], songs: new Set<string>() };
     artist.songs.add(track.name);
@@ -99,8 +106,8 @@ export const albums = query({
   handler: async (ctx, args) => {
     await requireUser(ctx);
     const byKey = new Map<string, { album: string; artist: string; trackCount: number; coverImage?: string; songs: Set<string> }>();
-    // shortcut: same full-catalogue scan as `allArtists`.
-    for (const track of await ctx.db.query("tracks").collect()) {
+    // shortcut: same capped scan as `allArtists`.
+    for (const track of await ctx.db.query("tracks").take(SCAN_LIMIT)) {
       if (!track.album || !track.artist) continue;
       const key = `${track.artist}\u0000${track.album}`;
       const album = byKey.get(key) ?? { album: track.album, artist: track.artist, trackCount: 0, coverImage: undefined, songs: new Set<string>() };

@@ -8,3 +8,9 @@ describe("artistHref", () => {
     expect(artistFromParam(href.slice("/artists/".length))).toBe(name);
   });
 });
+
+describe("artistFromParam", () => {
+  it("keeps an already-decoded name containing % instead of throwing", () => {
+    expect(artistFromParam("100%")).toBe("100%");
+  });
+});
