@@ -39,7 +39,9 @@ export default defineSchema({
     energy: v.optional(v.string()), // 'low' | 'mid' | 'high'
     audioUrl: v.optional(v.string()),
     coverImage: v.optional(v.string()),
-  }).searchIndex("search_name", { searchField: "name" }),
+  })
+    .searchIndex("search_name", { searchField: "name" })
+    .index("by_artist", ["artist"]),
 
   playlists: defineTable({
     // Absent on curated playlists, which ship with the app and have no owner.

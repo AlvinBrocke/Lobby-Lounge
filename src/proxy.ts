@@ -11,6 +11,7 @@ const isProtectedRoute = createRouteMatcher([
   "/settings(.*)",
   "/announcements(.*)",
   "/tasks(.*)",
+  "/artists(.*)",
 ]);
 
 const isOnboardingRoute = createRouteMatcher(["/signup/onboarding(.*)"]);
