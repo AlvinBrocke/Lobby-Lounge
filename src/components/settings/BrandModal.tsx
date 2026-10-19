@@ -77,7 +77,7 @@ export function BrandModal({ profile, onClose }: { profile: Profile; onClose: ()
   return (
     <Modal title="Brand your company profile" onClose={onClose} className="max-w-md">
       <div className="space-y-4">
-        <div className="flex items-center gap-3.5 rounded-xl border border-white/5 bg-secondary p-3.5">
+        <div className="flex items-center gap-3.5 rounded-xl border border-foreground/5 bg-secondary p-3.5">
           <VenueAvatar
             name={venueName || "Your venue"}
             logoUrl={preview}

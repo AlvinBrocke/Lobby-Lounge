@@ -14,5 +14,14 @@ export default async function MainLayout({
   // Mirrors the onboarding gate in src/proxy.ts. Users whose Convex profile is
   // complete but whose claim isn't set yet get it backfilled on that page.
   if (!session.onboardingComplete) redirect("/signup/onboarding");
-  return <MainShell>{children}</MainShell>;
+  return (
+    <>
+      {/* Runs during HTML parsing, before first paint, so a light-mode device
+          never flashes dark while React hydrates. Same key as useTheme. */}
+      <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      <MainShell>{children}</MainShell>
+    </>
+  );
 }
+
+const THEME_SCRIPT = `try{var t=localStorage.getItem("ll-theme");if(t==="light"||(t==="system"&&!matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.remove("dark")}catch(e){}`;

@@ -46,7 +46,7 @@ export function BillingPanel() {
 
   return (
     <div className="max-w-[820px] space-y-3">
-      <div className="rounded-xl border border-white/[0.06] p-[22px] shadow-[0_6px_24px_rgba(0,0,0,0.24)] bg-secondary bg-[radial-gradient(circle_at_90%_0%,hsl(var(--primary)/0.13),transparent_35%)]">
+      <div className="rounded-xl border border-foreground/[0.06] p-[22px] shadow-[0_6px_24px_rgba(0,0,0,0.24)] bg-secondary bg-[radial-gradient(circle_at_90%_0%,hsl(var(--primary)/0.13),transparent_35%)]">
         <div className="flex flex-col md:flex-row justify-between items-start gap-6">
           <div>
             {state ? (

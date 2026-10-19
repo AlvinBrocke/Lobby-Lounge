@@ -29,13 +29,13 @@ function group(a: Announcement, now: Date): Filter {
 // Status colours from the design: teal = live, amber = scheduled, slate = draft.
 const ACCENT: Record<Filter, { text: string; bg: string; border: string; dot: string }> = {
   live: { text: "text-primary", bg: "bg-primary/[0.12]", border: "border-l-primary", dot: "bg-primary shadow-[0_0_8px_hsl(var(--primary))]" },
-  scheduled: { text: "text-warning-500", bg: "bg-warning-500/[0.12]", border: "border-l-warning-500", dot: "bg-warning-500" },
+  scheduled: { text: "text-warning-700 dark:text-warning-500", bg: "bg-warning-500/[0.12]", border: "border-l-warning-500", dot: "bg-warning-500" },
   draft: { text: "text-faint", bg: "bg-muted-foreground/[0.08]", border: "border-l-faint", dot: "bg-faint" },
 };
 
 const FILTERS = [
   { id: "live", label: "Live", icon: PlayCircle, colour: "text-primary" },
-  { id: "scheduled", label: "Scheduled", icon: Calendar, colour: "text-warning-500" },
+  { id: "scheduled", label: "Scheduled", icon: Calendar, colour: "text-warning-700 dark:text-warning-500" },
   { id: "draft", label: "Drafts", icon: PencilLine, colour: "text-muted-foreground" },
 ] as const;
 
@@ -46,7 +46,7 @@ const EMPTY: Record<Filter, string> = {
 };
 
 const iconButton =
-  "px-[7px] py-[5px] rounded-md border leading-none transition-colors bg-white/[0.04] border-white/[0.07] hover:bg-white/[0.08] hover:text-foreground";
+  "px-[7px] py-[5px] rounded-md border leading-none transition-colors bg-foreground/[0.04] border-foreground/[0.07] hover:bg-foreground/[0.08] hover:text-foreground";
 
 export default function AnnouncementsPage() {
   const { isAuthenticated } = useConvexAuth();
@@ -97,7 +97,7 @@ export default function AnnouncementsPage() {
             aria-pressed={filter === id}
             className={cn(
               "text-left rounded-[10px] border px-3.5 py-3 shadow-[0_2px_10px_rgba(0,0,0,0.3)] transition-colors",
-              filter === id ? "bg-primary/10 border-primary/20" : "bg-secondary border-white/5 hover:border-white/10",
+              filter === id ? "bg-primary/10 border-primary/20" : "bg-secondary border-foreground/5 hover:border-foreground/10",
             )}
           >
             <div className="flex items-center justify-between mb-1.5">
@@ -129,7 +129,7 @@ export default function AnnouncementsPage() {
             <div
               key={a._id}
               className={cn(
-                "bg-secondary rounded-xl border border-white/5 border-l-[3px] overflow-hidden transition-shadow",
+                "bg-secondary rounded-xl border border-foreground/5 border-l-[3px] overflow-hidden transition-shadow",
                 accent.border,
                 status === "live" && !a.paused
                   ? "shadow-[0_4px_20px_hsl(var(--primary)/0.08)]"
@@ -195,7 +195,7 @@ export default function AnnouncementsPage() {
               </div>
 
               {isExpanded && (
-                <div className="px-4 pb-4 border-t border-white/5">
+                <div className="px-4 pb-4 border-t border-foreground/5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3.5">
                     <div className="sm:col-span-2 bg-card rounded-lg px-3.5 py-3">
                       <div className="text-[9px] font-bold text-faint uppercase tracking-[0.1em] mb-1.5">
@@ -219,7 +219,7 @@ export default function AnnouncementsPage() {
                     <div className="bg-card rounded-lg px-3.5 py-3 flex items-center gap-2">
                       <button
                         onClick={() => setComposer({ editing: a })}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border border-white/10 text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border border-foreground/10 text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
                       >
                         <PencilLine className="w-3.5 h-3.5" />
                         {a.status === "draft" ? "Edit & schedule" : "Edit"}
@@ -227,7 +227,7 @@ export default function AnnouncementsPage() {
                       <button
                         onClick={() => setDeleting(a)}
                         aria-label={`Delete ${a.title}`}
-                        className="px-3 py-2 rounded-lg border border-white/10 text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors"
+                        className="px-3 py-2 rounded-lg border border-foreground/10 text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>

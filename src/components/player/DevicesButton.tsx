@@ -84,7 +84,7 @@ export function DevicesButton({ audioRef, disabled }: { audioRef: RefObject<HTML
   }
 
   const item =
-    "w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left text-xs text-foreground hover:bg-white/5 transition-colors";
+    "w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left text-xs text-foreground hover:bg-foreground/5 transition-colors";
 
   return (
     <div ref={ref} className="relative">
@@ -109,7 +109,7 @@ export function DevicesButton({ audioRef, disabled }: { audioRef: RefObject<HTML
       {(open || error) && (
         <div
           role={error ? "alert" : "menu"}
-          className="absolute bottom-[calc(100%+10px)] right-0 w-60 p-1.5 rounded-[10px] bg-secondary border border-white/10 shadow-[0_-8px_28px_rgba(0,0,0,0.55)] z-50"
+          className="absolute bottom-[calc(100%+10px)] right-0 w-60 p-1.5 rounded-[10px] bg-secondary border border-foreground/10 shadow-[0_-8px_28px_rgba(0,0,0,0.55)] z-50"
         >
           {error ? (
             <p className="px-3 py-2 text-xs text-muted-foreground">{error}</p>

@@ -15,7 +15,7 @@ type SectionKey = "mine" | "daytime" | "evening" | "genres" | "liked" | "blocked
 type ReactionRow = FunctionReturnType<typeof api.trackReactions.listMine>[number];
 
 const card =
-  "bg-secondary border border-white/5 rounded-xl shadow-[0_2px_14px_rgba(0,0,0,0.4)] transition-all duration-150";
+  "bg-secondary border border-foreground/5 rounded-xl shadow-[0_2px_14px_rgba(0,0,0,0.4)] transition-all duration-150";
 
 function PlaylistList({ playlists }: { playlists: PlaylistSummary[] }) {
   if (playlists.length === 0) {
@@ -27,7 +27,7 @@ function PlaylistList({ playlists }: { playlists: PlaylistSummary[] }) {
         <Link
           key={p._id}
           href={`/playlists/${p._id}`}
-          className="flex items-center gap-3.5 px-3.5 py-2.5 rounded-[10px] bg-secondary border border-white/5 shadow-[0_2px_10px_rgba(0,0,0,0.3)] hover:bg-card transition-colors"
+          className="flex items-center gap-3.5 px-3.5 py-2.5 rounded-[10px] bg-secondary border border-foreground/5 shadow-[0_2px_10px_rgba(0,0,0,0.3)] hover:bg-card transition-colors"
         >
           <PlaylistCover src={p.coverImage} alt="" className="w-[52px] h-[52px] rounded-md shrink-0" iconClassName="w-5 h-5" />
           <div className="flex-1 min-w-0">
@@ -38,7 +38,7 @@ function PlaylistList({ playlists }: { playlists: PlaylistSummary[] }) {
                 .join(" · ")}
             </div>
           </div>
-          <span className="text-[10px] font-semibold text-muted-foreground bg-black/30 rounded px-2 py-[3px] shrink-0">
+          <span className="text-[10px] font-semibold text-muted-foreground bg-foreground/10 rounded px-2 py-[3px] shrink-0">
             {ENERGY_LABELS[p.energy]}
           </span>
         </Link>
@@ -56,7 +56,7 @@ function TrackList({ tracks, empty, undoLabel }: { tracks: ReactionRow[]; empty:
       {tracks.map((t) => (
         <div
           key={t.trackId}
-          className="flex items-center gap-3.5 px-3.5 py-2.5 rounded-[10px] bg-secondary border border-white/5 shadow-[0_2px_10px_rgba(0,0,0,0.3)]"
+          className="flex items-center gap-3.5 px-3.5 py-2.5 rounded-[10px] bg-secondary border border-foreground/5 shadow-[0_2px_10px_rgba(0,0,0,0.3)]"
         >
           <PlaylistCover src={t.coverImage} alt="" className="w-[44px] h-[44px] rounded-md shrink-0" iconClassName="w-4 h-4" />
           <div className="flex-1 min-w-0">

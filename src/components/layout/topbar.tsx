@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth, useClerk, useUser } from "@clerk/nextjs";
-import { CreditCard, Home, LogOut, Search, Settings, X } from "lucide-react";
+import { CreditCard, Home, LogOut, Monitor, Moon, Search, Settings, Sun, X } from "lucide-react";
 import { useAccess } from "@/hooks/useAccess";
+import { type Theme, useTheme } from "@/hooks/useTheme";
 import { SearchBrowse } from "@/components/layout/SearchBrowse";
 import { VenueAvatar } from "@/components/layout/VenueAvatar";
 
@@ -135,7 +136,7 @@ function AccountMenu() {
   const isCurator = useAuth().orgRole === "org:member"; // see the settings tabs
 
   const item =
-    "w-full flex items-center gap-2.5 px-2 py-2 touch:py-3 rounded-md text-xs touch:text-sm font-semibold text-foreground hover:bg-white/5 transition-colors";
+    "w-full flex items-center gap-2.5 px-2 py-2 touch:py-3 rounded-md text-xs touch:text-sm font-semibold text-foreground hover:bg-foreground/5 transition-colors";
 
   return (
     <div ref={ref} className="relative">
@@ -152,8 +153,8 @@ function AccountMenu() {
         />
       </button>
       {open && (
-        <div className="absolute right-0 top-[calc(100%+9px)] w-[240px] p-2.5 rounded-[11px] bg-popover border border-white/10 shadow-[0_18px_48px_rgba(0,0,0,0.62)] z-[60]">
-          <div className="flex items-center gap-2.5 px-1.5 pt-1 pb-3 border-b border-white/5">
+        <div className="absolute right-0 top-[calc(100%+9px)] w-[240px] p-2.5 rounded-[11px] bg-popover border border-foreground/10 shadow-[0_18px_48px_rgba(0,0,0,0.62)] z-[60]">
+          <div className="flex items-center gap-2.5 px-1.5 pt-1 pb-3 border-b border-foreground/5">
             <VenueAvatar name={name} logoUrl={logoUrl} className="w-[34px] h-[34px] rounded-full text-[10px] shrink-0" />
             <div className="min-w-0">
               <div className="text-xs font-bold text-foreground truncate">{name}</div>
@@ -171,6 +172,7 @@ function AccountMenu() {
                 Plan &amp; billing
               </Link>
             )}
+            <ThemePicker />
             <button
               // Let Clerk own the redirect: it clears the session cookie *then*
               // navigates, so middleware never sees a stale session.
@@ -183,6 +185,33 @@ function AccountMenu() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+const THEMES: { key: Theme; label: string; icon: typeof Sun }[] = [
+  { key: "light", label: "Light", icon: Sun },
+  { key: "dark", label: "Dark", icon: Moon },
+  { key: "system", label: "System", icon: Monitor },
+];
+
+function ThemePicker() {
+  const [theme, setTheme] = useTheme();
+  return (
+    <div role="group" aria-label="Theme" className="my-1 grid grid-cols-3 gap-1 p-1 rounded-md bg-foreground/[0.04]">
+      {THEMES.map(({ key, label, icon: Icon }) => (
+        <button
+          key={key}
+          onClick={() => setTheme(key)}
+          aria-pressed={theme === key}
+          className={`flex items-center justify-center gap-1 py-1.5 touch:py-2.5 rounded text-[11px] touch:text-xs font-semibold transition-colors ${
+            theme === key ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Icon className="w-3 h-3" />
+          {label}
+        </button>
+      ))}
     </div>
   );
 }

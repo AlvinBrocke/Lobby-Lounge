@@ -67,22 +67,44 @@ export function Sidebar() {
         aria-label="Lobby & Lounge home"
         className="h-[42px] shrink-0 flex items-center justify-center lg:justify-start px-1"
       >
-        <Image
-          src="/images/ll-icon-white.png"
-          alt=""
-          width={24}
-          height={31}
-          priority
-          className="object-contain lg:hidden"
-        />
-        <Image
-          src="/images/ll-logo-white.png"
-          alt="Lobby & Lounge"
-          width={81}
-          height={34}
-          priority
-          className="object-contain hidden lg:block"
-        />
+        {/* Colour logo on the light shell, white on navy. `contents` keeps each
+            image a direct flex child, so the lg: swaps below still apply. */}
+        <span className="contents dark:hidden">
+          <Image
+            src="/images/ll-icon-color.png"
+            alt=""
+            width={24}
+            height={31}
+            priority
+            className="object-contain lg:hidden"
+          />
+          <Image
+            src="/images/ll-logo-color.png"
+            alt="Lobby & Lounge"
+            width={81}
+            height={34}
+            priority
+            className="object-contain hidden lg:block"
+          />
+        </span>
+        <span className="hidden dark:contents">
+          <Image
+            src="/images/ll-icon-white.png"
+            alt=""
+            width={24}
+            height={31}
+            priority
+            className="object-contain lg:hidden"
+          />
+          <Image
+            src="/images/ll-logo-white.png"
+            alt="Lobby & Lounge"
+            width={81}
+            height={34}
+            priority
+            className="object-contain hidden lg:block"
+          />
+        </span>
       </Link>
 
       <nav className={cn(panel, "shrink-0 flex flex-col gap-1 lg:gap-0.5 px-1 lg:px-1.5 py-1.5 lg:py-2")}>
@@ -132,7 +154,7 @@ export function MobileNav() {
   const liveCount = useLiveAnnouncementCount();
 
   return (
-    <nav className="app-chrome md:hidden flex border-t border-white/5 bg-shell">
+    <nav className="app-chrome md:hidden flex border-t border-foreground/5 bg-shell">
       {navItems.map((item) => {
         const Icon = item.icon;
         const active = isActive(item.href);

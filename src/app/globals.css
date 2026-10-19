@@ -232,33 +232,38 @@
 
 @layer base {
   :root {
-    /* Light mode */
+    /* Light mode — the app's opt-in light theme (useTheme drops `.dark`). */
     --background: 194 21% 96%;   /* #F1F5F6 */
     --foreground: 218 22% 8%;    /* #0F1419 */
     --card: 0 0% 100%;
     --card-foreground: 218 22% 8%;
     --popover: 0 0% 100%;
     --popover-foreground: 218 22% 8%;
-    --primary: 175 58% 41%;      /* #2BA89F */
-    --primary-foreground: 173 100% 7%;
-    --secondary: 200 14% 93%;    /* #E9EEF0 */
+    /* Darker than the dark theme's #27E0C5 so teal text passes 4.5:1 on white. */
+    --primary: 175 72% 29%;      /* #157F76 */
+    --primary-foreground: 0 0% 100%;
+    /* The app uses `secondary` as its raised surface (dark: #162040 navy card),
+       so light mode raises to white like `card`, not to a grey. */
+    --secondary: 0 0% 100%;
     --secondary-foreground: 218 22% 8%;
     --muted: 200 14% 93%;
     --muted-foreground: 210 16% 37%; /* #51606E */
     --accent: 200 14% 93%;
     --accent-foreground: 218 22% 8%;
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 352 72% 45%;  /* #C5203A — 5.6:1 on white; #FF4B6E rose is 3:1 */
     --destructive-foreground: 0 0% 100%;
     --border: 198 20% 88%;       /* #E0E7EB */
     --input: 198 20% 88%;
-    --ring: 175 58% 41%;
+    --ring: 175 72% 29%;
     --radius: 0.75rem;
     --surface-2: 200 14% 93%;
+    --shell: 0 0% 100%;          /* sidebar + player bar */
+    --faint: 213 14% 52%;        /* dim labels */
   }
 
   .dark {
     /* App palette — navy + teal, from the Figma Make dashboard design.
-       The app is dark-only; marketing pages opt into `.ll-light` instead. */
+       The app's default; marketing pages opt into `.ll-light` instead. */
     --background: 223 57% 7%;    /* #080e1d navy */
     --foreground: 0 0% 100%;
     --card: 218 51% 14%;         /* #111e35 navy surface */
@@ -292,6 +297,16 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Light app theme: the arbitrary shadow-[…] values are tuned for navy (black at
+   .3–.75 alpha) and read as grey smudges on white. Tailwind keeps each one's
+   offset/blur in --tw-shadow-colored, so swapping only the colour keeps every
+   element's elevation and gives one soft, navy-tinted shadow. `html:not(.dark)`
+   only matches the app in light mode — marketing pages keep `.dark` on <html>. */
+html:not(.dark) [class*="shadow-["] {
+  --tw-shadow-color: rgb(16 24 40 / 0.08);
+  --tw-shadow: var(--tw-shadow-colored);
 }
 
 /* Hide a scroll container's scrollbar but keep it scrollable (carousels, panes). */

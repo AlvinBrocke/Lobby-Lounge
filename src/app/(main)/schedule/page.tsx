@@ -151,10 +151,10 @@ export default function SchedulePage() {
         </div>
       }
     >
-      <div className="bg-[#0A101C] border border-white/[0.07] rounded-[14px] p-[13px] shadow-[0_18px_50px_rgba(0,0,0,0.32)] overflow-hidden">
+      <div className="bg-shell border border-foreground/[0.07] rounded-[14px] p-[13px] shadow-[0_18px_50px_rgba(0,0,0,0.32)] overflow-hidden">
           <div ref={scrollRef} className="max-h-[calc(100vh-290px)] min-h-[400px] overflow-y-auto scrollbar-hide">
             {/* Day headers */}
-            <div className="grid grid-cols-[56px_1fr] sticky top-0 bg-[#0A101C] z-30 pb-[7px]">
+            <div className="grid grid-cols-[56px_1fr] sticky top-0 bg-shell z-30 pb-[7px]">
               <div />
               <div className="grid grid-cols-7 gap-[7px]">
                 {DAYS.map((day) => (
@@ -182,7 +182,7 @@ export default function SchedulePage() {
                   <div className="text-[10px] text-faint pr-2.5 font-semibold flex items-start justify-end -mt-1.5 uppercase">
                     {hour > 0 && formatHour(hour)}
                   </div>
-                  <div className="grid grid-cols-7 gap-[7px] border-t border-white/[0.04]">
+                  <div className="grid grid-cols-7 gap-[7px] border-t border-foreground/[0.04]">
                     {DAYS.map((day) => (
                       <button
                         key={`${day}-${hour}`}
@@ -191,8 +191,8 @@ export default function SchedulePage() {
                         aria-label={`Add block on ${day} at ${formatHour(hour)}`}
                         onClick={() => setModal({ mode: "create", day, startHour: hour })}
                         className={cn(
-                          "hover:bg-white/[0.04] transition-colors group/cell relative",
-                          day === today ? "bg-primary/[0.045]" : "bg-white/[0.025]",
+                          "hover:bg-foreground/[0.04] transition-colors group/cell relative",
+                          day === today ? "bg-primary/[0.045]" : "bg-foreground/[0.025]",
                         )}
                       >
                         <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/cell:opacity-100 transition-opacity">

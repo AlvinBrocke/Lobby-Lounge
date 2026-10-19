@@ -56,7 +56,7 @@ function TrackRow({
       className={cn(
         GRID,
         "group px-5 py-[9px] touch:py-3 cursor-pointer border-b border-primary/[0.04] transition-colors",
-        isCurrent ? "bg-primary/10" : "can-hover:hover:bg-white/[0.03] active:bg-white/[0.05]",
+        isCurrent ? "bg-primary/10" : "can-hover:hover:bg-foreground/[0.03] active:bg-foreground/[0.05]",
       )}
     >
       <span

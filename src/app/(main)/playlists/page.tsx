@@ -31,7 +31,7 @@ function CardSkeletons({ count }: { count: number }) {
   return (
     <div className="flex gap-[11px] overflow-hidden mb-7">
       {Array.from({ length: count }, (_, i) => (
-        <div key={i} className="w-[220px] min-w-[220px] h-[190px] rounded-[11px] bg-card border border-white/5 animate-pulse" />
+        <div key={i} className="w-[220px] min-w-[220px] h-[190px] rounded-[11px] bg-card border border-foreground/5 animate-pulse" />
       ))}
     </div>
   );

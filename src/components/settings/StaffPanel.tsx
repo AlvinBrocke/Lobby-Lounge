@@ -34,7 +34,7 @@ export function StaffPanel() {
           <CardDescription>Each zone plays its own music. Your plan includes one.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-3 rounded-xl border border-white/5 bg-secondary p-3.5">
+          <div className="flex items-center gap-3 rounded-xl border border-foreground/5 bg-secondary p-3.5">
             <VenueAvatar name={venueName} logoUrl={profile?.logoUrl} className="w-10 h-10 rounded-lg text-xs shrink-0" />
             <div className="flex-1 min-w-0">
               <div className="text-[13px] font-bold text-foreground truncate">{venueName}</div>
@@ -133,7 +133,7 @@ function Team() {
         )}
       </CardHeader>
       <CardContent>
-        <ul className="divide-y divide-white/5">
+        <ul className="divide-y divide-foreground/5">
           {memberships?.data?.map((m) => {
             const memberId = m.publicUserData?.userId;
             const name = [m.publicUserData?.firstName, m.publicUserData?.lastName].filter(Boolean).join(" ");
@@ -154,7 +154,7 @@ function Team() {
                   <button
                     onClick={() => run(() => m.destroy())}
                     aria-label={`Remove ${name || email}`}
-                    className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-white/5 transition-colors"
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-foreground/5 transition-colors"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -164,7 +164,7 @@ function Team() {
           })}
           {invitations?.data?.map((inv) => (
             <li key={inv.id} className="flex items-center gap-3 py-2.5">
-              <span className="w-8 h-8 rounded-full border border-dashed border-white/20 shrink-0" aria-hidden />
+              <span className="w-8 h-8 rounded-full border border-dashed border-foreground/20 shrink-0" aria-hidden />
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-bold text-foreground truncate">{inv.emailAddress}</div>
                 <div className="text-[11px] text-muted-foreground">Invitation sent</div>
@@ -236,7 +236,7 @@ function InviteModal({ onClose, onSent }: { onClose: () => void; onSent: () => v
                 key={r.key}
                 className={cn(
                   "flex items-start gap-2.5 rounded-lg border p-3 cursor-pointer transition-colors",
-                  role === r.key ? "border-primary bg-primary/5" : "border-white/10 hover:bg-white/5",
+                  role === r.key ? "border-primary bg-primary/5" : "border-foreground/10 hover:bg-foreground/5",
                 )}
               >
                 <input

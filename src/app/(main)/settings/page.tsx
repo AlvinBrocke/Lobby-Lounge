@@ -13,7 +13,6 @@ const TABS = [
   { key: "staff", label: "Zone & staff", adminOnly: true },
   { key: "billing", label: "Plan & billing", adminOnly: true },
   { key: "preferences", label: "Preferences" },
-  { key: "billing", label: "Plan & billing" },
 ] as const;
 type TabKey = (typeof TABS)[number]["key"];
 
