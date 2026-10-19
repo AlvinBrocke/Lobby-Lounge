@@ -10,6 +10,7 @@ const isProtectedRoute = createRouteMatcher([
   "/library(.*)",
   "/settings(.*)",
   "/announcements(.*)",
+  "/tasks(.*)",
 ]);
 
 const isOnboardingRoute = createRouteMatcher(["/signup/onboarding(.*)"]);

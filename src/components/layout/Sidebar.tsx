@@ -4,10 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useConvexAuth, useQuery } from "convex/react";
-import { Book, Calendar, List, Send, Settings } from "lucide-react";
+import { Book, Calendar, List, ListChecks, Send, Settings } from "lucide-react";
 import { api } from "@convex/_generated/api";
 import { UpNext, panel } from "@/components/player/UpNext";
 import { useNow } from "@/hooks/useNow";
+import { useSetupTasks } from "@/hooks/useSetupTasks";
 import { isLiveToday } from "@/lib/announcements";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ const navItems = [
   // The icon rail is too narrow for the full word.
   { name: "Announcements", short: "Announce", href: "/announcements", icon: Send },
   { name: "Settings", short: "Settings", href: "/settings", icon: Settings },
+  { name: "Tasks", short: "Tasks", href: "/tasks", icon: ListChecks },
 ];
 
 function useLiveAnnouncementCount() {
@@ -34,18 +36,31 @@ function useIsActive() {
   return (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function LiveBadge({ count, className }: { count: number; className?: string }) {
+function LiveBadge({ count, className, title = `${count} playing today`, tone = "bg-primary text-primary-foreground" }: {
+  count: number;
+  className?: string;
+  title?: string;
+  tone?: string;
+}) {
   if (count === 0) return null;
   return (
     <span
-      title={`${count} playing today`}
-      className={cn(
-        "text-[9px] font-bold bg-primary text-primary-foreground rounded-full px-[5px] py-px",
-        className,
-      )}
+      title={title}
+      className={cn("text-[9px] font-bold rounded-full px-[5px] py-px", tone, className)}
     >
       {count}
     </span>
+  );
+}
+
+function TasksBadge({ count, className }: { count: number; className?: string }) {
+  return (
+    <LiveBadge
+      count={count}
+      className={className}
+      title={`${count} setup ${count === 1 ? "task" : "tasks"} remaining`}
+      tone="bg-amber-400 text-background"
+    />
   );
 }
 
@@ -59,6 +74,7 @@ function LiveBadge({ count, className }: { count: number; className?: string }) 
 export function Sidebar() {
   const isActive = useIsActive();
   const liveCount = useLiveAnnouncementCount();
+  const { remaining: tasksLeft } = useSetupTasks();
 
   return (
     <aside className="app-chrome hidden md:flex w-[88px] lg:w-[228px] shrink-0 z-[2] flex-col gap-2.5 px-2 lg:px-2.5 py-3 bg-shell shadow-[4px_0_24px_rgba(0,0,0,0.45)] overflow-y-auto">
@@ -138,6 +154,9 @@ export function Sidebar() {
               {item.href === "/announcements" && (
                 <LiveBadge count={liveCount} className="absolute top-1.5 right-2 lg:static" />
               )}
+              {item.href === "/tasks" && (
+                <TasksBadge count={tasksLeft} className="absolute top-1.5 right-2 lg:static" />
+              )}
             </Link>
           );
         })}
@@ -152,6 +171,7 @@ export function Sidebar() {
 export function MobileNav() {
   const isActive = useIsActive();
   const liveCount = useLiveAnnouncementCount();
+  const { remaining: tasksLeft } = useSetupTasks();
 
   return (
     <nav className="app-chrome md:hidden flex border-t border-foreground/5 bg-shell">
@@ -173,6 +193,9 @@ export function MobileNav() {
             {item.short}
             {item.href === "/announcements" && (
               <LiveBadge count={liveCount} className="absolute top-1.5 left-1/2 ml-2" />
+            )}
+            {item.href === "/tasks" && (
+              <TasksBadge count={tasksLeft} className="absolute top-1.5 left-1/2 ml-2" />
             )}
           </Link>
         );
