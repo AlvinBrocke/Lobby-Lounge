@@ -242,13 +242,15 @@
     /* Darker than the dark theme's #27E0C5 so teal text passes 4.5:1 on white. */
     --primary: 175 72% 29%;      /* #157F76 */
     --primary-foreground: 0 0% 100%;
-    --secondary: 200 14% 93%;    /* #E9EEF0 */
+    /* The app uses `secondary` as its raised surface (dark: #162040 navy card),
+       so light mode raises to white like `card`, not to a grey. */
+    --secondary: 0 0% 100%;
     --secondary-foreground: 218 22% 8%;
     --muted: 200 14% 93%;
     --muted-foreground: 210 16% 37%; /* #51606E */
     --accent: 200 14% 93%;
     --accent-foreground: 218 22% 8%;
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 352 72% 45%;  /* #C5203A — 5.6:1 on white; #FF4B6E rose is 3:1 */
     --destructive-foreground: 0 0% 100%;
     --border: 198 20% 88%;       /* #E0E7EB */
     --input: 198 20% 88%;
@@ -295,6 +297,16 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Light app theme: the arbitrary shadow-[…] values are tuned for navy (black at
+   .3–.75 alpha) and read as grey smudges on white. Tailwind keeps each one's
+   offset/blur in --tw-shadow-colored, so swapping only the colour keeps every
+   element's elevation and gives one soft, navy-tinted shadow. `html:not(.dark)`
+   only matches the app in light mode — marketing pages keep `.dark` on <html>. */
+html:not(.dark) [class*="shadow-["] {
+  --tw-shadow-color: rgb(16 24 40 / 0.08);
+  --tw-shadow: var(--tw-shadow-colored);
 }
 
 /* Hide a scroll container's scrollbar but keep it scrollable (carousels, panes). */

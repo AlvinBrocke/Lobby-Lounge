@@ -19,7 +19,7 @@ export interface PlaylistCardData {
 }
 
 const ENERGY_TONE: Record<Energy, string> = {
-  low: "text-primary/80",
+  low: "text-primary dark:text-primary/80",
   mid: "text-muted-foreground",
   high: "text-destructive",
 };

@@ -200,7 +200,7 @@ function Notice({
       <div
         className={cn(
           "w-12 h-12 touch:w-14 touch:h-14 rounded-md shrink-0 flex items-center justify-center",
-          tone === "alert" ? "bg-red-500/15 text-red-400" : "bg-primary/15 text-primary",
+          tone === "alert" ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-primary",
         )}
       >
         <Icon className="w-5 h-5" />
@@ -210,7 +210,7 @@ function Notice({
         <div
           className={cn(
             "text-[11px] touch:text-[13px] truncate group-hover:underline",
-            tone === "alert" ? "text-red-400" : "text-primary",
+            tone === "alert" ? "text-destructive" : "text-primary",
           )}
         >
           {detail}

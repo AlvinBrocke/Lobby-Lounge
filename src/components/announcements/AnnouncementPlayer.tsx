@@ -63,7 +63,7 @@ export function AnnouncementPlayer() {
     >
       <span className="w-[7px] h-[7px] rounded-full bg-warning-500 shadow-[0_0_6px_theme(colors.warning.500)] shrink-0 animate-pulse" />
       <p className="flex-1 min-w-0 truncate text-[11px]">
-        <span className="font-bold text-warning-500 mr-2">Announcement Live</span>
+        <span className="font-bold text-warning-700 dark:text-warning-500 mr-2">Announcement Live</span>
         <span className="text-muted-foreground">{cue.message ?? cue.title}</span>
       </p>
       <span className="hidden sm:block text-[10px] text-faint mr-1 shrink-0">

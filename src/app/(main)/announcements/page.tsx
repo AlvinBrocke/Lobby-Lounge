@@ -29,13 +29,13 @@ function group(a: Announcement, now: Date): Filter {
 // Status colours from the design: teal = live, amber = scheduled, slate = draft.
 const ACCENT: Record<Filter, { text: string; bg: string; border: string; dot: string }> = {
   live: { text: "text-primary", bg: "bg-primary/[0.12]", border: "border-l-primary", dot: "bg-primary shadow-[0_0_8px_hsl(var(--primary))]" },
-  scheduled: { text: "text-warning-500", bg: "bg-warning-500/[0.12]", border: "border-l-warning-500", dot: "bg-warning-500" },
+  scheduled: { text: "text-warning-700 dark:text-warning-500", bg: "bg-warning-500/[0.12]", border: "border-l-warning-500", dot: "bg-warning-500" },
   draft: { text: "text-faint", bg: "bg-muted-foreground/[0.08]", border: "border-l-faint", dot: "bg-faint" },
 };
 
 const FILTERS = [
   { id: "live", label: "Live", icon: PlayCircle, colour: "text-primary" },
-  { id: "scheduled", label: "Scheduled", icon: Calendar, colour: "text-warning-500" },
+  { id: "scheduled", label: "Scheduled", icon: Calendar, colour: "text-warning-700 dark:text-warning-500" },
   { id: "draft", label: "Drafts", icon: PencilLine, colour: "text-muted-foreground" },
 ] as const;
 
