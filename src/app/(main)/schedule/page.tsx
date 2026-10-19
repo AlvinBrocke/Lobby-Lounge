@@ -3,10 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { CalendarClock, Plus } from "lucide-react";
+import { ConvexError } from "convex/values";
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { PlaylistCover } from "@/components/playlists/PlaylistCover";
+import { PlaylistTray } from "@/components/schedule/PlaylistTray";
 import {
   ScheduleBlockModal,
   type ScheduleBlockValues,
@@ -15,11 +17,14 @@ import { useNow } from "@/hooks/useNow";
 import { cn } from "@/lib/utils";
 import {
   DAYS,
+  DROP_DURATION,
   activeBlock,
+  fitsAt,
   formatHour,
   formatRange,
   todayKey,
   type Day,
+  type DragPayload,
 } from "@/lib/schedule";
 import posthog from "posthog-js";
 
@@ -61,6 +66,13 @@ export default function SchedulePage() {
   const removeBlock = useMutation(api.scheduleBlocks.remove);
 
   const [modal, setModal] = useState<ModalState>(null);
+
+  // Drag and drop. The payload lives in a ref because browsers hide
+  // dataTransfer contents until the drop, and the hover tint needs it sooner.
+  const dragRef = useRef<DragPayload | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const [hover, setHover] = useState<{ day: Day; hour: number; ok: boolean } | null>(null);
+  const [dropError, setDropError] = useState<string | null>(null);
 
   const playlistById = useMemo(
     () => new Map([...(curated ?? []), ...(mine ?? [])].map((p) => [p._id, p])),
@@ -114,6 +126,66 @@ export default function SchedulePage() {
     setModal(null);
   }
 
+  function startDrag(payload: DragPayload) {
+    dragRef.current = payload;
+    setDropError(null);
+    // Next tick: re-rendering the dragged element inside dragstart can cancel the drag in Chrome.
+    setTimeout(() => setDragging(true), 0);
+  }
+
+  function endDrag() {
+    dragRef.current = null;
+    setDragging(false);
+    setHover(null);
+  }
+
+  function dragDuration(payload: DragPayload) {
+    return payload.kind === "block" ? payload.duration : DROP_DURATION;
+  }
+
+  function handleDragOver(e: React.DragEvent, day: Day, hour: number) {
+    const payload = dragRef.current;
+    if (!payload) return;
+    e.preventDefault(); // marks the cell as a drop target
+    const ok = fitsAt(
+      blocks ?? [],
+      { day, startHour: hour, duration: dragDuration(payload) },
+      payload.kind === "block" ? payload.id : undefined,
+    );
+    if (hover?.day !== day || hover.hour !== hour || hover.ok !== ok) setHover({ day, hour, ok });
+  }
+
+  async function handleDrop(e: React.DragEvent, day: Day, hour: number) {
+    e.preventDefault();
+    const payload = dragRef.current;
+    endDrag();
+    if (!payload) return;
+    try {
+      if (payload.kind === "block") {
+        await updateBlock({ id: payload.id as Id<"scheduleBlocks">, day, startHour: hour });
+        if (posthogConfigured) posthog.capture("schedule_block_moved", { day });
+      } else {
+        await createBlock({
+          playlistId: payload.playlistId as Id<"playlists">,
+          day,
+          startHour: hour,
+          duration: DROP_DURATION,
+        });
+        if (posthogConfigured) posthog.capture("schedule_block_created", { day, duration_hours: DROP_DURATION, via: "drag" });
+      }
+    } catch (err) {
+      setDropError(err instanceof ConvexError ? String(err.data) : "Couldn't move that block. Please try again.");
+    }
+  }
+
+  /** Whether a cell sits under the slot being hovered, so the whole block-to-be is tinted. */
+  function hoverTint(day: Day, hour: number) {
+    if (!hover || hover.day !== day || !dragRef.current) return null;
+    const inside = hour >= hover.hour && hour < hover.hour + dragDuration(dragRef.current);
+    if (!inside) return null;
+    return hover.ok ? "bg-primary/20" : "bg-destructive/20";
+  }
+
   async function handleDelete(id: Id<"scheduleBlocks">) {
     await removeBlock({ id });
     if (posthogConfigured) posthog.capture("schedule_block_deleted");
@@ -151,7 +223,13 @@ export default function SchedulePage() {
         </div>
       }
     >
-      <div className="bg-shell border border-foreground/[0.07] rounded-[14px] p-[13px] shadow-[0_18px_50px_rgba(0,0,0,0.32)] overflow-hidden">
+      {dropError && (
+        <p role="alert" className="text-destructive text-xs mb-2">
+          {dropError}
+        </p>
+      )}
+      <div className="grid lg:grid-cols-[1fr_220px] gap-4 items-start">
+      <div className="min-w-0 bg-shell border border-foreground/[0.07] rounded-[14px] p-[13px] shadow-[0_18px_50px_rgba(0,0,0,0.32)] overflow-hidden">
           <div ref={scrollRef} className="max-h-[calc(100vh-290px)] min-h-[400px] overflow-y-auto scrollbar-hide">
             {/* Day headers */}
             <div className="grid grid-cols-[56px_1fr] sticky top-0 bg-shell z-30 pb-[7px]">
@@ -190,9 +268,11 @@ export default function SchedulePage() {
                         disabled={loading}
                         aria-label={`Add block on ${day} at ${formatHour(hour)}`}
                         onClick={() => setModal({ mode: "create", day, startHour: hour })}
+                        onDragOver={(e) => handleDragOver(e, day, hour)}
+                        onDrop={(e) => handleDrop(e, day, hour)}
                         className={cn(
                           "hover:bg-foreground/[0.04] transition-colors group/cell relative",
-                          day === today ? "bg-primary/[0.045]" : "bg-foreground/[0.025]",
+                          hoverTint(day, hour) ?? (day === today ? "bg-primary/[0.045]" : "bg-foreground/[0.025]"),
                         )}
                       >
                         <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/cell:opacity-100 transition-opacity">
@@ -229,8 +309,18 @@ export default function SchedulePage() {
                               key={block._id}
                               type="button"
                               onClick={() => setModal({ mode: "edit", block })}
+                              draggable
+                              onDragStart={(e) => {
+                                const payload: DragPayload = { kind: "block", id: block._id, duration: block.duration };
+                                e.dataTransfer.setData("application/x-ll-schedule", JSON.stringify(payload));
+                                e.dataTransfer.effectAllowed = "move";
+                                startDrag(payload);
+                              }}
+                              onDragEnd={endDrag}
                               className={cn(
-                                "absolute left-1 right-1 rounded-lg border pointer-events-auto text-left text-white overflow-hidden hover:scale-[1.02] transition-transform duration-150 z-10",
+                                // While dragging, blocks let the cells underneath receive the drop.
+                                dragging ? "pointer-events-none opacity-60" : "pointer-events-auto",
+                                "absolute left-1 right-1 rounded-lg border text-left text-white overflow-hidden hover:scale-[1.02] transition-transform duration-150 z-10",
                                 compact ? "px-2 py-1" : "px-2 py-[9px]",
                                 isNow
                                   ? "border-primary shadow-[0_0_0_2px_hsl(var(--primary)/0.15),0_8px_22px_rgba(0,0,0,0.3)]"
@@ -273,10 +363,14 @@ export default function SchedulePage() {
             </div>
           </div>
       </div>
+      {curated && mine && (
+        <PlaylistTray curated={curated} mine={mine} onDragStart={startDrag} onDragEnd={endDrag} />
+      )}
+      </div>
 
       {blocks?.length === 0 && (
         <p className="text-sm text-muted-foreground text-center mt-4">
-          No blocks yet — click any hour in the grid to schedule a playlist. It will repeat every
+          No blocks yet — click any hour, or drag a playlist onto the grid, to schedule it. It will repeat every
           week.
         </p>
       )}

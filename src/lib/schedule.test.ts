@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { activeBlock, blockStatus, formatHour, formatRange, overlaps, todayKey } from "./schedule";
+import { activeBlock, blockStatus, fitsAt, formatHour, formatRange, overlaps, todayKey } from "./schedule";
 
 // 2026-09-21 is a Monday; 2026-09-27 is a Sunday.
 const mondayAt = (h: number) => new Date(2026, 8, 21, h, 15);
@@ -65,5 +65,25 @@ describe("blockStatus", () => {
     expect(blockStatus(block, mondayAt(10))).toBe("now");
     expect(blockStatus(block, mondayAt(11))).toBe("now");
     expect(blockStatus(block, mondayAt(12))).toBe("done");
+  });
+});
+
+describe("fitsAt", () => {
+  const blocks = [{ _id: "a", day: "Mon", startHour: 9, duration: 2 }];
+
+  it("fits in a free slot", () => {
+    expect(fitsAt(blocks, { day: "Mon", startHour: 11, duration: 2 })).toBe(true);
+  });
+
+  it("rejects an overlap", () => {
+    expect(fitsAt(blocks, { day: "Mon", startHour: 10, duration: 2 })).toBe(false);
+  });
+
+  it("ignores the block being moved", () => {
+    expect(fitsAt(blocks, { day: "Mon", startHour: 10, duration: 2 }, "a")).toBe(true);
+  });
+
+  it("rejects running past midnight", () => {
+    expect(fitsAt([], { day: "Tue", startHour: 23, duration: 2 })).toBe(false);
   });
 });
