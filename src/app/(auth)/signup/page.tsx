@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth, useSignUp } from "@clerk/nextjs";
+import { useAuth, useClerk, useSignUp, useUser } from "@clerk/nextjs";
 import { describeClerkError, isSessionExistsError } from "@/lib/clerkErrors";
 import { Loader2, Mail, Lock, KeyRound, ChevronRight } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
@@ -48,15 +48,11 @@ const iconStyle: React.CSSProperties = {
 
 export default function SignupPage() {
   const router = useRouter();
-  const { isSignedIn } = useAuth();
+  const { isLoaded: authLoaded, isSignedIn } = useAuth();
+  const { signOut } = useClerk();
+  const { user } = useUser();
   const { isLoaded, signUp, setActive } = useSignUp();
   const [step, setStep] = useState<"signup" | "verify">("signup");
-
-  // Already signed in? Hand off to the onboarding route — middleware forwards
-  // onboarded users to /dashboard, so this never fights the post-signup push.
-  useEffect(() => {
-    if (isSignedIn) router.replace("/signup/onboarding");
-  }, [isSignedIn, router]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
@@ -64,17 +60,29 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   // Set when arriving from a team invitation email (Settings → Zone & staff).
   const [ticket, setTicket] = useState<string | null>(null);
+  // Opened an invitation while already signed in. Clerk can't redeem a ticket over an
+  // active session (`session_exists`), so the page offers to sign out first.
+  const [inviteBlocked, setInviteBlocked] = useState(false);
 
   // Clerk appends `__clerk_status`: "sign_up" for a new email, "sign_in" when it
   // already has an account, "complete" once the invitation is accepted.
   useEffect(() => {
+    if (!authLoaded) return;
     const params = new URLSearchParams(window.location.search);
     const t = params.get("__clerk_ticket");
-    if (!t) return;
     const status = params.get("__clerk_status");
+    if (isSignedIn) {
+      // `ticket` is only set for signed-out visitors, so someone who has just
+      // signed up through the invitation goes on to onboarding as usual.
+      if (t && !ticket && status !== "complete") setInviteBlocked(true);
+      // Middleware forwards onboarded users to /dashboard, so this never fights the post-signup push.
+      else router.replace("/signup/onboarding");
+      return;
+    }
+    if (!t) return;
     if (status === "sign_up") setTicket(t);
     else router.replace(status === "sign_in" ? `/signin?${params}` : "/signin");
-  }, [router]);
+  }, [authLoaded, isSignedIn, ticket, router]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -194,12 +202,14 @@ export default function SignupPage() {
                   marginBottom: 8,
                 }}
               >
-                {ticket ? "Join your team" : "Create your account"}
+                {inviteBlocked ? "Accept your invitation" : ticket ? "Join your team" : "Create your account"}
               </h1>
               <p style={{ fontFamily: "var(--ll-font-body)", fontSize: 14, color: "var(--ll-on-ink-3)" }}>
-                {ticket
-                  ? "Choose a password to accept your invitation."
-                  : "Free for your first month. No credit card required."}
+                {inviteBlocked
+                  ? `You're signed in${user ? ` as ${user.primaryEmailAddress?.emailAddress}` : ""}. Sign out first and this link will bring you straight back.`
+                  : ticket
+                    ? "Choose a password to accept your invitation."
+                    : "Free for your first month. No credit card required."}
               </p>
             </>
           ) : (
@@ -239,7 +249,17 @@ export default function SignupPage() {
           )}
         </div>
 
-        {step === "signup" ? (
+        {inviteBlocked ? (
+          <button
+            type="button"
+            // Back to this same URL, ticket and all, now signed out.
+            onClick={() => signOut({ redirectUrl: window.location.pathname + window.location.search })}
+            style={primaryBtn}
+          >
+            Sign out and continue
+            <ChevronRight style={{ width: 16, height: 16 }} />
+          </button>
+        ) : step === "signup" ? (
           <>
             <form onSubmit={handleSignup} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {!ticket && <div>

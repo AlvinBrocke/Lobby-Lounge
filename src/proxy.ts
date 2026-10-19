@@ -48,9 +48,10 @@ export default clerkMiddleware(async (auth, req) => {
   const { isAuthenticated, sessionClaims, redirectToSignIn } = await auth();
 
   // Clerk refuses to start a new sign-in/sign-up while a session is active (it throws
-  // `session_exists`), so signed-in users never belong on those pages.
+  // `session_exists`), so signed-in users never belong on those pages — except with a
+  // team invitation ticket, which /signup offers to redeem after signing them out.
   if (isAuth) {
-    if (!isAuthenticated) return NextResponse.next();
+    if (!isAuthenticated || req.nextUrl.searchParams.has("__clerk_ticket")) return NextResponse.next();
     const target = req.nextUrl.searchParams.get("redirect_url");
     return NextResponse.redirect(sameOriginRedirect(req, target, "/dashboard"));
   }

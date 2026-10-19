@@ -82,7 +82,7 @@ Manual Clerk Dashboard setup, on **every** instance (dev and prod):
    ```
    Without it, staff see an empty account of their own instead of the venue.
 
-Known limit: someone who is **signed in** when they click an invite link is bounced off `/signup` by `proxy.ts`, which drops the ticket. They need to sign out first, then click the link again.
+Someone who is **signed in** when they click an invite link can't redeem it straight away: Clerk rejects a ticket while a session is active (`session_exists`). `proxy.ts` lets any auth route through when the URL has `__clerk_ticket`, and `/signup` then offers "Sign out and continue", which signs out back to the same link.
 
 ## Environment variables
 
