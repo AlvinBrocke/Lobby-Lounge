@@ -59,11 +59,16 @@ function ActivateVenue() {
 
   useEffect(() => {
     if (!isSignedIn || !isLoaded || !listLoaded || organization || userMemberships.isLoading) return;
+    // Both are network calls that can be cut off mid-navigation (e.g. right after the
+    // OAuth redirect). Best-effort: the next page load retries, so just log.
+    const onError = (err: unknown) => console.warn("ActivateVenue:", err);
     if (firstOrgId) {
-      void setActive({ organization: firstOrgId });
+      setActive({ organization: firstOrgId }).catch(onError);
     } else if (!tried.current) {
       tried.current = true;
-      void createVenueTeam().then((res) => res.ok && setActive({ organization: res.orgId }));
+      createVenueTeam()
+        .then((res) => res.ok && setActive({ organization: res.orgId }))
+        .catch(onError);
     }
   }, [isSignedIn, isLoaded, listLoaded, organization, userMemberships.isLoading, firstOrgId, setActive]);
 
