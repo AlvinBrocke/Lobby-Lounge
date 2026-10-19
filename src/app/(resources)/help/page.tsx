@@ -1,4 +1,4 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { helpCategories, helpTitle } from "@/content/help";
 import { PageHeader } from "@/components/resources/PageHeader";
 import { FaqAccordion, answerText } from "@/components/resources/FaqAccordion";

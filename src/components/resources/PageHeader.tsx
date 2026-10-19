@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 
 /** Eyebrow + title + intro, matching the LegalPage header. */
 export function PageHeader({

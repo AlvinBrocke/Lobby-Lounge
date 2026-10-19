@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/session";
 import { MainShell } from "@/components/layout/MainShell";

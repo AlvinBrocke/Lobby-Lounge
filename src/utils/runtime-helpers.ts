@@ -52,7 +52,7 @@ function useUpload() {
             method: "POST",
           });
           const { secureSignature, secureExpire } = await response.json();
-          // @ts-ignore - 'client' might be available globally in some environments (e.g. Create.xyz)
+          // @ts-expect-error - 'client' might be available globally in some environments (e.g. Create.xyz)
           // but we guard against it here to prevent crashes.
           const anyClient = (globalThis as any).client;
           if (anyClient && anyClient.uploadFile) {

@@ -1,4 +1,4 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { posts, getPost, relatedPosts } from "@/content/blog";
 import { PageHeader } from "@/components/resources/PageHeader";
