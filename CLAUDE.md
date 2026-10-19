@@ -85,6 +85,7 @@ Manual Clerk Dashboard setup, on **every** instance (dev and prod):
    "venue_owner": "{{org.public_metadata.venueOwnerId}}"
    ```
    Without it, staff see an empty account of their own instead of the venue.
+3. Same template → also add `"name": "{{user.full_name}}"` and `"email": "{{user.primary_email_address}}"`. Settings → Activity log names whoever made each change from these claims (`convex/lib/activity.ts`); without them every row says "Someone".
 
 Someone who is **signed in** when they click an invite link can't redeem it straight away: Clerk rejects a ticket while a session is active (`session_exists`). `proxy.ts` lets any auth route through when the URL has `__clerk_ticket`, and `/signup` then offers "Sign out and continue", which signs out back to the same link.
 
