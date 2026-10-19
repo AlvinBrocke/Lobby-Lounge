@@ -81,6 +81,22 @@ describe("artists", () => {
     ]);
   });
 
+  it("counts and lists a song once when several playlists carry a copy", async () => {
+    const { t, asUser } = await setup();
+    await t.run(async (ctx) => {
+      // The Jamendo sync stores one row per playlist, so the same song can appear twice.
+      await ctx.db.insert("tracks", { name: "N1", artist: "Nora", category: "Lounge", album: "Blue" });
+      await ctx.db.insert("tracks", { name: "N4", artist: "Nora", album: "Blue" });
+    });
+    const nora = (await asUser.query(api.artists.list, {})).find((a) => a.name === "Nora")!;
+    expect(nora.trackCount).toBe(4);
+    expect(nora.categories).toEqual(["Jazz", "Lounge"]);
+    const res = await asUser.query(api.artists.get, { name: "Nora" });
+    expect(res!.tracks.map((tr) => tr.name)).toEqual(["N1", "N2", "N3", "N4"]);
+    expect(res!.artist.trackCount).toBe(4);
+    expect((await asUser.query(api.artists.albums, {}))[0]).toMatchObject({ album: "Blue", trackCount: 2 });
+  });
+
   it("requires sign-in", async () => {
     const { t } = await setup();
     await expect(t.query(api.artists.list, {})).rejects.toThrow("Not authenticated");
