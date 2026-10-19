@@ -18,6 +18,8 @@ export const createOrUpdate = mutation({
     region: v.optional(v.string()),
     locationCount: v.optional(v.number()),
     guestDemographics: v.optional(v.array(v.string())),
+    audienceGender: v.optional(v.string()),
+    ageGroups: v.optional(v.array(v.string())),
     tempo: v.optional(v.union(v.literal("low"), v.literal("mid"), v.literal("high"))),
     sound: v.optional(soundSettings),
   },
@@ -52,6 +54,8 @@ export const createOrUpdate = mutation({
         ...(args.guestDemographics !== undefined && {
           guestDemographics: args.guestDemographics,
         }),
+        ...(args.audienceGender !== undefined && { audienceGender: args.audienceGender }),
+        ...(args.ageGroups !== undefined && { ageGroups: args.ageGroups }),
         ...(args.tempo !== undefined && { tempo: args.tempo }),
         ...(args.sound !== undefined && { sound: args.sound }),
       });
@@ -71,6 +75,8 @@ export const createOrUpdate = mutation({
       region: args.region,
       locationCount: args.locationCount,
       guestDemographics: args.guestDemographics,
+      audienceGender: args.audienceGender,
+      ageGroups: args.ageGroups,
       tempo: args.tempo,
       sound: args.sound,
     });

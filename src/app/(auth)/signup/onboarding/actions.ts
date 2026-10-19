@@ -3,6 +3,7 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
+import { DEFAULT_SOUND } from "@convex/lib/sound";
 import { getSession, getConvexToken } from "@/lib/session";
 import { createVenueTeam } from "@/app/(main)/settings/actions";
 import {
@@ -20,8 +21,12 @@ type OnboardingInput = {
   locationCount?: number;
   businessType?: string;
   guestDemographics?: string[];
+  audienceGender?: string;
+  ageGroups?: string[];
   genres?: string[];
   mood?: string;
+  tempo?: "low" | "mid" | "high";
+  defaultVolume?: number;
 };
 
 const isOptionalString = (v: unknown, max = 200) =>
@@ -44,6 +49,13 @@ function isValidInput(input: OnboardingInput) {
     isOptionalString(input.mood) &&
     isOptionalStringArray(input.guestDemographics) &&
     isOptionalStringArray(input.genres) &&
+    isOptionalString(input.audienceGender) &&
+    isOptionalStringArray(input.ageGroups) &&
+    (input.tempo === undefined || ["low", "mid", "high"].includes(input.tempo)) &&
+    (input.defaultVolume === undefined ||
+      (Number.isInteger(input.defaultVolume) &&
+        input.defaultVolume >= 0 &&
+        input.defaultVolume <= 100)) &&
     (input.locationCount === undefined ||
       (Number.isInteger(input.locationCount) &&
         input.locationCount >= 0 &&
@@ -89,8 +101,16 @@ export async function completeOnboarding(
         locationCount: input.locationCount,
         businessType: input.businessType,
         guestDemographics: input.guestDemographics,
+        audienceGender: input.audienceGender,
+        ageGroups: input.ageGroups,
         genres: input.genres,
         mood: input.mood,
+        tempo: input.tempo,
+        // Only when picked, so "Skip" never resets sound settings to defaults.
+        sound:
+          input.defaultVolume === undefined
+            ? undefined
+            : { ...DEFAULT_SOUND, defaultVolume: input.defaultVolume },
         onboardingCompleted: true,
       },
       { token },

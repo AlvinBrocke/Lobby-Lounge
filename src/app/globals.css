@@ -51,6 +51,33 @@
   color: var(--ll-text);
 }
 
+/* Auth scope: sign-in, sign-up and onboarding (Figma "Screen-FLOW_Onboarding").
+   Set by AuthShell. Remaps the accent tokens the auth pages already use, and
+   adds role tokens for what used to be hard-coded white-on-dark values. */
+.ll-auth {
+  --ll-auth-bg: #F4F7F6;
+  --ll-auth-card: #FFFFFF;
+  --ll-auth-text: #20286F;
+  --ll-auth-text-2: #52647C;
+  --ll-auth-muted: #6F7D90;
+  --ll-auth-line: rgba(24, 167, 165, .28);
+  --ll-auth-line-soft: rgba(24, 167, 165, .12);
+  --ll-auth-field: #FFFFFF;
+  --ll-auth-hover: #EEF7F7;
+  --ll-auth-focus: #22D3C2;
+  --ll-auth-ghost: rgba(34, 211, 194, .12);
+  --ll-auth-glow: rgba(22, 127, 145, .35);
+  --ll-auth-shadow: rgba(32, 40, 111, .12);
+  --ll-auth-error: #C2415D;
+  --ll-auth-grad: linear-gradient(125deg, #20286F 0%, #225F8F 48%, #22B9AE 100%);
+  /* #167F91 rather than the design's #22D3C2: white text on it passes 4.5:1. */
+  --ll-accent: #167F91;
+  --ll-accent-ink: #FFFFFF;
+  --ll-on-ink-3: var(--ll-auth-text-2);
+  background: var(--ll-auth-bg);
+  color: var(--ll-auth-text);
+}
+
 /* In @layer components so Tailwind utilities (mt-*, pb-*…) can override them. */
 @layer components {
   /* Marketing type scale — deliberately modest */

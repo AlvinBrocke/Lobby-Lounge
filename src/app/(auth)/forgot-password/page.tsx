@@ -8,49 +8,7 @@ import { useAuth, useSignIn } from "@clerk/nextjs";
 import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { Loader2, Mail, Lock, KeyRound, ChevronRight } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  height: 48,
-  paddingLeft: 40,
-  paddingRight: 16,
-  background: "rgba(255,255,255,.05)",
-  border: "1px solid rgba(255,255,255,.1)",
-  borderRadius: 12,
-  color: "#fff",
-  fontFamily: "var(--ll-font-body)",
-  fontSize: 14,
-  outline: "none",
-  boxSizing: "border-box",
-  transition: "border-color .2s",
-};
-
-const labelStyle: React.CSSProperties = {
-  display: "block",
-  fontFamily: "var(--ll-font-body)",
-  fontWeight: 700,
-  fontSize: 11,
-  textTransform: "uppercase",
-  letterSpacing: ".12em",
-  color: "rgba(255,255,255,.5)",
-  marginBottom: 8,
-};
-
-const iconStyle: React.CSSProperties = {
-  position: "absolute",
-  left: 14,
-  top: "50%",
-  transform: "translateY(-50%)",
-  width: 15,
-  height: 15,
-  color: "rgba(255,255,255,.3)",
-  pointerEvents: "none",
-};
-
-const focus = (e: React.FocusEvent<HTMLInputElement>) =>
-  (e.target.style.borderColor = "rgba(78,205,196,.6)");
-const blur = (e: React.FocusEvent<HTMLInputElement>) =>
-  (e.target.style.borderColor = "rgba(255,255,255,.1)");
+import { focusIn, focusOut, iconStyle, inputStyle, labelStyle } from "@/components/auth/authStyles";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -150,7 +108,7 @@ export default function ForgotPasswordPage() {
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    boxShadow: "0 8px 24px -6px rgba(78,205,196,.5)",
+    boxShadow: "0 8px 24px -6px var(--ll-auth-glow)",
     transition: "opacity .2s, transform .2s",
   };
 
@@ -158,12 +116,12 @@ export default function ForgotPasswordPage() {
     <AuthShell>
       <div
         style={{
-          background: "rgba(15,20,25,.55)",
+          background: "var(--ll-auth-card)",
           backdropFilter: "blur(24px)",
-          border: "1px solid rgba(255,255,255,.1)",
+          border: "1px solid var(--ll-auth-line)",
           borderRadius: 24,
           padding: "40px 36px",
-          boxShadow: "0 40px 80px -20px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04)",
+          boxShadow: "0 30px 70px -24px var(--ll-auth-shadow)",
         }}
       >
         {/* Header */}
@@ -193,7 +151,7 @@ export default function ForgotPasswordPage() {
               fontWeight: 800,
               fontSize: 28,
               letterSpacing: "-.025em",
-              color: "#fff",
+              color: "var(--ll-auth-text)",
               marginBottom: 8,
             }}
           >
@@ -205,7 +163,7 @@ export default function ForgotPasswordPage() {
             ) : (
               <>
                 We sent a 6-digit code to{" "}
-                <span style={{ color: "#fff", fontWeight: 600 }}>{email}</span>
+                <span style={{ color: "var(--ll-auth-text)", fontWeight: 600 }}>{email}</span>
               </>
             )}
           </p>
@@ -224,14 +182,14 @@ export default function ForgotPasswordPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   style={inputStyle}
-                  onFocus={focus}
-                  onBlur={blur}
+                  onFocus={focusIn}
+                  onBlur={focusOut}
                 />
               </div>
             </div>
 
             {error && (
-              <p style={{ fontFamily: "var(--ll-font-body)", fontSize: 13, color: "#f87171", textAlign: "center" }}>
+              <p style={{ fontFamily: "var(--ll-font-body)", fontSize: 13, color: "var(--ll-auth-error)", textAlign: "center" }}>
                 {error}
               </p>
             )}
@@ -262,8 +220,8 @@ export default function ForgotPasswordPage() {
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
                   style={inputStyle}
-                  onFocus={focus}
-                  onBlur={blur}
+                  onFocus={focusIn}
+                  onBlur={focusOut}
                 />
               </div>
             </div>
@@ -280,8 +238,8 @@ export default function ForgotPasswordPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   style={inputStyle}
-                  onFocus={focus}
-                  onBlur={blur}
+                  onFocus={focusIn}
+                  onBlur={focusOut}
                 />
               </div>
             </div>
@@ -298,14 +256,14 @@ export default function ForgotPasswordPage() {
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                   style={inputStyle}
-                  onFocus={focus}
-                  onBlur={blur}
+                  onFocus={focusIn}
+                  onBlur={focusOut}
                 />
               </div>
             </div>
 
             {error && (
-              <p style={{ fontFamily: "var(--ll-font-body)", fontSize: 13, color: "#f87171", textAlign: "center" }}>
+              <p style={{ fontFamily: "var(--ll-font-body)", fontSize: 13, color: "var(--ll-auth-error)", textAlign: "center" }}>
                 {error}
               </p>
             )}
@@ -331,7 +289,7 @@ export default function ForgotPasswordPage() {
                 cursor: "pointer",
                 fontFamily: "var(--ll-font-body)",
                 fontSize: 12,
-                color: "rgba(255,255,255,.4)",
+                color: "var(--ll-auth-muted)",
               }}
             >
               Didn&apos;t get a code? Try again
@@ -346,7 +304,7 @@ export default function ForgotPasswordPage() {
             textAlign: "center",
             fontFamily: "var(--ll-font-body)",
             fontSize: 13,
-            color: "rgba(255,255,255,.4)",
+            color: "var(--ll-auth-muted)",
           }}
         >
           Remembered it?{" "}

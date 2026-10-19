@@ -1,5 +1,6 @@
 "use client";
 
+import type React from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -121,36 +122,46 @@ function NowPlayingChip() {
 
 interface AuthShellProps {
   children: React.ReactNode;
+  /** Onboarding's photo grids need more room than the auth forms. */
+  wide?: boolean;
 }
 
-export function AuthShell({ children }: AuthShellProps) {
+export function AuthShell({ children, wide = false }: AuthShellProps) {
   return (
     <div
-      className="min-h-screen flex relative overflow-hidden"
+      className="ll-auth min-h-screen flex relative overflow-hidden"
       style={{
-        background: `
-          radial-gradient(120% 90% at 85% 0%, rgba(44,181,176,.18) 0%, transparent 55%),
-          radial-gradient(90% 80% at 0% 100%, rgba(21,31,108,.55) 0%, transparent 60%),
-          linear-gradient(160deg, #0F1419 0%, #0c1322 45%, #0A0E12 100%)
-        `,
+        background:
+          "radial-gradient(90% 70% at 100% 0%, rgba(34,211,194,.10) 0%, transparent 60%), var(--ll-auth-bg)",
       }}
     >
-      {/* Soundwave texture overlay */}
+      {/* Left brand panel — desktop only. Dark gradient, so it puts the
+          dark-theme accent values back for its own children. */}
       <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage: "url('/images/LL soundwave3.png')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          opacity: 0.11,
-          mixBlendMode: "screen",
-        }}
-      />
-
-      {/* Left brand panel — desktop only */}
-      <div className="hidden lg:flex flex-col justify-between w-[440px] shrink-0 p-12 relative z-10 border-r border-white/[0.06]">
+        className="hidden lg:flex flex-col justify-between w-[440px] shrink-0 p-12 relative z-10 overflow-hidden"
+        style={
+          {
+            background: "var(--ll-auth-grad)",
+            "--ll-accent": "#4ECDC4",
+            "--ll-accent-ink": "#04201d",
+            "--ll-on-ink-2": "rgba(255,255,255,.78)",
+            "--ll-on-ink-3": "rgba(255,255,255,.6)",
+          } as React.CSSProperties
+        }
+      >
+        {/* Soundwave texture overlay */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: "url('/images/LL soundwave3.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            opacity: 0.14,
+            mixBlendMode: "screen",
+          }}
+        />
         {/* Logo */}
-        <Link href="/" className="block w-fit">
+        <Link href="/" className="block w-fit relative">
           <Image
             src="/images/ll-logo-white.png"
             alt="Lobby & Lounge"
@@ -162,7 +173,7 @@ export function AuthShell({ children }: AuthShellProps) {
         </Link>
 
         {/* Headline + features */}
-        <div>
+        <div className="relative">
           <span
             style={{
               fontFamily: "var(--ll-font-body)",
@@ -251,7 +262,9 @@ export function AuthShell({ children }: AuthShellProps) {
         </div>
 
         {/* Now playing chip */}
-        <NowPlayingChip />
+        <div className="relative">
+          <NowPlayingChip />
+        </div>
       </div>
 
       {/* Right — form area */}
@@ -260,7 +273,7 @@ export function AuthShell({ children }: AuthShellProps) {
         <div className="absolute top-6 left-6 lg:hidden">
           <Link href="/">
             <Image
-              src="/images/ll-logo-white.png"
+              src="/images/ll-logo-black.png"
               alt="Lobby & Lounge"
               width={57}
               height={24}
@@ -270,7 +283,7 @@ export function AuthShell({ children }: AuthShellProps) {
           </Link>
         </div>
 
-        <div className="w-full max-w-[420px]">{children}</div>
+        <div className={`w-full ${wide ? "max-w-[600px] py-12" : "max-w-[420px]"}`}>{children}</div>
       </div>
     </div>
   );

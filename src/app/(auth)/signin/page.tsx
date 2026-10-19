@@ -100,12 +100,12 @@ function LoginForm() {
     <AuthShell>
       <div
         style={{
-          background: "rgba(15,20,25,.55)",
+          background: "var(--ll-auth-card)",
           backdropFilter: "blur(24px)",
-          border: "1px solid rgba(255,255,255,.1)",
+          border: "1px solid var(--ll-auth-line)",
           borderRadius: 24,
           padding: "40px 36px",
-          boxShadow: "0 40px 80px -20px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04)",
+          boxShadow: "0 30px 70px -24px var(--ll-auth-shadow)",
         }}
       >
         {/* Header */}
@@ -116,7 +116,7 @@ function LoginForm() {
               fontWeight: 800,
               fontSize: 28,
               letterSpacing: "-.025em",
-              color: "#fff",
+              color: "var(--ll-auth-text)",
               marginBottom: 8,
             }}
           >
@@ -144,7 +144,7 @@ function LoginForm() {
                 fontSize: 11,
                 textTransform: "uppercase",
                 letterSpacing: ".12em",
-                color: "rgba(255,255,255,.5)",
+                color: "var(--ll-auth-text-2)",
                 marginBottom: 8,
               }}
             >
@@ -159,7 +159,7 @@ function LoginForm() {
                   transform: "translateY(-50%)",
                   width: 15,
                   height: 15,
-                  color: "rgba(255,255,255,.3)",
+                  color: "var(--ll-auth-muted)",
                   pointerEvents: "none",
                 }}
               />
@@ -174,18 +174,18 @@ function LoginForm() {
                   height: 48,
                   paddingLeft: 40,
                   paddingRight: 16,
-                  background: "rgba(255,255,255,.05)",
-                  border: "1px solid rgba(255,255,255,.1)",
+                  background: "var(--ll-auth-field)",
+                  border: "1px solid var(--ll-auth-line)",
                   borderRadius: 12,
-                  color: "#fff",
+                  color: "var(--ll-auth-text)",
                   fontFamily: "var(--ll-font-body)",
                   fontSize: 14,
                   outline: "none",
                   boxSizing: "border-box",
                   transition: "border-color .2s",
                 }}
-                onFocus={(e) => (e.target.style.borderColor = "rgba(78,205,196,.6)")}
-                onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,.1)")}
+                onFocus={(e) => (e.target.style.borderColor = "var(--ll-auth-focus)")}
+                onBlur={(e) => (e.target.style.borderColor = "var(--ll-auth-line)")}
               />
             </div>
           </div>
@@ -206,7 +206,7 @@ function LoginForm() {
                   fontSize: 11,
                   textTransform: "uppercase",
                   letterSpacing: ".12em",
-                  color: "rgba(255,255,255,.5)",
+                  color: "var(--ll-auth-text-2)",
                 }}
               >
                 Password
@@ -216,12 +216,12 @@ function LoginForm() {
                 style={{
                   fontFamily: "var(--ll-font-body)",
                   fontSize: 12,
-                  color: "rgba(255,255,255,.4)",
+                  color: "var(--ll-auth-muted)",
                   transition: "color .2s",
                 }}
-                onMouseEnter={(e) => ((e.target as HTMLElement).style.color = "#fff")}
+                onMouseEnter={(e) => ((e.target as HTMLElement).style.color = "var(--ll-auth-text)")}
                 onMouseLeave={(e) =>
-                  ((e.target as HTMLElement).style.color = "rgba(255,255,255,.4)")
+                  ((e.target as HTMLElement).style.color = "var(--ll-auth-muted)")
                 }
               >
                 Forgot password?
@@ -236,7 +236,7 @@ function LoginForm() {
                   transform: "translateY(-50%)",
                   width: 15,
                   height: 15,
-                  color: "rgba(255,255,255,.3)",
+                  color: "var(--ll-auth-muted)",
                   pointerEvents: "none",
                 }}
               />
@@ -251,18 +251,18 @@ function LoginForm() {
                   height: 48,
                   paddingLeft: 40,
                   paddingRight: 16,
-                  background: "rgba(255,255,255,.05)",
-                  border: "1px solid rgba(255,255,255,.1)",
+                  background: "var(--ll-auth-field)",
+                  border: "1px solid var(--ll-auth-line)",
                   borderRadius: 12,
-                  color: "#fff",
+                  color: "var(--ll-auth-text)",
                   fontFamily: "var(--ll-font-body)",
                   fontSize: 14,
                   outline: "none",
                   boxSizing: "border-box",
                   transition: "border-color .2s",
                 }}
-                onFocus={(e) => (e.target.style.borderColor = "rgba(78,205,196,.6)")}
-                onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,.1)")}
+                onFocus={(e) => (e.target.style.borderColor = "var(--ll-auth-focus)")}
+                onBlur={(e) => (e.target.style.borderColor = "var(--ll-auth-line)")}
               />
             </div>
           </div>
@@ -272,7 +272,7 @@ function LoginForm() {
               style={{
                 fontFamily: "var(--ll-font-body)",
                 fontSize: 13,
-                color: "#f87171",
+                color: "var(--ll-auth-error)",
                 textAlign: "center",
               }}
             >
@@ -300,7 +300,7 @@ function LoginForm() {
               alignItems: "center",
               justifyContent: "center",
               gap: 8,
-              boxShadow: "0 8px 24px -6px rgba(78,205,196,.5)",
+              boxShadow: "0 8px 24px -6px var(--ll-auth-glow)",
               transition: "opacity .2s, transform .2s",
             }}
             onMouseEnter={(e) => {
@@ -323,7 +323,7 @@ function LoginForm() {
             margin: "24px 0",
           }}
         >
-          <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,.08)" }} />
+          <div style={{ flex: 1, height: 1, background: "var(--ll-auth-line-soft)" }} />
           <span
             style={{
               fontFamily: "var(--ll-font-body)",
@@ -331,12 +331,12 @@ function LoginForm() {
               fontSize: 10,
               textTransform: "uppercase",
               letterSpacing: ".15em",
-              color: "rgba(255,255,255,.3)",
+              color: "var(--ll-auth-muted)",
             }}
           >
             Or
           </span>
-          <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,.08)" }} />
+          <div style={{ flex: 1, height: 1, background: "var(--ll-auth-line-soft)" }} />
         </div>
 
         {/* Google OAuth */}
@@ -345,8 +345,8 @@ function LoginForm() {
           style={{
             width: "100%",
             height: 48,
-            background: "rgba(255,255,255,.05)",
-            border: "1px solid rgba(255,255,255,.1)",
+            background: "var(--ll-auth-field)",
+            border: "1px solid var(--ll-auth-line)",
             borderRadius: 12,
             display: "flex",
             alignItems: "center",
@@ -357,15 +357,15 @@ function LoginForm() {
             fontFamily: "var(--ll-font-body)",
             fontWeight: 700,
             fontSize: 14,
-            color: "rgba(255,255,255,.8)",
+            color: "var(--ll-auth-text)",
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,.09)";
-            (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,.2)";
+            (e.currentTarget as HTMLButtonElement).style.background = "var(--ll-auth-hover)";
+            (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--ll-auth-focus)";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,.05)";
-            (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,.1)";
+            (e.currentTarget as HTMLButtonElement).style.background = "var(--ll-auth-field)";
+            (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--ll-auth-line)";
           }}
         >
           <img
@@ -383,7 +383,7 @@ function LoginForm() {
             textAlign: "center",
             fontFamily: "var(--ll-font-body)",
             fontSize: 13,
-            color: "rgba(255,255,255,.4)",
+            color: "var(--ll-auth-muted)",
           }}
         >
           Don&apos;t have an account?{" "}

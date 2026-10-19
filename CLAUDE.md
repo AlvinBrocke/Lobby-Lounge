@@ -65,6 +65,10 @@ Clerk issues the session JWT; the app never mints its own tokens. Authorization 
 
 This requires one manual Clerk Dashboard setting on **every** instance (dev and prod), or every user loops back to onboarding: Configure → Sessions → Customize session token → `{ "metadata": "{{user.public_metadata}}" }`. Session inactivity timeout / maximum lifetime are also configured there — the client-side `useIdleTimeout` hook is UX only.
 
+`/signup` sends `firstName` / `lastName` to `signUp.create`, so on **every** instance also enable Configure → User & authentication → **First and last name** (optional is fine). Without it Clerk rejects the sign-up form.
+
+**Sign-up / onboarding flow** (Figma "Screen-FLOW_Onboarding", light theme via the `.ll-auth` token scope in `globals.css`, set by `AuthShell`): `/signup` entry → account form → 6-digit code → verified → `/signup/onboarding` steps Business (name + type) → Audience (gender, age groups, lifestyle) → Genres (max 5) → Playback (tempo, volume) → "Your Lobby" screen, which runs `completeOnboarding` and only says "all set" once it returns. Option lists live in `src/lib/preferences.ts`; genre ids must keep prefix-matching Jamendo tags (`suggestedPlaylists`).
+
 ## Venue staff (Clerk Organizations)
 
 A venue's team is a Clerk **organization**, created by `createVenueTeam` (`src/app/(main)/settings/actions.ts`) with the venue name and `publicMetadata.venueOwnerId` = the owner's user id. It's idempotent (returns an existing membership's org) and runs automatically at the end of `completeOnboarding`; `ActivateVenue` calls it on page load for onboarded accounts that still have no org (older accounts, or a failed onboarding call). Settings → Zone & staff → "Set up your team" is the manual fallback. Only the Backend API can write that metadata. Roles are Clerk's built-ins: `org:admin` is "Admin" and `org:member` is "Curator". "Owner" is the admin whose id matches `venueOwnerId`. Curators don't see Zone & staff or Plan & billing.

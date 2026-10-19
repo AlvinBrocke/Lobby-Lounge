@@ -68,6 +68,25 @@ describe("userProfiles", () => {
     expect(profile?.onboardingCompleted).toBe(true);
   });
 
+  it("round-trips the audience and playback choices from onboarding", async () => {
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    const asUser = t.withIdentity({ subject: USER });
+    await asUser.mutation(api.userProfiles.createOrUpdate, {
+      audienceGender: "mixed",
+      ageGroups: ["gen-z", "millennials"],
+      guestDemographics: ["Trendy", "Luxury"],
+      tempo: "high",
+      sound: { defaultVolume: 80, fadeSeconds: 0, followSchedule: true },
+      onboardingCompleted: true,
+    });
+    const profile = await asUser.query(api.userProfiles.get, {});
+    expect(profile?.audienceGender).toBe("mixed");
+    expect(profile?.ageGroups).toEqual(["gen-z", "millennials"]);
+    expect(profile?.guestDemographics).toEqual(["Trendy", "Luxury"]);
+    expect(profile?.tempo).toBe("high");
+    expect(profile?.sound?.defaultVolume).toBe(80);
+  });
+
   it("supports 'Skip for now' — completing onboarding with no details", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
     const asUser = t.withIdentity({ subject: USER });

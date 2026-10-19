@@ -7,7 +7,7 @@ import { api } from "@convex/_generated/api";
 import type { Energy } from "@convex/lib/energy";
 import { DEFAULT_SOUND, FADE_OPTIONS } from "@convex/lib/sound";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BUSINESS_TYPES, GENRES, GUEST_DEMOGRAPHICS, MOODS } from "@/lib/preferences";
+import { BUSINESS_TYPES, GENRES, LIFESTYLES, MOODS } from "@/lib/preferences";
 import { ENERGY_LABELS } from "@/lib/playlists";
 import usePlayerStore from "@/store/usePlayerStore";
 import { cn } from "@/lib/utils";
@@ -141,9 +141,9 @@ export function PreferencesPanel() {
               </div>
             </div>
             <div>
-              <span className={fieldLabel}>Target audience</span>
+              <span className={fieldLabel}>Lifestyle</span>
               <div className="flex flex-wrap gap-1.5">
-                {GUEST_DEMOGRAPHICS.map((d) => (
+                {LIFESTYLES.map((d) => (
                   <Chip key={d} selected={audience.includes(d)} onClick={() => setAudience(toggle(audience, d))}>
                     {d}
                   </Chip>
