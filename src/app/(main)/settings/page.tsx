@@ -6,15 +6,10 @@ import { BillingPanel } from "@/components/settings/BillingPanel";
 import { StaffPanel } from "@/components/settings/StaffPanel";
 import { PreferencesPanel } from "@/components/settings/PreferencesPanel";
 import { VenuePanel } from "@/components/settings/VenuePanel";
+import { visibleTabs, type SettingsTabKey } from "@/lib/settingsTabs";
 import { cn } from "@/lib/utils";
 
-const TABS = [
-  { key: "venue", label: "Venue details" },
-  { key: "staff", label: "Zone & staff", adminOnly: true },
-  { key: "billing", label: "Plan & billing", adminOnly: true },
-  { key: "preferences", label: "Preferences" },
-] as const;
-type TabKey = (typeof TABS)[number]["key"];
+type TabKey = SettingsTabKey;
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -24,7 +19,7 @@ export default function SettingsPage() {
   // Curators (Clerk's org:member) run the music but not the team or the money.
   // Solo accounts have no org role and see everything.
   const isCurator = useAuth().orgRole === "org:member";
-  const tabs = TABS.filter((t) => !(isCurator && "adminOnly" in t));
+  const tabs = visibleTabs(isCurator);
   const tab: TabKey = tabs.some((t) => t.key === tabParam) ? (tabParam as TabKey) : "venue";
 
   return (
