@@ -130,7 +130,8 @@ export default function SchedulePage() {
     dragRef.current = payload;
     setDropError(null);
     // Next tick: re-rendering the dragged element inside dragstart can cancel the drag in Chrome.
-    setTimeout(() => setDragging(true), 0);
+    // Checks the ref so a drop that lands before this tick doesn't leave the grid stuck in drag mode.
+    setTimeout(() => setDragging(dragRef.current !== null), 0);
   }
 
   function endDrag() {
@@ -160,6 +161,12 @@ export default function SchedulePage() {
     const payload = dragRef.current;
     endDrag();
     if (!payload) return;
+    // Same check as the red tint; the server still validates, this just skips a request bound to fail.
+    const slot = { day, startHour: hour, duration: dragDuration(payload) };
+    if (!fitsAt(blocks ?? [], slot, payload.kind === "block" ? payload.id : undefined)) {
+      setDropError(`That doesn't fit at ${formatRange(slot.startHour, slot.duration)} on ${day} — it overlaps another block or runs past midnight.`);
+      return;
+    }
     try {
       if (payload.kind === "block") {
         await updateBlock({ id: payload.id as Id<"scheduleBlocks">, day, startHour: hour });
