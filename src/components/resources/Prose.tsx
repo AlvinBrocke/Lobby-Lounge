@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 
 /*
  * Long-form text styles for blog posts and help answers. Plain CSS scoped to

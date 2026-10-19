@@ -1,4 +1,4 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { LegalPage, Section, Sub, A, Email, Phone, LegalTable, ContactCard, sectionTitle } from "@/components/legal/LegalPage";
 import { DoNotSellToggle } from "@/components/legal/DoNotSellToggle";
 

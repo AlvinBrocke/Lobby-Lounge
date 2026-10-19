@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect } from "react";
+import type React from "react";
+import { useEffect } from "react";
 import { BRAND_COLORS, type BrandColor } from "@convex/lib/brand";
 import { AppLayout } from "@/components/layout/app-layout";
 import { useAccess } from "@/hooks/useAccess";

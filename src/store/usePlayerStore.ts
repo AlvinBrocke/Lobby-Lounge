@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { PlayerState, Track } from "@/types";
+import type { PlayerState, Track } from "@/types";
 
 /** Fisher–Yates: every order equally likely, each track exactly once. */
 export function shuffle<T>(items: T[]): T[] {

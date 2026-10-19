@@ -4,7 +4,7 @@ import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { useAuth, useOrganization, useOrganizationList, useUser } from "@clerk/nextjs";
 import posthog from "posthog-js";
-import { ReactNode, useEffect, useRef } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 import { createVenueTeam } from "@/app/(main)/settings/actions";
 
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;

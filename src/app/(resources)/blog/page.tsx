@@ -1,4 +1,4 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { posts } from "@/content/blog";
 import { PageHeader } from "@/components/resources/PageHeader";
 import { PostGrid } from "@/components/resources/PostCard";

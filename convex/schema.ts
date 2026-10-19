@@ -21,6 +21,8 @@ export default defineSchema({
     region: v.optional(v.string()), // state / province / free text
     locationCount: v.optional(v.number()),
     guestDemographics: v.optional(v.array(v.string())),
+    audienceGender: v.optional(v.string()), // AUDIENCE_GENDERS id in src/lib/preferences.ts
+    ageGroups: v.optional(v.array(v.string())), // AGE_GROUPS ids
     // Brand profile (Settings → Venue details → Edit brand).
     logoStorageId: v.optional(v.id("_storage")),
     brandColor: v.optional(v.string()), // a key of BRAND_COLORS in convex/lib/brand.ts
