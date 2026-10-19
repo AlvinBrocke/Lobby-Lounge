@@ -135,6 +135,21 @@ describe("jamendo.syncPlaylist", () => {
     expect(stored.artist).toBe("John Dada & the Weathermen");
   });
 
+  it("stores the album name, decoded", async () => {
+    const { t, playlistId } = await setup("Elegant");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(JSON.stringify({ results: [{ ...track("Blue Hour"), album_name: "Night &amp; Day" }] })),
+      ),
+    );
+
+    await t.action(internal.jamendo.syncPlaylist, { playlistId });
+
+    const [stored] = await t.withIdentity({ subject: "user_x" }).query(api.playlists.getTracks, { playlistId });
+    expect(stored.album).toBe("Night & Day");
+  });
+
   it("syncAllCurated syncs every curated playlist and reports errors per playlist", async () => {
     vi.stubEnv("JAMENDO_CLIENT_ID", "test-client");
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));

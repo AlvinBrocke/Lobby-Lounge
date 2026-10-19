@@ -34,6 +34,8 @@ export default defineSchema({
   tracks: defineTable({
     name: v.string(),
     artist: v.optional(v.string()),
+    // Only set on tracks synced after albums were added; older rows have none.
+    album: v.optional(v.string()),
     category: v.optional(v.string()),
     duration: v.optional(v.number()), // seconds
     energy: v.optional(v.string()), // 'low' | 'mid' | 'high'

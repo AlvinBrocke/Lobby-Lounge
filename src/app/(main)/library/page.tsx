@@ -3,16 +3,17 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { Ban, ChevronLeft, ChevronRight, Heart, Mic2, Moon, Music, Sun, User, X } from "lucide-react";
+import { Ban, ChevronLeft, ChevronRight, Disc3, Heart, Mic2, Moon, Music, Sun, User, X } from "lucide-react";
 import { api } from "@convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { ArtistCard } from "@/components/artists/ArtistCard";
 import { PlaylistCover } from "@/components/playlists/PlaylistCover";
+import { artistHref } from "@/lib/artists";
 import { ENERGY_LABELS } from "@/lib/playlists";
 import { formatDuration, formatTotalDuration } from "@/lib/utils";
 
 type PlaylistSummary = FunctionReturnType<typeof api.playlists.listCurated>[number];
-type SectionKey = "mine" | "daytime" | "evening" | "genres" | "artists" | "liked" | "blocked";
+type SectionKey = "mine" | "daytime" | "evening" | "genres" | "artists" | "albums" | "liked" | "blocked";
 type ReactionRow = FunctionReturnType<typeof api.trackReactions.listMine>[number];
 
 const card =
@@ -86,6 +87,7 @@ export default function LibraryPage() {
   const mine = useQuery(api.playlists.listByUser, isAuthenticated ? {} : "skip");
   const reactions = useQuery(api.trackReactions.listMine, isAuthenticated ? {} : "skip");
   const artists = useQuery(api.artists.list, isAuthenticated ? { limit: 50 } : "skip");
+  const albums = useQuery(api.artists.albums, isAuthenticated ? { limit: 50 } : "skip");
   const [section, setSection] = useState<SectionKey | null>(null);
   const [genre, setGenre] = useState<string | null>(null);
 
@@ -106,7 +108,7 @@ export default function LibraryPage() {
   const liked = (reactions ?? []).filter((r) => r.kind === "like");
   const blocked = (reactions ?? []).filter((r) => r.kind === "block");
 
-  const loading = curated === undefined || mine === undefined || reactions === undefined || artists === undefined;
+  const loading = curated === undefined || mine === undefined || reactions === undefined || artists === undefined || albums === undefined;
   const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
   const SECTIONS = [
@@ -115,6 +117,7 @@ export default function LibraryPage() {
     { key: "evening", label: "Evening & Night", count: plural(evening.length, "playlist"), accent: "#4A9EFF", icon: Moon },
     { key: "genres", label: "Genres", count: plural(genres.length, "genre"), accent: "#7C3AED", icon: Music },
     { key: "artists", label: "Artists", count: plural(artists?.length ?? 0, "artist"), accent: "#4A9EFF", icon: Mic2 },
+    { key: "albums", label: "Albums", count: plural(albums?.length ?? 0, "album"), accent: "#27E0C5", icon: Disc3 },
     { key: "liked", label: "Liked Songs", count: plural(liked.length, "song"), accent: "#FF4B6E", icon: Heart },
     { key: "blocked", label: "Blocked Songs", count: plural(blocked.length, "song"), accent: "#F59E0B", icon: Ban },
   ] as const;
@@ -149,6 +152,28 @@ export default function LibraryPage() {
             </div>
           ) : (
             <p className="text-sm text-muted-foreground py-6">Nothing here yet.</p>
+          ))}
+        {section === "albums" &&
+          (albums?.length ? (
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3">
+              {albums.map((a) => (
+                <Link
+                  key={`${a.artist}/${a.album}`}
+                  href={artistHref(a.artist)}
+                  className="p-2.5 rounded-xl bg-secondary border border-foreground/5 hover:bg-card transition-colors"
+                >
+                  <PlaylistCover src={a.coverImage} alt="" className="w-full aspect-square rounded-md" iconClassName="w-6 h-6" />
+                  <span className="block mt-2 text-xs font-bold text-foreground truncate">{a.album}</span>
+                  <span className="block text-[10px] text-faint truncate mt-0.5">
+                    {a.artist} · {plural(a.trackCount, "track")}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground py-6">
+              Albums appear as the weekly catalogue sync brings in new music.
+            </p>
           ))}
         {section === "liked" && (
           <TrackList tracks={liked} undoLabel="Unlove" empty="Tap the heart in the expanded player to save songs here." />

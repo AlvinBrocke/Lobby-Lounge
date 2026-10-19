@@ -68,6 +68,19 @@ describe("artists", () => {
     expect(await asUser.query(api.artists.get, { name: "Nobody" })).toBeNull();
   });
 
+  it("groups albums by artist, skipping tracks without one", async () => {
+    const { t, asUser } = await setup();
+    await t.run(async (ctx) => {
+      await ctx.db.insert("tracks", { name: "B1", artist: "Nora", album: "Blue", coverImage: "https://c/B1.jpg" });
+      await ctx.db.insert("tracks", { name: "B2", artist: "Nora", album: "Blue" });
+      await ctx.db.insert("tracks", { name: "B3", artist: "Kai", album: "Blue" });
+    });
+    expect(await asUser.query(api.artists.albums, {})).toEqual([
+      { album: "Blue", artist: "Nora", trackCount: 2, coverImage: "https://c/B1.jpg" },
+      { album: "Blue", artist: "Kai", trackCount: 1, coverImage: undefined },
+    ]);
+  });
+
   it("requires sign-in", async () => {
     const { t } = await setup();
     await expect(t.query(api.artists.list, {})).rejects.toThrow("Not authenticated");

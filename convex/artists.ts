@@ -79,3 +79,24 @@ export const get = query({
     };
   },
 });
+
+/** Albums in the catalogue, most tracks first. Tracks synced before albums were stored have none. */
+export const albums = query({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    await requireUser(ctx);
+    const byKey = new Map<string, { album: string; artist: string; trackCount: number; coverImage?: string }>();
+    // shortcut: same full-catalogue scan as `allArtists`.
+    for (const track of await ctx.db.query("tracks").collect()) {
+      if (!track.album || !track.artist) continue;
+      const key = `${track.artist}\u0000${track.album}`;
+      const album = byKey.get(key) ?? { album: track.album, artist: track.artist, trackCount: 0, coverImage: undefined };
+      album.trackCount += 1;
+      album.coverImage ??= track.coverImage;
+      byKey.set(key, album);
+    }
+    return [...byKey.values()]
+      .sort((a, b) => b.trackCount - a.trackCount || a.album.localeCompare(b.album))
+      .slice(0, clampLimit(args.limit, 50));
+  },
+});

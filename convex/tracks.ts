@@ -45,6 +45,7 @@ export const create = internalMutation({
   args: {
     name: v.string(),
     artist: v.optional(v.string()),
+    album: v.optional(v.string()),
     category: v.optional(v.string()),
     duration: v.optional(v.number()),
     energy: v.optional(v.string()),
