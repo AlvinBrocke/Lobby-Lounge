@@ -1,6 +1,7 @@
 import { mutation, query, type MutationCtx } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
+import { logActivity } from "./lib/activity";
 import { assertOwner, requireUser } from "./lib/auth";
 
 // Mirrored client-side in src/lib/announcements.ts — keep the two in sync.
@@ -145,7 +146,9 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const clerkUserId = await requireUser(ctx);
     const announcement = await clean(ctx, args);
-    return await ctx.db.insert("announcements", { ...announcement, clerkUserId, paused: false });
+    const id = await ctx.db.insert("announcements", { ...announcement, clerkUserId, paused: false });
+    await logActivity(ctx, clerkUserId, `Created announcement "${announcement.title}"`);
+    return id;
   },
 });
 
@@ -170,6 +173,7 @@ export const update = mutation({
     if (existing.storageId && existing.storageId !== announcement.storageId) {
       await ctx.storage.delete(existing.storageId);
     }
+    await logActivity(ctx, clerkUserId, `Updated announcement "${announcement.title}"`);
   },
 });
 
@@ -180,6 +184,7 @@ export const setPaused = mutation({
     const existing = await ctx.db.get(id);
     assertOwner(existing, clerkUserId, "Announcement");
     await ctx.db.patch(id, { paused });
+    await logActivity(ctx, clerkUserId, `${paused ? "Paused" : "Resumed"} announcement "${existing.title}"`);
   },
 });
 
@@ -191,5 +196,6 @@ export const remove = mutation({
     assertOwner(existing, clerkUserId, "Announcement");
     await ctx.db.delete(id);
     if (existing.storageId) await ctx.storage.delete(existing.storageId);
+    await logActivity(ctx, clerkUserId, `Deleted announcement "${existing.title}"`);
   },
 });

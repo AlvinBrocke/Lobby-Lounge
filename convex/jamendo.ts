@@ -14,6 +14,7 @@ const EMPTY_RESULT_RETRY_MS = 500;
 interface JamendoTrack {
   name: string;
   artist_name: string;
+  album_name?: string;
   duration: number;
   audio: string;
   image: string;
@@ -97,6 +98,7 @@ export const syncPlaylist = internalAction({
         await ctx.runMutation(internal.tracks.create, {
           name,
           artist: decodeEntities(track.artist_name),
+          album: track.album_name ? decodeEntities(track.album_name) : undefined,
           duration: track.duration,
           audioUrl: track.audio,
           coverImage: track.image,

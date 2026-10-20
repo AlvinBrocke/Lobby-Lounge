@@ -8,6 +8,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import type { FunctionReturnType } from "convex/server";
 import { CATEGORY_TAGS } from "@convex/lib/energy";
+import { ArtistCard } from "@/components/artists/ArtistCard";
 import { PlaylistCard } from "@/components/playlists/PlaylistCard";
 import { PlaylistCarousel } from "@/components/playlists/PlaylistCarousel";
 import { PlaylistFormModal, type PlaylistFormValues } from "@/components/playlists/PlaylistFormModal";
@@ -56,6 +57,7 @@ export default function PlaylistsPage() {
   // unauthenticated and `requireUser` throws.
   const curated = useQuery(api.playlists.listCurated, isAuthenticated ? {} : "skip");
   const mine = useQuery(api.playlists.listByUser, isAuthenticated ? {} : "skip");
+  const artists = useQuery(api.artists.list, isAuthenticated ? { limit: 12 } : "skip");
   const createPlaylist = useMutation(api.playlists.create);
 
   const activePlaylistId = usePlayerStore((s) => s.activePlaylistId);
@@ -177,6 +179,15 @@ export default function PlaylistsPage() {
             {rows.map(card)}
           </PlaylistCarousel>
         ))
+      )}
+
+      {/* Hidden while searching: the term filters playlists, not artists. */}
+      {!filtering && artists && artists.length > 0 && (
+        <PlaylistCarousel title="Artist spotlight" blurb="Faces behind the sound">
+          {artists.map((a) => (
+            <ArtistCard key={a.name} artist={a} />
+          ))}
+        </PlaylistCarousel>
       )}
 
       {/* The user's own playlists */}

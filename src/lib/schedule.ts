@@ -40,6 +40,20 @@ export function overlaps(a: BlockSlot, b: BlockSlot): boolean {
   );
 }
 
+/** Hours given to a playlist dropped onto the grid from the tray. */
+export const DROP_DURATION = 2;
+
+/** What's being dragged on the schedule grid. */
+export type DragPayload =
+  | { kind: "block"; id: string; duration: number }
+  | { kind: "playlist"; playlistId: string };
+
+/** Whether `slot` can go on the grid without overlapping or running past midnight. */
+export function fitsAt(blocks: (BlockSlot & { _id?: string })[], slot: BlockSlot, ignoreId?: string): boolean {
+  if (slot.startHour + slot.duration > 24) return false;
+  return !blocks.some((b) => b._id !== ignoreId && overlaps(b, slot));
+}
+
 /** The block playing right now, or null if nothing is scheduled. */
 export function activeBlock<T extends BlockSlot>(blocks: T[], now: Date): T | null {
   const day = todayKey(now);

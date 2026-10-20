@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { cn, fadeGain, formatDuration, formatTotalDuration } from "./utils";
+import { cn, fadeGain, formatDuration, formatTotalDuration, timeAgo } from "./utils";
 
 describe("cn", () => {
   it("returns a single class unchanged", () => {
@@ -60,4 +60,12 @@ describe("fadeGain", () => {
     expect(fadeGain(197, 200, 6)).toBe(0.5);
     expect(fadeGain(200, 200, 6)).toBe(0);
   });
+});
+
+describe("timeAgo", () => {
+  const now = new Date(2026, 9, 19, 12, 0).getTime();
+  it("says 'just now' under a minute", () => expect(timeAgo(now - 30_000, now)).toBe("just now"));
+  it("counts minutes", () => expect(timeAgo(now - 5 * 60_000, now)).toBe("5 min ago"));
+  it("counts hours", () => expect(timeAgo(now - 3 * 3_600_000, now)).toBe("3 h ago"));
+  it("counts days", () => expect(timeAgo(now - 2 * 86_400_000, now)).toBe("2 d ago"));
 });

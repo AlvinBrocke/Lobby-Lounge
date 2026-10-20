@@ -57,7 +57,7 @@ After `npx convex deploy`, copy the printed production URL into Vercel's Product
 
 Clerk issues the session JWT; the app never mints its own tokens. Authorization is layered:
 
-1. **Middleware** — `src/proxy.ts` (**not** `middleware.ts`; Next.js 16 convention, do not rename). Shallow check only: reads the session JWT, never the database. Protected routes: `/dashboard`, `/account`, `/explore`, `/schedule`, `/playlists`, `/library`, `/settings`, `/announcements`.
+1. **Middleware** — `src/proxy.ts` (**not** `middleware.ts`; Next.js 16 convention, do not rename). Shallow check only: reads the session JWT, never the database. Protected routes: `/dashboard`, `/account`, `/explore`, `/schedule`, `/playlists`, `/library`, `/settings`, `/announcements`, `/tasks`, `/artists`.
 2. **Data Access Layer** — `src/lib/session.ts`. Any server code (Server Components, layouts, Server Actions) that needs the current user goes through `verifySession()` (redirects) or `getSession()` (nullable). `getConvexToken()` returns the Clerk JWT for calling Convex from the server with `fetchQuery`/`fetchMutation` from `convex/nextjs`. `src/app/(main)/layout.tsx` calls `verifySession()` so nothing under `(main)` renders signed-out.
 3. **Convex** — `requireUser()` / `assertOwner()` in `convex/lib/auth.ts` on every user-scoped function. Shared-catalog writes (`playlists.seedCurated` / `appendTracks`, `tracks.*` create/update/remove/seed, `jamendo.*`) are `internalMutation` / `internalAction` — callable only from other Convex functions or `npx convex run`, never from the browser.
 
@@ -85,6 +85,7 @@ Manual Clerk Dashboard setup, on **every** instance (dev and prod):
    "venue_owner": "{{org.public_metadata.venueOwnerId}}"
    ```
    Without it, staff see an empty account of their own instead of the venue.
+3. Same template → also add `"name": "{{user.full_name}}"` and `"email": "{{user.primary_email_address}}"`. Settings → Activity log names whoever made each change from these claims (`convex/lib/activity.ts`); without them every row says "Someone".
 
 Someone who is **signed in** when they click an invite link can't redeem it straight away: Clerk rejects a ticket while a session is active (`session_exists`). `proxy.ts` lets any auth route through when the URL has `__clerk_ticket`, and `/signup` then offers "Sign out and continue", which signs out back to the same link.
 
@@ -120,7 +121,7 @@ npx convex run userProfiles:setPlan '{"clerkUserId":"user_...","plan":"basic"}'
 npx convex run userProfiles:extendTrial '{"clerkUserId":"user_...","days":14}'   # days from now; default 30
 ```
 
-Audio URLs are only ever returned by `playlists.getTracks`; `tracks.search` strips them and `tracks.list`/`get` are internal. Keep it that way, or the gate can be bypassed.
+Audio URLs are only ever returned by `playlists.getTracks` and `artists.get`, both behind `canPlay()`; `tracks.search`, `artists.list` and `artists.related` strip them and `tracks.list`/`get` are internal. Keep it that way, or the gate can be bypassed.
 
 `JAMENDO_CLIENT_ID` and `CLERK_JWT_ISSUER_DOMAIN` are **not** Next.js env vars — they're read Convex-side (`convex/jamendo.ts` and `convex/auth.config.ts`), so they must be set via the Convex CLI (`npx convex env set JAMENDO_CLIENT_ID <value>`, add `--prod` for production), not in `.env.local`.
 

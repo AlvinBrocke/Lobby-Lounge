@@ -1,6 +1,7 @@
 import { mutation, query, type MutationCtx } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
+import { logActivity } from "./lib/activity";
 import { assertOwner, requireUser } from "./lib/auth";
 
 // Mirrored client-side in src/lib/schedule.ts — keep the two in sync.
@@ -85,6 +86,13 @@ async function validateBlock(
   }
 }
 
+/** How a block is named in the activity log: its title, else its playlist's name. */
+async function labelOf(ctx: MutationCtx, block: { title?: string; playlistId?: Id<"playlists"> }) {
+  if (block.title) return block.title;
+  const playlist = block.playlistId ? await ctx.db.get(block.playlistId) : null;
+  return playlist?.name ?? "a block";
+}
+
 /** Trims the title and turns an empty one into "no title". */
 function cleanTitle(title: string | undefined): string | undefined {
   const trimmed = title?.trim();
@@ -114,7 +122,13 @@ export const create = mutation({
     const clerkUserId = await requireUser(ctx);
     const block = { ...args, title: cleanTitle(args.title) };
     await validateBlock(ctx, clerkUserId, block);
-    return await ctx.db.insert("scheduleBlocks", { ...block, clerkUserId });
+    const id = await ctx.db.insert("scheduleBlocks", { ...block, clerkUserId });
+    await logActivity(
+      ctx,
+      clerkUserId,
+      `Scheduled "${await labelOf(ctx, block)}" on ${block.day} at ${formatHour(block.startHour)}`,
+    );
+    return id;
   },
 });
 
@@ -142,8 +156,14 @@ export const update = mutation({
 
     // Validate the block as it will be after the patch, excluding itself from
     // the overlap check so moving a block within its own slot is allowed.
-    await validateBlock(ctx, clerkUserId, { ...block, ...patch }, id);
+    const next = { ...block, ...patch };
+    await validateBlock(ctx, clerkUserId, next, id);
     await ctx.db.patch(id, patch);
+    await logActivity(
+      ctx,
+      clerkUserId,
+      `Updated "${await labelOf(ctx, next)}" on ${next.day} at ${formatHour(next.startHour)}`,
+    );
   },
 });
 
@@ -156,5 +176,6 @@ export const remove = mutation({
     assertOwner(block, clerkUserId, "Schedule block");
 
     await ctx.db.delete(args.id);
+    await logActivity(ctx, clerkUserId, `Removed "${await labelOf(ctx, block)}" from ${block.day}`);
   },
 });

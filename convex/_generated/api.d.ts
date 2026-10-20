@@ -8,9 +8,12 @@
  * @module
  */
 
+import type * as activity from "../activity.js";
 import type * as announcements from "../announcements.js";
+import type * as artists from "../artists.js";
 import type * as crons from "../crons.js";
 import type * as jamendo from "../jamendo.js";
+import type * as lib_activity from "../lib/activity.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_billing from "../lib/billing.js";
 import type * as lib_brand from "../lib/brand.js";
@@ -31,9 +34,12 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  activity: typeof activity;
   announcements: typeof announcements;
+  artists: typeof artists;
   crons: typeof crons;
   jamendo: typeof jamendo;
+  "lib/activity": typeof lib_activity;
   "lib/auth": typeof lib_auth;
   "lib/billing": typeof lib_billing;
   "lib/brand": typeof lib_brand;

@@ -34,12 +34,16 @@ export default defineSchema({
   tracks: defineTable({
     name: v.string(),
     artist: v.optional(v.string()),
+    // Only set on tracks synced after albums were added; older rows have none.
+    album: v.optional(v.string()),
     category: v.optional(v.string()),
     duration: v.optional(v.number()), // seconds
     energy: v.optional(v.string()), // 'low' | 'mid' | 'high'
     audioUrl: v.optional(v.string()),
     coverImage: v.optional(v.string()),
-  }).searchIndex("search_name", { searchField: "name" }),
+  })
+    .searchIndex("search_name", { searchField: "name" })
+    .index("by_artist", ["artist"]),
 
   playlists: defineTable({
     // Absent on curated playlists, which ship with the app and have no owner.
@@ -110,5 +114,15 @@ export default defineSchema({
     endMinute: v.optional(v.number()),
     everyMinutes: v.optional(v.number()),
     interruptMusic: v.boolean(),
+  }).index("by_clerk_user", ["clerkUserId"]),
+
+  // Settings → Activity log. Append-only, written by `logActivity` in
+  // convex/lib/activity.ts after a venue's mutation succeeds.
+  // shortcut: rows are never pruned, add a cron that deletes rows older than 90 days once tables grow.
+  activity: defineTable({
+    clerkUserId: v.string(), // venue owner (what requireUser returns)
+    actorId: v.string(), // identity.subject of the person who did it
+    actorName: v.string(),
+    summary: v.string(), // e.g. 'Moved "Morning Jazz" to Tue 9 am'
   }).index("by_clerk_user", ["clerkUserId"]),
 });
