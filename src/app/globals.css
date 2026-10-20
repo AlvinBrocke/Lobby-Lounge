@@ -228,6 +228,18 @@
 .eq-bars-paused .eq-bar { animation-play-state: paused; }
 
 .live-dot { animation: live-pulse 2s ease-in-out infinite; }
+
+/* App splash (AppSplash) waveform: bars grow from the centre line, and the
+   per-bar delay makes the peak travel left to right like a playhead. */
+@keyframes ll-wave {
+  0%, 100% { transform: scaleY(0.3); opacity: 0.5; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+.ll-wave-bar { animation: ll-wave 1.1s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .ll-splash .ll-wave-bar { animation: none; transform: scaleY(0.6); }
+  .ll-splash { transform: none !important; }
+}
 .hero-pip { animation: hero-pulse 2s ease-in-out infinite; }
 
 @layer base {

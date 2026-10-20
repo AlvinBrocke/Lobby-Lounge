@@ -1,9 +1,11 @@
 "use client";
 
 import type React from "react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useConvexAuth } from "convex/react";
 import { BRAND_COLORS, type BrandColor } from "@convex/lib/brand";
 import { AppLayout } from "@/components/layout/app-layout";
+import { AppSplash } from "@/components/layout/AppSplash";
 import { useAccess } from "@/hooks/useAccess";
 import { useIdleTimeout } from "@/hooks/useIdleTimeout";
 import { useApplyTheme } from "@/hooks/useTheme";
@@ -14,7 +16,30 @@ export function MainShell({ children }: { children: React.ReactNode }) {
   useIdleTimeout();
   useBrandColor();
   useApplyTheme();
-  return <AppLayout>{children}</AppLayout>;
+  const ready = useAppReady();
+  // The app mounts under the splash so its queries load in parallel with it.
+  return (
+    <>
+      <AppLayout>{children}</AppLayout>
+      <AppSplash ready={ready} />
+    </>
+  );
+}
+
+/**
+ * True once the profile has loaded (so the brand colour is already applied),
+ * or once there's no point waiting: Convex rejected the token, which skips the
+ * profile query for good, or the backend hasn't answered within 8s.
+ */
+function useAppReady() {
+  const { isLoading, isAuthenticated } = useConvexAuth();
+  const profileLoaded = useAccess() !== undefined;
+  const [timedOut, setTimedOut] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setTimedOut(true), 8000);
+    return () => clearTimeout(id);
+  }, []);
+  return profileLoaded || (!isLoading && !isAuthenticated) || timedOut;
 }
 
 /**
