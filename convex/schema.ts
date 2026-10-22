@@ -11,6 +11,9 @@ export default defineSchema({
     // Overrides the default trial end (profile creation + TRIAL_DAYS), e.g. to
     // extend a trial via `userProfiles:extendTrial`. Epoch ms.
     trialEndsAt: v.optional(v.number()),
+    // Saved by the Stripe webhook on first payment; later subscription events
+    // only carry this id, not the Clerk user id.
+    stripeCustomerId: v.optional(v.string()),
     genres: v.array(v.string()),
     mood: v.optional(v.string()),
     onboardingCompleted: v.boolean(),
@@ -29,7 +32,9 @@ export default defineSchema({
     // Settings → Preferences. Tempo matches track `energy`.
     tempo: v.optional(v.union(v.literal("low"), v.literal("mid"), v.literal("high"))),
     sound: v.optional(soundSettings),
-  }).index("by_clerk_user", ["clerkUserId"]),
+  })
+    .index("by_clerk_user", ["clerkUserId"])
+    .index("by_stripe_customer", ["stripeCustomerId"]),
 
   tracks: defineTable({
     name: v.string(),

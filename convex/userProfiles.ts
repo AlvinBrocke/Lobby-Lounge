@@ -156,9 +156,9 @@ export const saveBrand = mutation({
 });
 
 /* ── Billing admin (internal only) ────────────────────────────────────────── */
-// Billing is a Stripe Payment Link with no webhook, so after a payment lands
-// you flip the plan by hand. The Stripe payment's "client_reference_id" is
-// the Clerk user id to pass here:
+// The Stripe webhook (convex/http.ts) calls activateSubscription and
+// endSubscription. setPlan / extendTrial are for fixing things by hand; the
+// Stripe payment's "client_reference_id" is the Clerk user id to pass:
 //   npx convex run userProfiles:setPlan '{"clerkUserId":"user_...","plan":"basic"}'
 
 async function profileFor(ctx: MutationCtx, clerkUserId: string) {
@@ -178,6 +178,29 @@ export const setPlan = internalMutation({
   handler: async (ctx, args) => {
     const profile = await profileFor(ctx, args.clerkUserId);
     await ctx.db.patch(profile._id, { plan: args.plan });
+  },
+});
+
+/** Stripe checkout finished: the payer's venue is on Basic. */
+export const activateSubscription = internalMutation({
+  args: { clerkUserId: v.string(), stripeCustomerId: v.string() },
+  handler: async (ctx, args) => {
+    const profile = await profileFor(ctx, args.clerkUserId);
+    await ctx.db.patch(profile._id, { plan: "basic", stripeCustomerId: args.stripeCustomerId });
+  },
+});
+
+/** Stripe subscription ended (cancelled, or every payment retry failed): playback stops now. */
+export const endSubscription = internalMutation({
+  args: { stripeCustomerId: v.string() },
+  handler: async (ctx, args) => {
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_stripe_customer", (q) => q.eq("stripeCustomerId", args.stripeCustomerId))
+      .unique();
+    // A customer we never activated has no access to revoke.
+    if (!profile) return;
+    await ctx.db.patch(profile._id, { plan: "trial", trialEndsAt: Date.now() });
   },
 });
 

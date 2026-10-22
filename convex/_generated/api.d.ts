@@ -12,6 +12,7 @@ import type * as activity from "../activity.js";
 import type * as announcements from "../announcements.js";
 import type * as artists from "../artists.js";
 import type * as crons from "../crons.js";
+import type * as http from "../http.js";
 import type * as jamendo from "../jamendo.js";
 import type * as lib_activity from "../lib/activity.js";
 import type * as lib_auth from "../lib/auth.js";
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   announcements: typeof announcements;
   artists: typeof artists;
   crons: typeof crons;
+  http: typeof http;
   jamendo: typeof jamendo;
   "lib/activity": typeof lib_activity;
   "lib/auth": typeof lib_auth;
