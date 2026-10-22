@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { Cast, Speaker } from "lucide-react";
+import { Bluetooth, Cast, Speaker } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Not in TypeScript's DOM lib yet (Safari's AirPlay picker; the speaker picker).
@@ -12,8 +12,9 @@ type Support = { cast: boolean; speaker: boolean };
 
 /**
  * "Devices" in the player bar: send the music to a Cast/AirPlay receiver, or
- * pick which speaker this computer plays through. Each option only shows when
- * the browser supports it, and the button hides when neither is available.
+ * pick which speaker this computer plays through. Cast and the speaker picker
+ * only show when the browser supports them; Bluetooth is always explained,
+ * because no browser can pair it — the page plays through the system output.
  */
 export function DevicesButton({ audioRef, disabled }: { audioRef: RefObject<HTMLAudioElement | null>; disabled: boolean }) {
   const [support, setSupport] = useState<Support>({ cast: false, speaker: false });
@@ -21,6 +22,7 @@ export function DevicesButton({ audioRef, disabled }: { audioRef: RefObject<HTML
   const [connected, setConnected] = useState(false);
   const [speakerName, setSpeakerName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showBluetooth, setShowBluetooth] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   // Feature-detect after mount so the server render and first client render agree.
@@ -54,8 +56,6 @@ export function DevicesButton({ audioRef, disabled }: { audioRef: RefObject<HTML
     return () => document.removeEventListener("mousedown", onDown);
   }, [open]);
 
-  if (!support.cast && !support.speaker) return null;
-
   async function cast() {
     const audio = audioRef.current as AirPlayAudio | null;
     setOpen(false);
@@ -65,8 +65,10 @@ export function DevicesButton({ audioRef, disabled }: { audioRef: RefObject<HTML
       else audio.webkitShowPlaybackTargetPicker?.();
     } catch (e) {
       // Closing the picker rejects with NotAllowedError; that's not a failure.
-      if ((e as DOMException).name === "NotFoundError") setError("No Cast or AirPlay devices found on this network.");
-      else if ((e as DOMException).name !== "NotAllowedError") setError("Couldn't open the device picker.");
+      const name = (e as DOMException).name;
+      if (name === "NotFoundError") setError("No Cast or AirPlay devices found on this network.");
+      else if (name === "NotSupportedError") setError("This browser can't cast this audio. Try Chrome with a Google Cast speaker, or Safari for AirPlay.");
+      else if (name !== "NotAllowedError") setError("Couldn't open the device picker.");
     }
   }
 
@@ -91,6 +93,7 @@ export function DevicesButton({ audioRef, disabled }: { audioRef: RefObject<HTML
       <button
         onClick={() => {
           setError(null);
+          setShowBluetooth(false);
           setOpen((o) => !o);
         }}
         disabled={disabled}
@@ -126,13 +129,25 @@ export function DevicesButton({ audioRef, disabled }: { audioRef: RefObject<HTML
                   </span>
                 </button>
               )}
-              {support.speaker && (
+              {support.speaker ? (
                 <button role="menuitem" onClick={chooseSpeaker} className={item}>
                   <Speaker className="w-4 h-4 text-primary shrink-0" />
                   <span>
                     <span className="block font-semibold">Choose speaker</span>
                     <span className="block text-[10px] text-muted-foreground truncate">
                       {speakerName ?? "Wired or Bluetooth output"}
+                    </span>
+                  </span>
+                </button>
+              ) : (
+                <button role="menuitem" onClick={() => setShowBluetooth((b) => !b)} className={item} aria-expanded={showBluetooth}>
+                  <Bluetooth className="w-4 h-4 text-primary shrink-0" />
+                  <span>
+                    <span className="block font-semibold">Bluetooth speaker</span>
+                    <span className="block text-[10px] text-muted-foreground">
+                      {showBluetooth
+                        ? "Pair it in your computer's or tablet's Bluetooth settings and pick it as the sound output. The music follows automatically."
+                        : "How to connect"}
                     </span>
                   </span>
                 </button>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { Ban, ChevronLeft, ChevronRight, Disc3, Heart, Mic2, Moon, Music, Sun, User, X } from "lucide-react";
+import { Ban, ChevronLeft, ChevronRight, Disc3, Heart, Mic2, Music, User, X } from "lucide-react";
 import { api } from "@convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { ArtistCard } from "@/components/artists/ArtistCard";
@@ -13,7 +13,7 @@ import { ENERGY_LABELS } from "@/lib/playlists";
 import { formatDuration, formatTotalDuration } from "@/lib/utils";
 
 type PlaylistSummary = FunctionReturnType<typeof api.playlists.listCurated>[number];
-type SectionKey = "mine" | "daytime" | "evening" | "genres" | "artists" | "albums" | "liked" | "blocked";
+type SectionKey = "mine" | "genres" | "artists" | "albums" | "liked" | "blocked";
 type ReactionRow = FunctionReturnType<typeof api.trackReactions.listMine>[number];
 
 const card =
@@ -92,8 +92,6 @@ export default function LibraryPage() {
   const [genre, setGenre] = useState<string | null>(null);
 
   const all = [...(curated ?? []), ...(mine ?? [])];
-  const daytime = (curated ?? []).filter((p) => p.section === "daytime");
-  const evening = (curated ?? []).filter((p) => p.section === "evening");
   // Genres are the categories that actually have playlists, each with a cover to show.
   const genres = Array.from(
     all.reduce((map, p) => {
@@ -113,8 +111,6 @@ export default function LibraryPage() {
 
   const SECTIONS = [
     { key: "mine", label: "My Playlists", count: plural(mine?.length ?? 0, "playlist"), accent: "#FF4B6E", icon: User },
-    { key: "daytime", label: "Daytime Sets", count: plural(daytime.length, "playlist"), accent: "#27E0C5", icon: Sun },
-    { key: "evening", label: "Evening & Night", count: plural(evening.length, "playlist"), accent: "#4A9EFF", icon: Moon },
     { key: "genres", label: "Genres", count: plural(genres.length, "genre"), accent: "#7C3AED", icon: Music },
     { key: "artists", label: "Artists", count: plural(artists?.length ?? 0, "artist"), accent: "#4A9EFF", icon: Mic2 },
     { key: "albums", label: "Albums", count: plural(albums?.length ?? 0, "album"), accent: "#27E0C5", icon: Disc3 },
@@ -141,8 +137,6 @@ export default function LibraryPage() {
         </div>
 
         {section === "mine" && <PlaylistList playlists={mine ?? []} />}
-        {section === "daytime" && <PlaylistList playlists={daytime} />}
-        {section === "evening" && <PlaylistList playlists={evening} />}
         {section === "artists" &&
           (artists?.length ? (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(132px,1fr))] gap-2">

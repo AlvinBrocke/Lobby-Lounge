@@ -22,6 +22,7 @@ import { useMediaSession, useWakeLock } from "@/hooks/useKeepAwake";
 import { useVolumeSupported } from "@/hooks/useVolumeSupported";
 import { TrackReactions, useSyncBlockedTracks } from "@/components/player/TrackReactions";
 import { DevicesButton } from "@/components/player/DevicesButton";
+import { PlayerTips } from "@/components/player/PlayerTips";
 import { UpNext } from "@/components/player/UpNext";
 import type { ScheduleStatus } from "@/hooks/useScheduleAutoplay";
 import type { Track } from "@/types";
@@ -313,6 +314,27 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
     }
   }, [currentTrack, clearStall, fail]);
 
+  // The crossfade: near the end of a song, a second <audio> ("tail") takes over
+  // its last seconds and fades them out while the main element starts the next
+  // track. Only the main element is ever queued, stall-checked or cast.
+  const tailRef = useRef<HTMLAudioElement | null>(null);
+  const tailTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const crossfading = useRef(false);
+
+  const stopTail = useCallback(() => {
+    if (tailTimer.current) clearInterval(tailTimer.current);
+    tailTimer.current = null;
+    crossfading.current = false;
+    const tail = tailRef.current;
+    if (tail?.hasAttribute("src")) {
+      tail.pause();
+      tail.removeAttribute("src");
+      tail.load();
+    }
+  }, []);
+
+  useEffect(() => stopTail, [stopTail]);
+
   // Sync play/pause with store
   useEffect(() => {
     const audio = audioRef.current;
@@ -332,23 +354,56 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
       });
     } else {
       clearStall();
+      stopTail();
       audio.pause();
     }
-  }, [isPlaying, currentTrack, announcing, stopped, clearStall, setIsPlaying]);
+  }, [isPlaying, currentTrack, announcing, stopped, clearStall, stopTail, setIsPlaying]);
 
   useEffect(() => clearStall, [clearStall]);
 
   const sound = access?.profile?.sound;
   const fadeSeconds = sound?.fadeSeconds ?? 0;
-  // 0-1 multiplier for "Fade between songs": dips the volume over the first
-  // and last `fadeSeconds` of each track. A single <audio> can't overlap two
-  // tracks, so this fades out and back in rather than truly crossfading.
+  // 0-1 multiplier for "Fade between songs": fades each track in over its
+  // first `fadeSeconds` (and out over its last, when there's no crossfade).
   const fade = useRef(1);
 
   const applyVolume = useCallback(() => {
     const audio = audioRef.current;
     if (audio) audio.volume = (usePlayerStore.getState().volume / 100) * fade.current;
   }, []);
+
+  function maybeCrossfade(main: HTMLAudioElement) {
+    const tail = tailRef.current;
+    const left = main.duration - main.currentTime;
+    if (!tail || crossfading.current || fadeSeconds <= 0 || left > fadeSeconds || main.duration < fadeSeconds * 2) return;
+    const { isPlaying, announcing, pendingAnnouncements, queue, repeat, playlistTracks } = usePlayerStore.getState();
+    // Skip it where it can't work or would be wrong; the track then fades out and ends as before:
+    // a waiting announcement plays at the song's end, iOS can't set volume, a cast plays elsewhere,
+    // and with no different next song there's nothing to fade into.
+    if (!isPlaying || announcing || pendingAnnouncements.length > 0 || !volumeSupported) return;
+    if (main.remote?.state === "connected" || playlistTracks.length < 2 || (queue.length === 0 && !repeat)) return;
+
+    crossfading.current = true;
+    const startVolume = main.volume;
+    tail.src = main.currentSrc;
+    tail.currentTime = main.currentTime;
+    tail.volume = startVolume;
+    (main.sinkId ? tail.setSinkId(main.sinkId) : Promise.resolve())
+      .then(() => tail.play())
+      .then(() => {
+        // The next track starts silent and fades in (see fadeGain).
+        fade.current = 0;
+        applyVolume();
+        nextTrack();
+        const start = Date.now();
+        tailTimer.current = setInterval(() => {
+          const remaining = 1 - (Date.now() - start) / (fadeSeconds * 1000);
+          if (remaining <= 0) stopTail();
+          else tail.volume = startVolume * remaining;
+        }, 50);
+      })
+      .catch(stopTail);
+  }
 
   // Sync volume with store
   useEffect(applyVolume, [volume, applyVolume]);
@@ -460,6 +515,7 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
             fade.current = gain;
             applyVolume();
           }
+          maybeCrossfade(el);
           clearStall();
         }}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
@@ -482,6 +538,7 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
         }}
         className="hidden"
       />
+      <audio ref={tailRef} onError={stopTail} className="hidden" />
 
       {expanded && currentTrack && (
         <div
@@ -580,7 +637,7 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
             </div>
           </div>
 
-          {/* Queue (where the sidebar can't show it) + devices + volume */}
+          {/* Queue (where the sidebar can't show it) + tips + devices + volume */}
           <div className="w-[30%] flex items-center justify-end gap-1 pl-3 sm:pl-5">
             <button
               onClick={() => setShowQueue(true)}
@@ -590,6 +647,7 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
             >
               <ListMusic className="w-[15px] h-[15px] touch:w-5 touch:h-5" />
             </button>
+            <PlayerTips />
             <DevicesButton audioRef={audioRef} disabled={!currentTrack} />
             <div ref={volumeRef} className="relative">
               <button

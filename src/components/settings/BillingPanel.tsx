@@ -18,6 +18,14 @@ function formatDate(ms: number) {
   return new Date(ms).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
+/** Stripe's portal login page pre-fills the email it sends the one-time code to. */
+function withEmail(href: string, email?: string) {
+  if (!email) return href;
+  const url = new URL(href);
+  url.searchParams.set("prefilled_email", email);
+  return url.toString();
+}
+
 function Skeleton({ className }: { className: string }) {
   return <div className={`rounded bg-muted animate-pulse ${className}`} />;
 }
@@ -34,6 +42,7 @@ export function BillingPanel() {
   const email = user?.primaryEmailAddress?.emailAddress;
   // The plan lives on the venue owner's profile, so a payment by another admin is still credited to it.
   const subscribeHref = venueOwnerId ? subscribeUrl(venueOwnerId, email) : null;
+  const portalHref = customerPortalUrl && withEmail(customerPortalUrl, email);
 
   let statusLine = "";
   if (state) {
@@ -75,11 +84,6 @@ export function BillingPanel() {
                   Online checkout isn&apos;t available yet — contact us to subscribe.
                 </p>
               ))}
-            {state?.access.status === "active" && customerPortalUrl && (
-              <a href={customerPortalUrl} className={primaryButton}>
-                Manage subscription &amp; invoices
-              </a>
-            )}
           </div>
 
           <p className="text-[26px] font-bold text-foreground">
@@ -99,6 +103,27 @@ export function BillingPanel() {
             Payments are handled securely by Stripe — your card details never touch Lobby &amp; Lounge.
           </CardDescription>
         </CardHeader>
+        {state && (
+          <CardContent>
+            {state.access.status !== "active" ? (
+              <p className="text-xs text-muted-foreground">You&apos;ll add your card at checkout when you subscribe.</p>
+            ) : portalHref ? (
+              <>
+                <a href={portalHref} className={primaryButton}>
+                  Update payment method
+                </a>
+                <p className="text-[10px] text-faint mt-2">
+                  Opens Stripe&apos;s billing portal to change your card, download invoices or cancel. Sign in with the
+                  email you paid with.
+                </p>
+              </>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Contact us to update your card or get an invoice.
+              </p>
+            )}
+          </CardContent>
+        )}
       </Card>
     </div>
   );
