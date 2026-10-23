@@ -12,12 +12,12 @@ const services = [
 ];
 
 export const StreamingWarning = () => (
-  <section id="streaming-warning" className="scroll-mt-20 border-t border-ll-line py-24 md:py-32">
+  <section id="streaming-warning" className="scroll-mt-20 bg-ll-paper-2 py-24 md:py-32">
     <div className="ll-container">
       <div data-ll-reveal>
-        <h2 className="ll-h1 max-w-4xl">Avoid hefty fines from streaming personal playlists in your establishment</h2>
-        <p className="mt-6 max-w-3xl text-lg leading-relaxed text-ll-text-2 md:text-xl">
-          Streaming from non-commercial streaming services is an infringement on the intellectual property rights of right holders (musicians) under U.S copyright law.
+        <h2 className="ll-h2 max-w-3xl">Avoid hefty fines from streaming personal playlists in your establishment</h2>
+        <p className="ll-lead mt-5 max-w-2xl">
+          Streaming from non-commercial streaming services is an infringement on the intellectual property rights of right holders (musicians) under U.S. copyright law.
         </p>
       </div>
 
@@ -27,7 +27,7 @@ export const StreamingWarning = () => (
             key={s.name}
             data-ll-reveal
             data-ll-delay={i % 3 ? String(i % 3) : undefined}
-            className="overflow-hidden rounded-md border border-ll-line bg-white"
+            className="overflow-hidden rounded-2xl border border-ll-line bg-white"
           >
             <div
               className={`flex items-center gap-2 px-4 py-2.5 text-[11px] ${s.dark ? "text-ll-text" : "text-white"}`}
@@ -56,7 +56,7 @@ export const StreamingWarning = () => (
         ))}
       </ul>
 
-      <p data-ll-reveal className="mt-12 max-w-4xl text-2xl leading-snug text-ll-teal-ink md:text-[32px]">
+      <p data-ll-reveal className="mt-12 max-w-3xl text-xl font-medium leading-snug tracking-tight text-ll-teal-ink md:text-2xl">
         You infringe on (I) sound recording, (II) publishing &amp; (III) performing rights of musicians when you stream from YouTube, Spotify or Apple Music.
       </p>
     </div>

@@ -16,7 +16,7 @@ const SRC_W = 511;
 const SRC_H = 689;
 
 export const CatalogBand = () => (
-  <section className="ll-catalog overflow-hidden border-t border-ll-line bg-ll-paper-2 pt-24 md:pt-28">
+  <section className="ll-catalog overflow-hidden bg-ll-paper-2 pt-24 md:pt-28">
     <div data-ll-reveal className="ll-container mb-12 max-w-[1200px]">
       <p className="ll-eyebrow">The catalog</p>
       <h2 className="ll-h2 mt-3">Sound great, all day</h2>

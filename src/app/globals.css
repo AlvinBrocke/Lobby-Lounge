@@ -164,6 +164,7 @@
 }
 /* Scroll-reveal */
 @media (prefers-reduced-motion: no-preference) {
+  html.ll-js { scroll-behavior: smooth; }
   html.ll-js [data-ll-reveal] {
     opacity: 0;
     transform: translateY(12px);

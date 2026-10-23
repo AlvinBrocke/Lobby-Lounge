@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 
 // The page's one dark block: brand navy with the soundwave asset, kept static.
 export const CallToAction = () => (
-  <section className="ll-container pb-24 md:pb-32">
+  <section className="ll-container py-24 md:py-32">
     <div className="relative overflow-hidden rounded-3xl bg-ll-navy px-6 py-16 text-white md:px-16 md:py-20">
       <div
         aria-hidden

@@ -1,19 +1,19 @@
 import React from "react";
 import Image from "next/image";
-import { ArrowUpRight } from "lucide-react";
-import { supportHref } from "@/lib/site";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 export const ArtistsSection = () => (
-  <section id="artists" className="scroll-mt-20 bg-white py-24 md:py-32">
+  <section id="artists" className="scroll-mt-20 bg-ll-paper-2 py-24 md:py-32">
     <div className="ll-container grid items-center gap-12 md:grid-cols-2 md:gap-20">
       <div data-ll-reveal>
-        <h2 className="ll-h1">Reward musicians for their contributions to your space.</h2>
-        <p className="ll-lead mt-6 md:text-xl">
+        <h2 className="ll-h2">Reward musicians for their contributions to your space.</h2>
+        <p className="ll-lead mt-5">
           We work with independent artists &amp; labels with a sizable catalog that reflects your local culture while keeping staff &amp; guests engaged…
         </p>
-        <a href={supportHref("Book a demo")} className="ll-btn ll-btn-primary mt-7">
-          Book Demo <ArrowUpRight className="h-4 w-4" aria-hidden />
-        </a>
+        <Link href="/signup" className="ll-btn ll-btn-primary mt-8">
+          Start free trial <ArrowRight className="h-4 w-4" aria-hidden />
+        </Link>
       </div>
 
       <figure data-ll-reveal data-ll-delay="1">
@@ -23,9 +23,9 @@ export const ArtistsSection = () => (
           width={1080}
           height={819}
           sizes="(min-width: 768px) 540px, 100vw"
-          className="h-auto w-full"
+          className="h-auto w-full rounded-2xl"
         />
-        <figcaption className="mt-6 text-lg leading-relaxed text-ll-text-2 md:text-xl">
+        <figcaption className="mt-4 text-sm leading-relaxed text-ll-text-2">
           Streaming indie artists in your venue is a vote for your support for local music &amp; culture (CSR)
         </figcaption>
       </figure>

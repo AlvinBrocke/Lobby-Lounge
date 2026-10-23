@@ -10,7 +10,6 @@ import { CallToAction } from "@/components/landing/CallToAction";
 import { Footer } from "@/components/landing/Footer";
 import { CatalogBand } from "@/components/landing/CatalogBand";
 import { PricingSection } from "@/components/landing/PricingSection";
-import { TrustSection } from "@/components/landing/TrustSection";
 import { BusinessTypes } from "@/components/landing/BusinessTypes";
 import { StreamingWarning } from "@/components/landing/StreamingWarning";
 import { RightsSection } from "@/components/landing/RightsSection";
@@ -56,16 +55,15 @@ export default function LandingPage() {
 
       <main>
         <Hero />
-        <TrustSection />
-        <StreamingWarning />
-        <RightsSection />
-        <BrandSection />
-        <SonicIdentity />
-        <ArtistsSection />
+        <ControlSection />
         <LicensingSection />
         <CatalogBand />
         <BusinessTypes />
-        <ControlSection />
+        <BrandSection />
+        <RightsSection />
+        <StreamingWarning />
+        <SonicIdentity />
+        <ArtistsSection />
         <StatsSection />
         <PricingSection />
         <CallToAction />

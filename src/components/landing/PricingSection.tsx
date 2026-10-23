@@ -20,7 +20,7 @@ const plan = {
 };
 
 export const PricingSection = () => (
-  <section id="pricing" className="scroll-mt-20 py-24 md:py-32">
+  <section id="pricing" className="scroll-mt-20 bg-ll-paper-2 py-24 md:py-32">
     <div className="ll-container grid gap-12 md:grid-cols-[1fr_440px] md:items-start md:gap-20">
       <div data-ll-reveal className="md:pt-6">
         <p className="ll-eyebrow">Pricing</p>
