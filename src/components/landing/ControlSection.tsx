@@ -1,6 +1,7 @@
 import React from "react";
-import Image from "next/image";
-import { CalendarClock, ListMusic, ListPlus, MonitorSmartphone } from "lucide-react";
+import Link from "next/link";
+import { LandingVideo } from "@/components/landing/LandingVideo";
+import { ArrowRight, CalendarClock, ListMusic, ListPlus, MonitorSmartphone } from "lucide-react";
 
 const rows = [
   {
@@ -26,27 +27,22 @@ const rows = [
 ];
 
 export const ControlSection = () => (
-  <section id="how-it-works" className="scroll-mt-20 border-t border-ll-line py-24 md:py-32">
-    <div className="ll-container grid items-center gap-12 md:grid-cols-2 md:gap-20">
+  <section id="how-it-works" className="scroll-mt-20 bg-ll-paper-2 py-24 md:py-32">
+    <div className="ll-container grid gap-12 md:grid-cols-[1fr_1.1fr] md:gap-20">
       <div data-ll-reveal>
-        <Image
-          src="/images/Playlist On Tablet mockup(3).jpg"
-          alt="Choosing a playlist on the Lobby & Lounge dashboard"
-          width={1332}
-          height={1024}
-          sizes="(min-width: 768px) 540px, 100vw"
-          className="h-auto w-full rounded-2xl"
-        />
-      </div>
-
-      <div data-ll-reveal data-ll-delay="1">
         <p className="ll-eyebrow">How it works</p>
         <h2 className="ll-h2 mt-3">One dashboard, your whole space</h2>
         <p className="ll-lead mt-4">
           Pick a curated playlist, build your own, or schedule the whole week — all from one place, on any device with a browser.
         </p>
+        <LandingVideo src="/videos/landing/dashboard-playlists.mp4" poster="/videos/landing/dashboard-playlists.jpg" label="Walkthrough of the Lobby & Lounge dashboard: daytime sets, evening playlists, genres and the weekly schedule" className="mt-8" />
+        <Link href="/signup" className="ll-link mt-6 inline-flex items-center gap-1.5 rounded-sm text-[15px] font-medium text-ll-teal-ink underline-offset-4 hover:underline">
+          Start free trial <ArrowRight className="h-4 w-4" aria-hidden />
+        </Link>
+      </div>
 
-        <ul className="mt-8 border-b border-ll-line">
+      <div data-ll-reveal data-ll-delay="1">
+        <ul className="border-b border-ll-line">
           {rows.map(({ title, desc, icon: Icon }) => (
             <li key={title} className="flex gap-4 border-t border-ll-line py-5">
               <Icon className="mt-0.5 h-5 w-5 shrink-0 text-ll-teal-ink" strokeWidth={1.75} aria-hidden />

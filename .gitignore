@@ -62,3 +62,6 @@ local.db
 
 # pnpm local package store
 .pnpm-store/
+
+# Source/master video exports (some exceed GitHub's 100 MB limit); only public/videos/landing/ is committed
+/public/videos/LL_*

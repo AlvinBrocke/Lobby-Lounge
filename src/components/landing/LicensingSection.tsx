@@ -9,10 +9,6 @@ const features = [
     title: "Curated weekly",
     desc: "Every curated playlist is refreshed with new tracks each week, so your regulars — and your staff — never hear the same rotation on repeat.",
   },
-  {
-    title: "Works in the browser",
-    desc: "No hardware to buy, nothing to install. Open Lobby & Lounge on any laptop, tablet or phone with a browser and press play.",
-  },
 ];
 
 export const LicensingSection = () => (

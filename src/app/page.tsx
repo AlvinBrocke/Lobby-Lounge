@@ -10,8 +10,12 @@ import { CallToAction } from "@/components/landing/CallToAction";
 import { Footer } from "@/components/landing/Footer";
 import { CatalogBand } from "@/components/landing/CatalogBand";
 import { PricingSection } from "@/components/landing/PricingSection";
-import { TrustSection } from "@/components/landing/TrustSection";
 import { BusinessTypes } from "@/components/landing/BusinessTypes";
+import { StreamingWarning } from "@/components/landing/StreamingWarning";
+import { RightsSection } from "@/components/landing/RightsSection";
+import { BrandSection } from "@/components/landing/BrandSection";
+import { SonicIdentity } from "@/components/landing/SonicIdentity";
+import { ArtistsSection } from "@/components/landing/ArtistsSection";
 
 export default function LandingPage() {
   // Mark <html> so reveal CSS activates, and run scroll-reveal
@@ -20,7 +24,7 @@ export default function LandingPage() {
 
     const onScroll = () => {
       const vh = window.innerHeight;
-      document.querySelectorAll<HTMLElement>("[data-ll-reveal]:not(.ll-visible), .ll-bars:not(.ll-visible)").forEach((el) => {
+      document.querySelectorAll<HTMLElement>("[data-ll-reveal]:not(.ll-visible)").forEach((el) => {
         if (el.getBoundingClientRect().top < vh * 0.9) {
           el.classList.add("ll-visible");
         }
@@ -32,7 +36,7 @@ export default function LandingPage() {
     window.addEventListener("resize", onScroll);
     // Failsafe: ensure nothing stays hidden after 2.5s
     const t = setTimeout(() => {
-      document.querySelectorAll<HTMLElement>("[data-ll-reveal], .ll-bars").forEach((el) => {
+      document.querySelectorAll<HTMLElement>("[data-ll-reveal]").forEach((el) => {
         el.classList.add("ll-visible");
       });
     }, 2500);
@@ -51,11 +55,15 @@ export default function LandingPage() {
 
       <main>
         <Hero />
-        <TrustSection />
+        <ControlSection />
         <LicensingSection />
         <CatalogBand />
         <BusinessTypes />
-        <ControlSection />
+        <BrandSection />
+        <RightsSection />
+        <StreamingWarning />
+        <SonicIdentity />
+        <ArtistsSection />
         <StatsSection />
         <PricingSection />
         <CallToAction />
