@@ -12,6 +12,11 @@ import { CatalogBand } from "@/components/landing/CatalogBand";
 import { PricingSection } from "@/components/landing/PricingSection";
 import { TrustSection } from "@/components/landing/TrustSection";
 import { BusinessTypes } from "@/components/landing/BusinessTypes";
+import { StreamingWarning } from "@/components/landing/StreamingWarning";
+import { RightsSection } from "@/components/landing/RightsSection";
+import { BrandSection } from "@/components/landing/BrandSection";
+import { SonicIdentity } from "@/components/landing/SonicIdentity";
+import { ArtistsSection } from "@/components/landing/ArtistsSection";
 
 export default function LandingPage() {
   // Mark <html> so reveal CSS activates, and run scroll-reveal
@@ -52,6 +57,11 @@ export default function LandingPage() {
       <main>
         <Hero />
         <TrustSection />
+        <StreamingWarning />
+        <RightsSection />
+        <BrandSection />
+        <SonicIdentity />
+        <ArtistsSection />
         <LicensingSection />
         <CatalogBand />
         <BusinessTypes />
