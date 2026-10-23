@@ -1,5 +1,7 @@
 import React from "react";
-import { CalendarClock, ListMusic, ListPlus, MonitorSmartphone } from "lucide-react";
+import Link from "next/link";
+import { LandingVideo } from "@/components/landing/LandingVideo";
+import { ArrowRight, CalendarClock, ListMusic, ListPlus, MonitorSmartphone } from "lucide-react";
 
 const rows = [
   {
@@ -33,6 +35,10 @@ export const ControlSection = () => (
         <p className="ll-lead mt-4">
           Pick a curated playlist, build your own, or schedule the whole week — all from one place, on any device with a browser.
         </p>
+        <LandingVideo src="/videos/landing/dashboard-playlists.mp4" poster="/videos/landing/dashboard-playlists.jpg" label="Walkthrough of the Lobby & Lounge dashboard: daytime sets, evening playlists, genres and the weekly schedule" className="mt-8" />
+        <Link href="/signup" className="ll-link mt-6 inline-flex items-center gap-1.5 rounded-sm text-[15px] font-medium text-ll-teal-ink underline-offset-4 hover:underline">
+          Start free trial <ArrowRight className="h-4 w-4" aria-hidden />
+        </Link>
       </div>
 
       <div data-ll-reveal data-ll-delay="1">

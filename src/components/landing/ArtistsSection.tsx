@@ -1,7 +1,7 @@
 import React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { LandingVideo } from "@/components/landing/LandingVideo";
 
 export const ArtistsSection = () => (
   <section id="artists" className="scroll-mt-20 bg-ll-paper-2 py-24 md:py-32">
@@ -17,14 +17,7 @@ export const ArtistsSection = () => (
       </div>
 
       <figure data-ll-reveal data-ll-delay="1">
-        <Image
-          src="/images/landing/artist-playlists.png"
-          alt="Playlist covers: Lounge vibes, Workout Beats, Morning Energy, Cafe Ambience"
-          width={1080}
-          height={819}
-          sizes="(min-width: 768px) 540px, 100vw"
-          className="h-auto w-full rounded-2xl"
-        />
+        <LandingVideo src="/videos/landing/artist-pay.mp4" poster="/videos/landing/artist-pay.jpg" label="Animation: how many streams it takes to buy an independent artist one $5 coffee" />
         <figcaption className="mt-4 text-sm leading-relaxed text-ll-text-2">
           Streaming indie artists in your venue is a vote for your support for local music &amp; culture (CSR)
         </figcaption>

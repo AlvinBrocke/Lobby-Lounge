@@ -1,45 +1,12 @@
 import React from "react";
-
-// "Importance of background music" — % of US businesses agreeing.
-// MRC Data × Soundtrack Your Brand, B2B study, 2021 (n=1,001).
-const bars = [
-  { h: 65, label: "Longer stays" },
-  { h: 67, label: "Fits our brand" },
-  { h: 71, label: "Purchasing" },
-  { h: 75, label: "Opinion of us" },
-  { h: 76, label: "Atmosphere" },
-  { h: 79, label: "Guest mood" },
-];
+import { LandingVideo } from "@/components/landing/LandingVideo";
 
 export const StatsSection = () => (
   <section id="results" className="scroll-mt-20 py-24 md:py-32">
     <div className="ll-container grid items-center gap-12 md:grid-cols-2 md:gap-20">
-      {/* Chart card */}
-      <figure data-ll-reveal className="rounded-2xl border border-ll-line bg-white p-6 md:p-8">
-        <div>
-          <p className="text-sm text-ll-text-2">Businesses playing music</p>
-          <p className="mt-1 text-3xl font-semibold tabular-nums tracking-tight">87%</p>
-        </div>
-
-        {/* The page's scroll script adds .ll-visible, which grows the bars */}
-        <div className="ll-bars mt-8 flex h-44 items-end gap-2.5">
-          {bars.map((b, i) => (
-            <span
-              key={b.label}
-              data-bar
-              title={`${b.label} — ${b.h}%`}
-              className="flex-1 rounded-t-md"
-              style={{
-                height: `${b.h}%`,
-                background: i === bars.length - 1 ? "var(--ll-teal-ink)" : `rgba(24,120,115,${0.18 + i * 0.1})`,
-              }}
-            />
-          ))}
-        </div>
-        <figcaption className="mt-3 text-xs text-ll-text-2">
-          % of businesses who agree music impacts each outcome
-        </figcaption>
-      </figure>
+      <div data-ll-reveal>
+        <LandingVideo src="/videos/landing/tempo.mp4" poster="/videos/landing/tempo.jpg" label="Animation: slower music keeps diners at the table longer and ordering more rounds" />
+      </div>
 
       {/* Copy */}
       <div data-ll-reveal data-ll-delay="1">
@@ -51,7 +18,7 @@ export const StatsSection = () => (
       </div>
     </div>
 
-    {/* Headline stat */}
+    {/* Headline stat — MRC Data × Soundtrack Your Brand, B2B study, 2021 (n=1,001) */}
     <div data-ll-reveal className="ll-container mt-20 md:mt-28">
       <div className="grid items-end gap-6 border-t border-ll-line pt-10 md:grid-cols-[auto_1fr] md:gap-12">
         <p className="text-[64px] font-semibold leading-none tracking-[-0.04em] tabular-nums text-ll-navy md:text-[88px]">

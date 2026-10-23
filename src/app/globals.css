@@ -177,17 +177,6 @@
   [data-ll-delay="1"] { transition-delay: .08s; }
   [data-ll-delay="2"] { transition-delay: .16s; }
   [data-ll-delay="3"] { transition-delay: .24s; }
-  html.ll-js .ll-bars [data-bar] {
-    transform: scaleY(0);
-    transition: transform .9s var(--ll-ease);
-    transform-origin: bottom;
-  }
-  html.ll-js .ll-bars.ll-visible [data-bar] { transform: scaleY(1) !important; }
-  .ll-bars [data-bar]:nth-child(2) { transition-delay: .06s; }
-  .ll-bars [data-bar]:nth-child(3) { transition-delay: .12s; }
-  .ll-bars [data-bar]:nth-child(4) { transition-delay: .18s; }
-  .ll-bars [data-bar]:nth-child(5) { transition-delay: .24s; }
-  .ll-bars [data-bar]:nth-child(6) { transition-delay: .3s; }
 }
 
 @media (prefers-reduced-motion: reduce) {

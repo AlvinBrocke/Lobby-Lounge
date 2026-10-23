@@ -1,5 +1,8 @@
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { LandingVideo } from "@/components/landing/LandingVideo";
 
 // Header colours are each service's brand colour, as in the Figma frame.
 const services = [
@@ -14,11 +17,16 @@ const services = [
 export const StreamingWarning = () => (
   <section id="streaming-warning" className="scroll-mt-20 bg-ll-paper-2 py-24 md:py-32">
     <div className="ll-container">
-      <div data-ll-reveal>
-        <h2 className="ll-h2 max-w-3xl">Avoid hefty fines from streaming personal playlists in your establishment</h2>
-        <p className="ll-lead mt-5 max-w-2xl">
-          Streaming from non-commercial streaming services is an infringement on the intellectual property rights of right holders (musicians) under U.S. copyright law.
-        </p>
+      <div className="grid items-center gap-10 md:grid-cols-2 md:gap-16">
+        <div data-ll-reveal>
+          <h2 className="ll-h2">Avoid hefty fines from streaming personal playlists in your establishment</h2>
+          <p className="ll-lead mt-5">
+            Streaming from non-commercial streaming services is an infringement on the intellectual property rights of right holders (musicians) under U.S. copyright law.
+          </p>
+        </div>
+        <div data-ll-reveal data-ll-delay="1">
+          <LandingVideo src="/videos/landing/personal-account.mp4" poster="/videos/landing/personal-account.jpg" label="Animation: you wouldn't open a cinema on your personal Netflix account" />
+        </div>
       </div>
 
       <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -59,6 +67,9 @@ export const StreamingWarning = () => (
       <p data-ll-reveal className="mt-12 max-w-3xl text-xl font-medium leading-snug tracking-tight text-ll-teal-ink md:text-2xl">
         You infringe on (I) sound recording, (II) publishing &amp; (III) performing rights of musicians when you stream from YouTube, Spotify or Apple Music.
       </p>
+      <Link href="/signup" className="ll-link mt-6 inline-flex items-center gap-1.5 rounded-sm text-[15px] font-medium text-ll-teal-ink underline-offset-4 hover:underline">
+        Play it legal: start free trial <ArrowRight className="h-4 w-4" aria-hidden />
+      </Link>
     </div>
   </section>
 );

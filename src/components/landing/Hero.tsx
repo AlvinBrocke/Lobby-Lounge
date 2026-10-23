@@ -1,5 +1,6 @@
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
 
 export const Hero = () => (
@@ -19,9 +20,9 @@ export const Hero = () => (
         </p>
 
         <div data-ll-reveal data-ll-delay="2" className="mt-8 flex flex-wrap items-center gap-3">
-          <a href="#pricing" className="ll-btn ll-btn-primary">
+          <Link href="/signup" className="ll-btn ll-btn-primary">
             Try it free <ArrowRight className="h-4 w-4" aria-hidden />
-          </a>
+          </Link>
           <a href="#how-it-works" className="ll-btn ll-btn-secondary">
             See it in action
           </a>
