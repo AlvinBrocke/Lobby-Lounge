@@ -11,7 +11,9 @@
 import type * as activity from "../activity.js";
 import type * as announcements from "../announcements.js";
 import type * as artists from "../artists.js";
+import type * as billing from "../billing.js";
 import type * as crons from "../crons.js";
+import type * as http from "../http.js";
 import type * as jamendo from "../jamendo.js";
 import type * as lib_activity from "../lib/activity.js";
 import type * as lib_auth from "../lib/auth.js";
@@ -20,6 +22,7 @@ import type * as lib_brand from "../lib/brand.js";
 import type * as lib_curated from "../lib/curated.js";
 import type * as lib_energy from "../lib/energy.js";
 import type * as lib_sound from "../lib/sound.js";
+import type * as lib_stripe from "../lib/stripe.js";
 import type * as lib_text from "../lib/text.js";
 import type * as playlists from "../playlists.js";
 import type * as scheduleBlocks from "../scheduleBlocks.js";
@@ -37,7 +40,9 @@ declare const fullApi: ApiFromModules<{
   activity: typeof activity;
   announcements: typeof announcements;
   artists: typeof artists;
+  billing: typeof billing;
   crons: typeof crons;
+  http: typeof http;
   jamendo: typeof jamendo;
   "lib/activity": typeof lib_activity;
   "lib/auth": typeof lib_auth;
@@ -46,6 +51,7 @@ declare const fullApi: ApiFromModules<{
   "lib/curated": typeof lib_curated;
   "lib/energy": typeof lib_energy;
   "lib/sound": typeof lib_sound;
+  "lib/stripe": typeof lib_stripe;
   "lib/text": typeof lib_text;
   playlists: typeof playlists;
   scheduleBlocks: typeof scheduleBlocks;

@@ -156,10 +156,10 @@ export const saveBrand = mutation({
 });
 
 /* ── Billing admin (internal only) ────────────────────────────────────────── */
-// Billing is a Stripe Payment Link with no webhook, so after a payment lands
-// you flip the plan by hand. The Stripe payment's "client_reference_id" is
-// the Clerk user id to pass here:
+// The Stripe webhook (convex/billing.ts) sets `plan` automatically. These are
+// for support cases outside Stripe, e.g. a comped venue or a manual invoice:
 //   npx convex run userProfiles:setPlan '{"clerkUserId":"user_...","plan":"basic"}'
+// A webhook for that venue's subscription will overwrite a manual `plan`.
 
 async function profileFor(ctx: MutationCtx, clerkUserId: string) {
   const profile = await ctx.db

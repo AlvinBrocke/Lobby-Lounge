@@ -232,7 +232,7 @@ export const helpCategories: HelpCategory[] = [
         q: "How do I cancel my subscription?",
         a: [
           [
-            "We believe in zero hassle. If Lobby & Lounge isn't the right fit for your venue, you can cancel anytime directly from your dashboard. Navigate to Settings > Billing, and click Cancel Subscription. Your service will remain active until the end of your current billing cycle."
+            "We believe in zero hassle. If Lobby & Lounge isn't the right fit for your venue, you can cancel anytime directly from your dashboard. Navigate to Settings > Plan & billing, click Manage subscription & invoices, and choose Cancel subscription. Your service will remain active until the end of your current billing cycle."
           ]
         ]
       }

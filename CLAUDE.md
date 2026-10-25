@@ -105,16 +105,30 @@ NEXT_PUBLIC_CONVEX_URL
 NEXT_PUBLIC_CONVEX_SITE_URL
 ```
 
-Optional:
+### Billing (Stripe)
+
+Checkout, the customer portal and the webhook all run in Convex (`convex/billing.ts`, routed by `convex/http.ts`). There is no Stripe SDK: `convex/lib/stripe.ts` calls the REST API with `fetch` and verifies webhook signatures with Web Crypto, so everything runs in the default Convex runtime. No Stripe keys go in `.env.local` or Vercel.
+
+Convex env vars (`npx convex env set NAME value`, add `--prod` for production — use **test-mode** keys on dev, **live** keys on prod):
 
 ```
-NEXT_PUBLIC_STRIPE_PREMIUM_PAYMENT_LINK   # https://buy.stripe.com/... — the in-app Subscribe button (trial banner, Settings → Plan & billing)
-NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL    # https://billing.stripe.com/p/login/... — "Manage subscription" in Settings → Plan & billing (`/account` redirects there)
+STRIPE_SECRET_KEY       # sk_test_... / sk_live_... (a restricted key works: write on Customers, Checkout Sessions, Customer portal; read on Subscriptions)
+STRIPE_WEBHOOK_SECRET   # whsec_... from the webhook endpoint below
+STRIPE_PRICE_ID         # the recurring $20/mo price of "L&L Basic Plan" in that mode
+SITE_URL                # where Stripe sends people back, e.g. https://www.lobbyloungemusic.com or http://localhost:3000
 ```
 
-Billing is a Stripe **Payment Link** (a plain URL created in the Stripe Dashboard) — there is no Stripe SDK, secret key, or webhook in this repo. The Subscribe link carries `client_reference_id=<Clerk user id>`, so each Stripe payment shows who paid. If the variable is unset, the billing tab says checkout isn't available and the banner links to the billing tab. The landing page CTA always goes to `/signup` (the trial comes first).
+Stripe Dashboard, in each mode:
 
-**Trial & access** (`convex/lib/billing.ts`): `plan` is `"trial"` or `"basic"`. A trial lasts `TRIAL_DAYS` (30) from profile creation, unless `trialEndsAt` overrides it. When it ends, `playlists.getTracks` withholds `audioUrl` (browsing still works) and a banner prompts to subscribe. There's no webhook, so after a payment lands, flip the plan by hand (add `--prod` for production):
+1. Developers → Webhooks → Add endpoint `<NEXT_PUBLIC_CONVEX_SITE_URL>/stripe/webhook` with events `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `customer.subscription.paused`, `customer.subscription.resumed`. Copy its signing secret into `STRIPE_WEBHOOK_SECRET`. Locally: `stripe listen --forward-to 127.0.0.1:3213/stripe/webhook`.
+2. Settings → Billing → Customer portal → activate it (allow updating payment methods, viewing invoices, cancelling at period end).
+3. Settings → Billing → Subscriptions and emails → turn on "Send emails about upcoming trial endings" and choose what happens after failed retries (cancel or mark unpaid — both end access).
+
+**Test mode = the "LL Basic Plan Sandbox" Stripe account** (`acct_1UUJR1Bd9dxtZlQt`). Dev deployments always use it; only the production deployment gets live keys. It already has the product `prod_VVYQ846N0MITXu` (L&L Basic Plan) with the $20/mo price `price_1UUXJOBd9dxtZlQtO55WZMH7`, and a default customer-portal configuration (`bpc_1UUXJcBd9dxtZlQtuQICIHVO`: card updates, invoices, cancel at period end). `pnpm stripe:sandbox` sets `STRIPE_SECRET_KEY` (prompts; rejects anything but a test key), `STRIPE_PRICE_ID` and `SITE_URL` on the dev deployment; then run `stripe listen --forward-to 127.0.0.1:3213/stripe/webhook` and set the `whsec_` it prints as `STRIPE_WEBHOOK_SECRET`. Test card: 4242 4242 4242 4242. As a backstop, `stripeRequest` refuses a live key when `SITE_URL` is localhost (`assertKeyMatchesSite`).
+
+**Flow.** Settings → Plan & billing → "Add payment method" (`billing.startCheckout`) creates a Stripe customer for the venue owner (stored as `stripeCustomerId`) and a Checkout session for `STRIPE_PRICE_ID`. During the free trial the session sets `subscription_data.trial_end` to the app's trial end (`checkoutTrialEnd` in `convex/lib/billing.ts`), so the card is collected now and first charged when the trial ends; within 48 h of the end (Stripe's minimum) or after it, the first $20 is charged at checkout. The webhook re-fetches the subscription and `billing.syncSubscription` sets `plan` = `"basic"` while Stripe's status is `trialing`, `active` or `past_due`, and back to `"trial"` (i.e. expired, once the trial dates have passed) when it is cancelled/unpaid. "Manage subscription & invoices" (`billing.openPortal`) opens the Stripe customer portal. Both are keyed by `requireUser()`, so an admin paying for a venue credits the owner.
+
+**Trial & access** (`convex/lib/billing.ts`): `plan` is `"trial"` or `"basic"`. A trial lasts `TRIAL_DAYS` (30) from profile creation, unless `trialEndsAt` overrides it. No card is needed to start it. When it ends, `playlists.getTracks` withholds `audioUrl` (browsing still works) and a banner prompts to subscribe. For support cases outside Stripe (add `--prod` for production; a later webhook for that venue overwrites a manual `plan`):
 
 ```bash
 npx convex run userProfiles:setPlan '{"clerkUserId":"user_...","plan":"basic"}'
@@ -123,7 +137,7 @@ npx convex run userProfiles:extendTrial '{"clerkUserId":"user_...","days":14}'  
 
 Audio URLs are only ever returned by `playlists.getTracks` and `artists.get`, both behind `canPlay()`; `tracks.search`, `artists.list` and `artists.related` strip them and `tracks.list`/`get` are internal. Keep it that way, or the gate can be bypassed.
 
-`JAMENDO_CLIENT_ID` and `CLERK_JWT_ISSUER_DOMAIN` are **not** Next.js env vars — they're read Convex-side (`convex/jamendo.ts` and `convex/auth.config.ts`), so they must be set via the Convex CLI (`npx convex env set JAMENDO_CLIENT_ID <value>`, add `--prod` for production), not in `.env.local`.
+`JAMENDO_CLIENT_ID`, `CLERK_JWT_ISSUER_DOMAIN` and the `STRIPE_*` / `SITE_URL` vars above are **not** Next.js env vars — they're read Convex-side (`convex/jamendo.ts` and `convex/auth.config.ts`), so they must be set via the Convex CLI (`npx convex env set JAMENDO_CLIENT_ID <value>`, add `--prod` for production), not in `.env.local`.
 
 There are no channels: the catalogue is **curated playlists** — `playlists` rows with `curated: true` and no `clerkUserId`, grouped into `section: "daytime" | "evening"` on the Playlists page. Users can read them but never modify them (`assertOwner` rejects ownerless docs). Schedule blocks point at a playlist via `playlistId`.
 
@@ -147,6 +161,7 @@ convex/             — Convex schema, queries, mutations
 convex/lib/auth.ts  — requireUser / assertOwner (layer 3)
 convex/jamendo.ts   — internal action that syncs real streamable tracks/audio from the Jamendo API into the curated playlists (`npx convex run jamendo:syncAllCurated`)
 convex/lib/curated.ts — the curated playlist catalogue used by `playlists:seedCurated`
+convex/billing.ts   — Stripe Checkout, customer portal and webhook (`/stripe/webhook` via convex/http.ts)
 convex/crons.ts     — weekly cron that re-runs `jamendo:syncAllCurated` (backs the "Curated weekly" claim on the landing page)
 ```
 

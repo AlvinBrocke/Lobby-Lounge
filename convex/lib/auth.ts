@@ -1,3 +1,4 @@
+import type { Auth } from "convex/server";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { accessFor } from "./billing";
 
@@ -11,7 +12,7 @@ import { accessFor } from "./billing";
  * the caller's own id (`identity.subject`). Do not use `tokenIdentifier` — it
  * is issuer-prefixed and will not match stored values.
  */
-export async function requireUser(ctx: QueryCtx | MutationCtx): Promise<string> {
+export async function requireUser(ctx: { auth: Auth }): Promise<string> {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) throw new Error("Not authenticated");
   const venueOwner = identity.venue_owner;
