@@ -26,6 +26,10 @@ export const createOrUpdate = mutation({
   },
   handler: async (ctx, args) => {
     const clerkUserId = await requireUser(ctx);
+    const identity = await ctx.auth.getUserIdentity();
+    // Staff edit this profile too; only the owner's own email belongs on it.
+    const email =
+      identity?.subject === clerkUserId && typeof identity.email === "string" ? identity.email : undefined;
     if (args.sound) {
       const { defaultVolume, fadeSeconds } = args.sound;
       if (!Number.isInteger(defaultVolume) || defaultVolume < 0 || defaultVolume > 100) {
@@ -59,6 +63,7 @@ export const createOrUpdate = mutation({
         ...(args.ageGroups !== undefined && { ageGroups: args.ageGroups }),
         ...(args.tempo !== undefined && { tempo: args.tempo }),
         ...(args.sound !== undefined && { sound: args.sound }),
+        ...(email && { email }),
       });
       return existing._id;
     }
@@ -67,6 +72,7 @@ export const createOrUpdate = mutation({
       clerkUserId,
       displayName: args.displayName,
       venueName: args.venueName,
+      email,
       plan: "trial",
       genres: args.genres ?? [],
       mood: args.mood,

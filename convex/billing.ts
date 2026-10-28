@@ -1,7 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { action, httpAction, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { requireUser } from "./lib/auth";
+import { requireBillingAdmin } from "./lib/auth";
 import { checkoutTrialEnd } from "./lib/billing";
 import {
   isLiveSubscription,
@@ -114,18 +114,38 @@ export const syncSubscription = internalMutation({
 export const startCheckout = action({
   args: {},
   handler: async (ctx): Promise<string> => {
-    const clerkUserId = await requireUser(ctx);
+    const clerkUserId = await requireBillingAdmin(ctx);
     const identity = await ctx.auth.getUserIdentity();
     const profile = await ctx.runQuery(internal.billing.profileByUser, { clerkUserId });
     if (!profile) throw new ConvexError("Finish setting up your venue before subscribing.");
-    if (profile.plan === "basic") {
-      throw new ConvexError("Your subscription is already active. Use “Manage subscription” to change it.");
-    }
+    const alreadyActive = new ConvexError("Your subscription is already active. Use “Manage subscription” to change it.");
+    if (profile.plan === "basic") throw alreadyActive;
 
     let customerId = profile.stripeCustomerId;
-    if (!customerId) {
+    if (customerId) {
+      // `plan` lags until the webhook lands (or never flips if it failed), so ask
+      // Stripe directly; a second Checkout would bill the venue twice.
+      const subs = await stripeRequest<{ data: StripeSubscription[] }>("GET", "/subscriptions", {
+        customer: customerId,
+        status: "all",
+        limit: 10,
+      });
+      const live = subs.data.find((s) => isLiveSubscription(s.status));
+      if (live) {
+        await ctx.runMutation(internal.billing.syncSubscription, {
+          clerkUserId,
+          stripeCustomerId: customerId,
+          stripeSubscriptionId: live.id,
+          status: live.status,
+        });
+        throw alreadyActive;
+      }
+    } else {
+      // The owner's email, never an admin's: receipts and trial reminders go here.
+      const ownerEmail =
+        identity?.subject === clerkUserId && typeof identity.email === "string" ? identity.email : profile.email;
       const customer = await stripeRequest<{ id: string }>("POST", "/customers", {
-        email: typeof identity?.email === "string" ? identity.email : undefined,
+        email: ownerEmail || undefined,
         name: profile.venueName || undefined,
         metadata: { clerkUserId },
       });
@@ -156,7 +176,7 @@ export const startCheckout = action({
 export const openPortal = action({
   args: {},
   handler: async (ctx): Promise<string> => {
-    const clerkUserId = await requireUser(ctx);
+    const clerkUserId = await requireBillingAdmin(ctx);
     const profile = await ctx.runQuery(internal.billing.profileByUser, { clerkUserId });
     if (!profile?.stripeCustomerId) {
       throw new ConvexError("There's no billing account yet. Subscribe first.");

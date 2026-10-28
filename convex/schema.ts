@@ -7,6 +7,8 @@ export default defineSchema({
     clerkUserId: v.string(),
     displayName: v.optional(v.string()),
     venueName: v.optional(v.string()),
+    // The owner's email, from the JWT `email` claim. Stripe's billing contact.
+    email: v.optional(v.string()),
     plan: v.string(), // 'trial' | 'basic' — see convex/lib/billing.ts
     // Overrides the default trial end (profile creation + TRIAL_DAYS), e.g. to
     // extend a trial via `userProfiles:extendTrial`. Epoch ms.

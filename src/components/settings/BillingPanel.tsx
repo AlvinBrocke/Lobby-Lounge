@@ -94,7 +94,7 @@ export function BillingPanel() {
               <Skeleton className="h-4 w-72 mt-1 mb-5" />
             )}
 
-            {state && !isActive && (
+            {state && !isActive && checkout !== "success" && (
               <button type="button" onClick={billing.subscribe} disabled={billing.pending !== null} className={primaryButton}>
                 {billing.pending === "checkout" ? "Opening checkout…" : subscribeLabel}
               </button>

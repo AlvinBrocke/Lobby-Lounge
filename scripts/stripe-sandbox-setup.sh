@@ -5,7 +5,7 @@
 #   pnpm stripe:sandbox
 #
 # Then, in another terminal, forward webhooks to the local backend:
-#   stripe listen --forward-to 127.0.0.1:3213/stripe/webhook
+#   stripe listen --events checkout.session.completed,customer.subscription.created,customer.subscription.updated,customer.subscription.deleted,customer.subscription.paused,customer.subscription.resumed --forward-to 127.0.0.1:3213/stripe/webhook
 # and store the whsec_... it prints:
 #   npx convex env set STRIPE_WEBHOOK_SECRET whsec_...
 set -euo pipefail
@@ -30,7 +30,7 @@ cat <<EOF
 
 Done. Dev now uses the Stripe sandbox (price $SANDBOX_PRICE_ID, returns to $SITE_URL).
 Next:
-  1. stripe listen --forward-to 127.0.0.1:3213/stripe/webhook
+  1. stripe listen --events checkout.session.completed,customer.subscription.created,customer.subscription.updated,customer.subscription.deleted,customer.subscription.paused,customer.subscription.resumed --forward-to 127.0.0.1:3213/stripe/webhook
   2. npx convex env set STRIPE_WEBHOOK_SECRET whsec_...   (the secret 'stripe listen' prints)
   3. Settings → Plan & billing → Add payment method, pay with 4242 4242 4242 4242.
 EOF

@@ -1,4 +1,5 @@
 import type { Auth } from "convex/server";
+import { ConvexError } from "convex/values";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { accessFor } from "./billing";
 
@@ -17,6 +18,21 @@ export async function requireUser(ctx: { auth: Auth }): Promise<string> {
   if (!identity) throw new Error("Not authenticated");
   const venueOwner = identity.venue_owner;
   return typeof venueOwner === "string" && venueOwner !== "" ? venueOwner : identity.subject;
+}
+
+/**
+ * `requireUser`, but only for whoever may manage the venue's billing: the
+ * owner, or an admin of the venue's organization. Curators (`org:member`)
+ * are rejected. The role comes from the `org_role` claim in the "convex" JWT
+ * template (CLAUDE.md → Venue staff); without it, only the owner gets in.
+ */
+export async function requireBillingAdmin(ctx: { auth: Auth }): Promise<string> {
+  const ownerId = await requireUser(ctx);
+  const identity = (await ctx.auth.getUserIdentity())!;
+  if (ownerId !== identity.subject && identity.org_role !== "org:admin") {
+    throw new ConvexError("Only venue admins can manage billing.");
+  }
+  return ownerId;
 }
 
 /**
