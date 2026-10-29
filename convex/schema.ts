@@ -7,10 +7,17 @@ export default defineSchema({
     clerkUserId: v.string(),
     displayName: v.optional(v.string()),
     venueName: v.optional(v.string()),
+    // The owner's email, from the JWT `email` claim. Stripe's billing contact.
+    email: v.optional(v.string()),
     plan: v.string(), // 'trial' | 'basic' — see convex/lib/billing.ts
     // Overrides the default trial end (profile creation + TRIAL_DAYS), e.g. to
     // extend a trial via `userProfiles:extendTrial`. Epoch ms.
     trialEndsAt: v.optional(v.number()),
+    // Stripe, kept in sync by the webhook in convex/billing.ts. `plan` is
+    // still the source of truth for access; these record why it is what it is.
+    stripeCustomerId: v.optional(v.string()),
+    stripeSubscriptionId: v.optional(v.string()),
+    subscriptionStatus: v.optional(v.string()), // Stripe's status: 'trialing' | 'active' | 'past_due' | 'canceled' | …
     genres: v.array(v.string()),
     mood: v.optional(v.string()),
     onboardingCompleted: v.boolean(),
@@ -29,7 +36,9 @@ export default defineSchema({
     // Settings → Preferences. Tempo matches track `energy`.
     tempo: v.optional(v.union(v.literal("low"), v.literal("mid"), v.literal("high"))),
     sound: v.optional(soundSettings),
-  }).index("by_clerk_user", ["clerkUserId"]),
+  })
+    .index("by_clerk_user", ["clerkUserId"])
+    .index("by_stripe_customer", ["stripeCustomerId"]),
 
   tracks: defineTable({
     name: v.string(),

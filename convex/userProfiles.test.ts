@@ -27,6 +27,14 @@ describe("userProfiles", () => {
     expect(profile?.onboardingCompleted).toBe(false);
   });
 
+  it("createOrUpdate records the owner's email, never a staff member's", async () => {
+    const t = convexTest(schema, import.meta.glob("./**/*.ts"));
+    await t.withIdentity({ subject: USER, email: "owner@venue.test" }).mutation(api.userProfiles.createOrUpdate, {});
+    const staff = t.withIdentity({ subject: "user_staff", venue_owner: USER, email: "staff@venue.test" });
+    await staff.mutation(api.userProfiles.createOrUpdate, { mood: "chill" });
+    expect((await staff.query(api.userProfiles.get, {}))?.email).toBe("owner@venue.test");
+  });
+
   it("createOrUpdate updates an existing profile", async () => {
     const t = convexTest(schema, import.meta.glob("./**/*.ts"));
     const asUser = t.withIdentity({ subject: USER });

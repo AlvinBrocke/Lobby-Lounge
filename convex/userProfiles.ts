@@ -26,6 +26,10 @@ export const createOrUpdate = mutation({
   },
   handler: async (ctx, args) => {
     const clerkUserId = await requireUser(ctx);
+    const identity = await ctx.auth.getUserIdentity();
+    // Staff edit this profile too; only the owner's own email belongs on it.
+    const email =
+      identity?.subject === clerkUserId && typeof identity.email === "string" ? identity.email : undefined;
     if (args.sound) {
       const { defaultVolume, fadeSeconds } = args.sound;
       if (!Number.isInteger(defaultVolume) || defaultVolume < 0 || defaultVolume > 100) {
@@ -59,6 +63,7 @@ export const createOrUpdate = mutation({
         ...(args.ageGroups !== undefined && { ageGroups: args.ageGroups }),
         ...(args.tempo !== undefined && { tempo: args.tempo }),
         ...(args.sound !== undefined && { sound: args.sound }),
+        ...(email && { email }),
       });
       return existing._id;
     }
@@ -67,6 +72,7 @@ export const createOrUpdate = mutation({
       clerkUserId,
       displayName: args.displayName,
       venueName: args.venueName,
+      email,
       plan: "trial",
       genres: args.genres ?? [],
       mood: args.mood,
@@ -156,10 +162,10 @@ export const saveBrand = mutation({
 });
 
 /* ── Billing admin (internal only) ────────────────────────────────────────── */
-// Billing is a Stripe Payment Link with no webhook, so after a payment lands
-// you flip the plan by hand. The Stripe payment's "client_reference_id" is
-// the Clerk user id to pass here:
+// The Stripe webhook (convex/billing.ts) sets `plan` automatically. These are
+// for support cases outside Stripe, e.g. a comped venue or a manual invoice:
 //   npx convex run userProfiles:setPlan '{"clerkUserId":"user_...","plan":"basic"}'
+// A webhook for that venue's subscription will overwrite a manual `plan`.
 
 async function profileFor(ctx: MutationCtx, clerkUserId: string) {
   const profile = await ctx.db

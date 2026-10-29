@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { TRIAL_DAYS, accessFor, trialDaysLeft } from "./billing";
+import { TRIAL_DAYS, accessFor, checkoutTrialEnd, trialDaysLeft, trialEndFor } from "./billing";
 
 const DAY = 24 * 60 * 60 * 1000;
 const CREATED = Date.UTC(2026, 8, 1);
@@ -33,5 +33,30 @@ describe("trialDaysLeft", () => {
     expect(trialDaysLeft(access, CREATED)).toBe(2);
     expect(trialDaysLeft(access, CREATED + DAY + 1)).toBe(1);
     expect(trialDaysLeft(access, CREATED + 3 * DAY)).toBe(0);
+  });
+});
+
+describe("checkoutTrialEnd", () => {
+  const profile = { plan: "trial", _creationTime: CREATED };
+  const end = CREATED + TRIAL_DAYS * DAY;
+
+  it("carries the rest of the free trial into the Stripe subscription", () => {
+    expect(checkoutTrialEnd(profile, CREATED + DAY)).toBe(Math.floor(end / 1000));
+  });
+
+  it("honours an extended trial", () => {
+    const extended = { ...profile, trialEndsAt: end + 10 * DAY };
+    expect(trialEndFor(extended)).toBe(end + 10 * DAY);
+    expect(checkoutTrialEnd(extended, end)).toBe(Math.floor((end + 10 * DAY) / 1000));
+  });
+
+  it("bills immediately inside Stripe's 48-hour minimum or after the trial", () => {
+    expect(checkoutTrialEnd(profile, end - 2 * DAY)).toBeNull();
+    expect(checkoutTrialEnd(profile, end - DAY)).toBeNull();
+    expect(checkoutTrialEnd(profile, end + DAY)).toBeNull();
+  });
+
+  it("still keeps the trial with comfortably more than 48 hours left", () => {
+    expect(checkoutTrialEnd(profile, end - 3 * DAY)).toBe(Math.floor(end / 1000));
   });
 });
