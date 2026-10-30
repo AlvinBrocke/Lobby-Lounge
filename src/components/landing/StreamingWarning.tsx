@@ -38,7 +38,7 @@ export const StreamingWarning = () => (
             className="overflow-hidden rounded-2xl border border-ll-line bg-white"
           >
             <div
-              className={`flex items-center gap-2 px-4 py-2.5 text-[11px] ${s.dark ? "text-ll-text" : "text-white"}`}
+              className={`flex items-center gap-2 px-4 py-2.5 text-xs ${s.dark ? "text-ll-text" : "text-white"}`}
               style={{ background: s.bar }}
             >
               {s.logo ? (
@@ -67,7 +67,7 @@ export const StreamingWarning = () => (
       <p data-ll-reveal className="mt-12 max-w-3xl text-xl font-medium leading-snug tracking-tight text-ll-teal-ink md:text-2xl">
         You infringe on (I) sound recording, (II) publishing &amp; (III) performing rights of musicians when you stream from YouTube, Spotify or Apple Music.
       </p>
-      <Link href="/signup" className="ll-link mt-6 inline-flex items-center gap-1.5 rounded-sm text-[15px] font-medium text-ll-teal-ink underline-offset-4 hover:underline">
+      <Link href="/signup" className="ll-link mt-6 inline-flex items-center gap-1.5 rounded-sm text-base font-medium text-ll-teal-ink underline-offset-4 hover:underline">
         Play it legal: start free trial <ArrowRight className="h-4 w-4" aria-hidden />
       </Link>
     </div>

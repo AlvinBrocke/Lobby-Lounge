@@ -11,7 +11,7 @@ import { VenueAvatar } from "@/components/layout/VenueAvatar";
 import { COUNTRIES } from "@/lib/countries";
 import { cn } from "@/lib/utils";
 
-const fieldLabel = "block text-[9px] font-bold uppercase tracking-[0.08em] text-faint mb-1.5";
+const fieldLabel = "block text-xs font-bold uppercase tracking-[0.08em] text-faint mb-1.5";
 const fieldBox =
   "w-full rounded-[7px] border border-primary/20 bg-background px-2.5 py-2 text-xs touch:text-base text-foreground outline-none focus:border-primary transition-colors";
 
@@ -87,7 +87,7 @@ export function BrandModal({ profile, onClose }: { profile: Profile; onClose: ()
             <button
               type="button"
               onClick={() => fileInput.current?.click()}
-              className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-[11px] font-bold hover:bg-primary/20 transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold hover:bg-primary/20 transition-colors"
             >
               {preview ? "Change logo" : "Upload avatar or logo"}
             </button>
@@ -95,7 +95,7 @@ export function BrandModal({ profile, onClose }: { profile: Profile; onClose: ()
               <button
                 type="button"
                 onClick={() => setLogo(null)}
-                className="px-3 py-1.5 rounded-lg text-muted-foreground text-[11px] font-semibold hover:text-foreground transition-colors"
+                className="px-3 py-1.5 rounded-lg text-muted-foreground text-xs font-semibold hover:text-foreground transition-colors"
               >
                 Remove
               </button>

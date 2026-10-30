@@ -30,7 +30,7 @@ export function PlaylistCarousel({
       <div className="flex items-end justify-between gap-3.5 mb-2.5">
         <div>
           <h2 className="text-sm font-bold tracking-tight text-foreground">{title}</h2>
-          {blurb && <p className="text-[11px] text-muted-foreground mt-0.5">{blurb}</p>}
+          {blurb && <p className="text-xs text-muted-foreground mt-0.5">{blurb}</p>}
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
           {action}

@@ -21,7 +21,7 @@ export const CallToAction = () => (
           <Link href="/signup" className="ll-btn ll-btn-light">
             Sign up now <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
-          <a href="#pricing" className="ll-link rounded-sm text-[15px] font-medium text-white/80 underline-offset-4 hover:text-white hover:underline">
+          <a href="#pricing" className="ll-link rounded-sm text-base font-medium text-white/80 underline-offset-4 hover:text-white hover:underline">
             View pricing
           </a>
         </div>

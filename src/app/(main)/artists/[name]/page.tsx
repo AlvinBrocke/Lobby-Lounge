@@ -64,9 +64,9 @@ export default function ArtistPage() {
         </Link>
         <PlaylistCover src={artist.coverImage} alt="" className="w-20 h-20 rounded-full shrink-0" iconClassName="w-6 h-6" />
         <div className="flex-1 min-w-0">
-          <div className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-primary">Artist spotlight</div>
-          <h1 className="text-[22px] font-bold tracking-tight text-foreground truncate">{artist.name}</h1>
-          <p className="text-[11px] text-muted-foreground truncate">
+          <div className="text-xs font-extrabold uppercase tracking-[0.12em] text-primary">Artist spotlight</div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground truncate">{artist.name}</h1>
+          <p className="text-xs text-muted-foreground truncate">
             {[...artist.categories, `${artist.trackCount} ${artist.trackCount === 1 ? "track" : "tracks"}`].join(" · ")}
           </p>
         </div>
@@ -96,7 +96,7 @@ export default function ArtistPage() {
                   isCurrent ? "bg-primary/10" : "can-hover:hover:bg-foreground/[0.03]",
                 )}
               >
-                <span className={cn("text-[11px] font-mono text-center", isCurrent ? "text-primary" : "text-faint")}>
+                <span className={cn("text-xs font-mono text-center", isCurrent ? "text-primary" : "text-faint")}>
                   {isCurrent ? "▶" : i + 1}
                 </span>
                 <span className="flex items-center gap-[9px] min-w-0">
@@ -105,7 +105,7 @@ export default function ArtistPage() {
                     {track.name}
                   </span>
                 </span>
-                <span className="text-[11px] font-mono text-faint">{formatDuration(track.duration)}</span>
+                <span className="text-xs font-mono text-faint">{formatDuration(track.duration)}</span>
               </button>
             );
           })}

@@ -17,7 +17,7 @@ const posthogConfigured = Boolean(
   process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN && process.env.NEXT_PUBLIC_POSTHOG_HOST,
 );
 
-const fieldLabel = "block text-[9px] font-bold uppercase tracking-[0.08em] text-faint mb-1.5";
+const fieldLabel = "block text-xs font-bold uppercase tracking-[0.08em] text-faint mb-1.5";
 const fieldBox =
   "w-full rounded-[7px] border border-primary/20 bg-card px-2.5 py-2 text-xs text-foreground outline-none focus:border-primary transition-colors";
 
@@ -77,16 +77,16 @@ export function VenuePanel() {
         <div className="flex items-center gap-3.5">
           <VenueAvatar name={displayName} logoUrl={profile?.logoUrl} className="w-[54px] h-[54px] rounded-xl text-base shrink-0" />
           <div className="flex-1 min-w-0">
-            <div className="text-[17px] font-extrabold text-foreground truncate">{displayName}</div>
-            <div className="text-[11px] text-muted-foreground mt-1 truncate">{profile?.businessType || userEmail}</div>
+            <div className="text-lg font-extrabold text-foreground truncate">{displayName}</div>
+            <div className="text-xs text-muted-foreground mt-1 truncate">{profile?.businessType || userEmail}</div>
           </div>
-          <span className="hidden sm:inline px-2 py-1 rounded-full bg-primary/10 text-primary text-[9px] font-extrabold shrink-0">
+          <span className="hidden sm:inline px-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-extrabold shrink-0">
             {planLabel}
           </span>
           {profile && (
             <button
               onClick={() => setEditingBrand(true)}
-              className="shrink-0 flex items-center gap-1.5 px-3 py-2 touch:py-3 rounded-lg border border-primary/20 text-[11px] font-bold text-foreground hover:bg-foreground/5 transition-colors"
+              className="shrink-0 flex items-center gap-1.5 px-3 py-2 touch:py-3 rounded-lg border border-primary/20 text-xs font-bold text-foreground hover:bg-foreground/5 transition-colors"
             >
               <Palette className="w-3.5 h-3.5 text-primary" />
               Edit brand
@@ -119,7 +119,7 @@ export function VenuePanel() {
                 <button
                   onClick={handleSaveVenueName}
                   disabled={isSaving}
-                  className="shrink-0 px-3 py-2 rounded-[7px] bg-primary text-primary-foreground text-[11px] font-extrabold hover:opacity-90 transition-opacity disabled:opacity-50"
+                  className="shrink-0 px-3 py-2 rounded-[7px] bg-primary text-primary-foreground text-xs font-extrabold hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
                   {isSaving ? "Saving…" : savedFeedback ? "Saved" : "Save"}
                 </button>

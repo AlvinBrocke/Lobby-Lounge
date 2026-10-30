@@ -19,7 +19,7 @@ export const LicensingSection = () => (
         <p className="ll-lead mt-5">
           <b className="font-semibold text-ll-text">56% of business owners</b>{" "}don&apos;t know that a personal Spotify or Apple Music subscription isn&apos;t licensed for commercial use. Every track in Lobby &amp; Lounge is — so you can stop worrying about licensing and start building your brand sound.
         </p>
-        <p className="mt-4 text-[13px] text-ll-text-2">
+        <p className="mt-4 text-sm text-ll-text-2">
           Source: MRC Data × Soundtrack Your Brand, B2B study, 2021
         </p>
       </div>
@@ -35,7 +35,7 @@ export const LicensingSection = () => (
             <span className="pt-0.5 text-sm font-medium tabular-nums text-ll-teal-ink">0{i + 1}</span>
             <div>
               <h3 className="ll-h3">{f.title}</h3>
-              <p className="mt-2 text-[15px] leading-relaxed text-ll-text-2">{f.desc}</p>
+              <p className="mt-2 text-base leading-relaxed text-ll-text-2">{f.desc}</p>
             </div>
           </li>
         ))}

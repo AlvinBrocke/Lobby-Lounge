@@ -48,7 +48,7 @@ export const Navigation = () => {
             <a
               key={href}
               href={href}
-              className="ll-link rounded-sm text-[15px] font-medium text-ll-text-2 hover:text-ll-text"
+              className="ll-link rounded-sm text-base font-medium text-ll-text-2 hover:text-ll-text"
             >
               {label}
             </a>
@@ -58,7 +58,7 @@ export const Navigation = () => {
         <div className="flex items-center gap-5">
           <Link
             href="/signin"
-            className="ll-link hidden rounded-sm text-[15px] font-medium text-ll-text-2 hover:text-ll-text sm:block"
+            className="ll-link hidden rounded-sm text-base font-medium text-ll-text-2 hover:text-ll-text sm:block"
           >
             Log in
           </Link>

@@ -140,7 +140,7 @@ export function TourMap() {
                       <span className="flex items-center gap-2 text-sm font-bold text-foreground">
                         {name}
                         {here && (
-                          <span className="text-[9px] font-extrabold uppercase tracking-[0.12em] text-primary">
+                          <span className="text-xs font-extrabold uppercase tracking-[0.12em] text-primary">
                             You are here
                           </span>
                         )}
@@ -164,7 +164,7 @@ export function TourMap() {
               </div>
             </nav>
 
-            <h3 className="text-[10px] font-bold uppercase tracking-[0.16em] text-faint mt-6 mb-2">
+            <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-faint mt-6 mb-2">
               Guides &amp; FAQs
             </h3>
             {/* New tab on purpose: /help and /blog sit outside the (main) layout, so

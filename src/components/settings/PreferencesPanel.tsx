@@ -12,7 +12,7 @@ import { ENERGY_LABELS } from "@/lib/playlists";
 import usePlayerStore from "@/store/usePlayerStore";
 import { cn } from "@/lib/utils";
 
-const fieldLabel = "block text-[9px] font-bold uppercase tracking-[0.08em] text-faint mb-2";
+const fieldLabel = "block text-xs font-bold uppercase tracking-[0.08em] text-faint mb-2";
 
 function Chip({ selected, onClick, children }: { selected: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
@@ -21,7 +21,7 @@ function Chip({ selected, onClick, children }: { selected: boolean; onClick: () 
       onClick={onClick}
       aria-pressed={selected}
       className={cn(
-        "px-3 py-1.5 touch:py-2.5 rounded-full border text-[11px] touch:text-sm font-semibold transition-colors",
+        "px-3 py-1.5 touch:py-2.5 rounded-full border text-xs touch:text-sm font-semibold transition-colors",
         selected
           ? "bg-primary text-primary-foreground border-primary"
           : "border-primary/20 text-muted-foreground hover:text-foreground hover:border-primary/50",
@@ -172,7 +172,7 @@ export function PreferencesPanel() {
                 onChange={(e) => setSound({ ...sound, defaultVolume: Number(e.target.value) })}
                 className="w-full accent-primary cursor-pointer"
               />
-              <p className="text-[10px] text-faint mt-1">Where the volume starts each time the app opens.</p>
+              <p className="text-xs text-faint mt-1">Where the volume starts each time the app opens.</p>
             </div>
             <div>
               <span className={fieldLabel}>Fade between songs</span>
@@ -183,12 +183,12 @@ export function PreferencesPanel() {
                   </Chip>
                 ))}
               </div>
-              <p className="text-[10px] text-faint mt-1">Eases each song out and the next one in, so changes aren&apos;t abrupt.</p>
+              <p className="text-xs text-faint mt-1">Eases each song out and the next one in, so changes aren&apos;t abrupt.</p>
             </div>
             <label className="flex items-start justify-between gap-3 cursor-pointer">
               <span>
                 <span className="block text-xs font-bold text-foreground">Follow the schedule automatically</span>
-                <span className="block text-[10px] text-faint mt-0.5">
+                <span className="block text-xs text-faint mt-0.5">
                   Switch playlists when a schedule block starts. Off: you change them by hand.
                 </span>
               </span>

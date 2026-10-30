@@ -16,7 +16,7 @@ export default function TasksPage() {
       description="Complete these steps to get the most out of Lobby & Lounge."
       action={
         <div className="min-w-[180px]">
-          <div className="flex justify-between text-[11px] text-muted-foreground mb-1.5">
+          <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
             <span>Setup progress</span>
             <span className={cn("font-bold", remaining === 0 ? "text-primary" : "text-foreground")}>
               {loading ? "…" : `${done} of ${tasks.length}`}
@@ -37,8 +37,8 @@ export default function TasksPage() {
             <Check className="w-3.5 h-3.5" strokeWidth={3} />
           </span>
           <div>
-            <div className="text-[13px] font-bold text-primary">Setup complete</div>
-            <div className="text-[11px] text-muted-foreground mt-0.5">Your venue is ready to go.</div>
+            <div className="text-sm font-bold text-primary">Setup complete</div>
+            <div className="text-xs text-muted-foreground mt-0.5">Your venue is ready to go.</div>
           </div>
         </div>
       )}
@@ -56,7 +56,7 @@ export default function TasksPage() {
               <div>
                 <div
                   className={cn(
-                    "text-[10px] font-extrabold uppercase tracking-[0.12em]",
+                    "text-xs font-extrabold uppercase tracking-[0.12em]",
                     task.done ? "text-primary" : "text-faint",
                   )}
                 >
@@ -78,7 +78,7 @@ export default function TasksPage() {
             <Link
               href={task.href}
               className={cn(
-                "self-start px-3 py-2 rounded-lg border border-primary/25 text-[11px] font-extrabold transition-opacity hover:opacity-90",
+                "self-start px-3 py-2 rounded-lg border border-primary/25 text-xs font-extrabold transition-opacity hover:opacity-90",
                 task.done ? "text-primary" : "bg-primary text-primary-foreground",
               )}
             >

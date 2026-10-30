@@ -13,11 +13,11 @@ import { describeClerkError } from "@/lib/clerkErrors";
 import { STAFF_ROLES, roleLabel, type StaffRole } from "@/lib/staff";
 import { cn } from "@/lib/utils";
 
-const fieldLabel = "block text-[9px] font-bold uppercase tracking-[0.08em] text-faint mb-1.5";
+const fieldLabel = "block text-xs font-bold uppercase tracking-[0.08em] text-faint mb-1.5";
 const fieldBox =
   "w-full rounded-[7px] border border-primary/20 bg-card px-2.5 py-2 text-xs text-foreground outline-none focus:border-primary transition-colors";
 const smallButton =
-  "shrink-0 flex items-center gap-1.5 px-3 py-2 touch:py-3 rounded-lg text-[11px] font-bold transition-colors disabled:opacity-50";
+  "shrink-0 flex items-center gap-1.5 px-3 py-2 touch:py-3 rounded-lg text-xs font-bold transition-colors disabled:opacity-50";
 
 /** The "Zone & staff" settings tab: the venue's one zone and its team (a Clerk organization). */
 export function StaffPanel() {
@@ -37,12 +37,12 @@ export function StaffPanel() {
           <div className="flex items-center gap-3 rounded-xl border border-foreground/5 bg-secondary p-3.5">
             <VenueAvatar name={venueName} logoUrl={profile?.logoUrl} className="w-10 h-10 rounded-lg text-xs shrink-0" />
             <div className="flex-1 min-w-0">
-              <div className="text-[13px] font-bold text-foreground truncate">{venueName}</div>
-              <div className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
+              <div className="text-sm font-bold text-foreground truncate">{venueName}</div>
+              <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                 <MapPin className="w-3 h-3" /> Main zone
               </div>
             </div>
-            <span className="px-2 py-1 rounded-full bg-primary/10 text-primary text-[9px] font-extrabold shrink-0">1 of 1 zones</span>
+            <span className="px-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-extrabold shrink-0">1 of 1 zones</span>
           </div>
         </CardContent>
       </Card>
@@ -141,15 +141,15 @@ function Team() {
             const isOwner = memberId === ownerId;
             return (
               <li key={m.id} className="flex items-center gap-3 py-2.5">
-                <VenueAvatar name={name || email} className="w-8 h-8 rounded-full text-[10px] shrink-0" />
+                <VenueAvatar name={name || email} className="w-8 h-8 rounded-full text-xs shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-bold text-foreground truncate">
                     {name || email}
                     {memberId === userId && <span className="text-muted-foreground font-medium"> (you)</span>}
                   </div>
-                  {name && <div className="text-[11px] text-muted-foreground truncate">{email}</div>}
+                  {name && <div className="text-xs text-muted-foreground truncate">{email}</div>}
                 </div>
-                <span className="text-[10px] font-bold text-muted-foreground shrink-0">{isOwner ? "Owner" : roleLabel(m.role)}</span>
+                <span className="text-xs font-bold text-muted-foreground shrink-0">{isOwner ? "Owner" : roleLabel(m.role)}</span>
                 {isAdmin && !isOwner && memberId !== userId && (
                   <button
                     onClick={() => run(() => m.destroy())}
@@ -167,13 +167,13 @@ function Team() {
               <span className="w-8 h-8 rounded-full border border-dashed border-foreground/20 shrink-0" aria-hidden />
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-bold text-foreground truncate">{inv.emailAddress}</div>
-                <div className="text-[11px] text-muted-foreground">Invitation sent</div>
+                <div className="text-xs text-muted-foreground">Invitation sent</div>
               </div>
-              <span className="text-[10px] font-bold text-muted-foreground shrink-0">{roleLabel(inv.role)}</span>
+              <span className="text-xs font-bold text-muted-foreground shrink-0">{roleLabel(inv.role)}</span>
               {isAdmin && (
                 <button
                   onClick={() => run(() => inv.revoke())}
-                  className="px-2 py-1 rounded-lg text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                  className="px-2 py-1 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Revoke
                 </button>
@@ -249,7 +249,7 @@ function InviteModal({ onClose, onSent }: { onClose: () => void; onSent: () => v
                 />
                 <span>
                   <span className="block text-xs font-bold text-foreground">{r.label}</span>
-                  <span className="block text-[11px] text-muted-foreground">{r.blurb}</span>
+                  <span className="block text-xs text-muted-foreground">{r.blurb}</span>
                 </span>
               </label>
             ))}

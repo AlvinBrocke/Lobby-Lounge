@@ -120,7 +120,7 @@ export function DevicesButton({ audioRef, disabled }: { audioRef: RefObject<HTML
                   <Cast className="w-4 h-4 text-primary shrink-0" />
                   <span>
                     <span className="block font-semibold">Cast or AirPlay</span>
-                    <span className="block text-[10px] text-muted-foreground">
+                    <span className="block text-xs text-muted-foreground">
                       {connected ? "Connected · tap to change" : "Speakers & screens on your network"}
                     </span>
                   </span>
@@ -131,7 +131,7 @@ export function DevicesButton({ audioRef, disabled }: { audioRef: RefObject<HTML
                   <Speaker className="w-4 h-4 text-primary shrink-0" />
                   <span>
                     <span className="block font-semibold">Choose speaker</span>
-                    <span className="block text-[10px] text-muted-foreground truncate">
+                    <span className="block text-xs text-muted-foreground truncate">
                       {speakerName ?? "Wired or Bluetooth output"}
                     </span>
                   </span>

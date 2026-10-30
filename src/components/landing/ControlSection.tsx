@@ -36,7 +36,7 @@ export const ControlSection = () => (
           Pick a curated playlist, build your own, or schedule the whole week — all from one place, on any device with a browser.
         </p>
         <LandingVideo src="/videos/landing/dashboard-playlists.mp4" poster="/videos/landing/dashboard-playlists.jpg" label="Walkthrough of the Lobby & Lounge dashboard: daytime sets, evening playlists, genres and the weekly schedule" className="mt-8" />
-        <Link href="/signup" className="ll-link mt-6 inline-flex items-center gap-1.5 rounded-sm text-[15px] font-medium text-ll-teal-ink underline-offset-4 hover:underline">
+        <Link href="/signup" className="ll-link mt-6 inline-flex items-center gap-1.5 rounded-sm text-base font-medium text-ll-teal-ink underline-offset-4 hover:underline">
           Start free trial <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>
       </div>
@@ -48,7 +48,7 @@ export const ControlSection = () => (
               <Icon className="mt-0.5 h-5 w-5 shrink-0 text-ll-teal-ink" strokeWidth={1.75} aria-hidden />
               <div>
                 <h3 className="text-base font-semibold tracking-tight">{title}</h3>
-                <p className="mt-1 text-[15px] leading-relaxed text-ll-text-2">{desc}</p>
+                <p className="mt-1 text-base leading-relaxed text-ll-text-2">{desc}</p>
               </div>
             </li>
           ))}

@@ -46,7 +46,7 @@ function LiveBadge({ count, className, title = `${count} playing today`, tone = 
   return (
     <span
       title={title}
-      className={cn("text-[9px] font-bold rounded-full px-[5px] py-px", tone, className)}
+      className={cn("text-xs font-bold rounded-full px-[5px] py-px", tone, className)}
     >
       {count}
     </span>
@@ -137,9 +137,9 @@ export function Sidebar() {
               className={cn(
                 "relative flex items-center rounded-md transition-colors",
                 // Rail: icon over a small label, a 56px-tall tap target.
-                "flex-col justify-center gap-1 h-14 text-[10px] font-medium",
+                "flex-col justify-center gap-1 h-14 text-xs font-medium",
                 // Full sidebar: icon beside the label, accent bar on the left.
-                "lg:flex-row lg:justify-start lg:gap-2.5 lg:h-auto lg:px-2.5 lg:py-[9px] touch:lg:py-3 lg:text-[13px] lg:font-normal lg:border-l-2",
+                "lg:flex-row lg:justify-start lg:gap-2.5 lg:h-auto lg:px-2.5 lg:py-[9px] touch:lg:py-3 lg:text-sm lg:font-normal lg:border-l-2",
                 active
                   ? "bg-primary/10 lg:border-primary text-primary lg:font-semibold"
                   : "lg:border-transparent text-muted-foreground can-hover:hover:bg-primary/5 active:bg-primary/5",
@@ -185,7 +185,7 @@ export function MobileNav() {
             data-tour={`nav${item.href.replace("/", "-")}`}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "relative flex-1 h-14 flex flex-col items-center justify-center gap-1 text-[10px] font-medium",
+              "relative flex-1 h-14 flex flex-col items-center justify-center gap-1 text-xs font-medium",
               active ? "text-primary" : "text-muted-foreground",
             )}
           >

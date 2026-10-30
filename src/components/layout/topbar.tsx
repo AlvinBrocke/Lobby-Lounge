@@ -149,16 +149,16 @@ function AccountMenu() {
         <VenueAvatar
           name={name}
           logoUrl={logoUrl}
-          className="w-[30px] h-[30px] touch:w-11 touch:h-11 rounded-full text-[9px] touch:text-xs"
+          className="w-[30px] h-[30px] touch:w-11 touch:h-11 rounded-full text-xs"
         />
       </button>
       {open && (
         <div className="absolute right-0 top-[calc(100%+9px)] w-[240px] p-2.5 rounded-[11px] bg-popover border border-foreground/10 shadow-[0_18px_48px_rgba(0,0,0,0.62)] z-[60]">
           <div className="flex items-center gap-2.5 px-1.5 pt-1 pb-3 border-b border-foreground/5">
-            <VenueAvatar name={name} logoUrl={logoUrl} className="w-[34px] h-[34px] rounded-full text-[10px] shrink-0" />
+            <VenueAvatar name={name} logoUrl={logoUrl} className="w-[34px] h-[34px] rounded-full text-xs shrink-0" />
             <div className="min-w-0">
               <div className="text-xs font-bold text-foreground truncate">{name}</div>
-              <div className="text-[10px] text-muted-foreground truncate mt-0.5">{subtitle}</div>
+              <div className="text-xs text-muted-foreground truncate mt-0.5">{subtitle}</div>
             </div>
           </div>
           <div className="pt-1.5 flex flex-col">
@@ -204,7 +204,7 @@ function ThemePicker() {
           key={key}
           onClick={() => setTheme(key)}
           aria-pressed={theme === key}
-          className={`flex items-center justify-center gap-1 py-1.5 touch:py-2.5 rounded text-[11px] touch:text-xs font-semibold transition-colors ${
+          className={`flex items-center justify-center gap-1 py-1.5 touch:py-2.5 rounded text-xs font-semibold transition-colors ${
             theme === key ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
           }`}
         >

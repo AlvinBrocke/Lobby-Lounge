@@ -46,16 +46,16 @@ const SOURCES: { id: Source; label: string; detail: string }[] = [
 
 const field =
   "w-full px-3 py-2.5 bg-card border border-foreground/[0.08] rounded-lg text-xs text-foreground placeholder:text-faint outline-none focus:ring-2 focus:ring-primary/40 transition";
-const label = "block mb-1.5 text-[9px] font-bold text-muted-foreground";
+const label = "block mb-1.5 text-xs font-bold text-muted-foreground";
 const choice = (active: boolean) =>
   cn(
     "text-left rounded-lg border transition-colors",
     active ? "border-primary bg-primary/10" : "border-foreground/[0.07] bg-card hover:border-foreground/15",
   );
 const primary =
-  "px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-[11px] font-extrabold hover:opacity-90 transition-opacity disabled:opacity-45 disabled:cursor-not-allowed";
+  "px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-xs font-extrabold hover:opacity-90 transition-opacity disabled:opacity-45 disabled:cursor-not-allowed";
 const secondary =
-  "px-3 py-[9px] rounded-lg border border-foreground/10 text-[11px] text-muted-foreground hover:text-foreground transition-colors disabled:opacity-45 disabled:cursor-not-allowed";
+  "px-3 py-[9px] rounded-lg border border-foreground/10 text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-45 disabled:cursor-not-allowed";
 
 /** Reads an audio blob's length in seconds, or null if the browser can't decode it. */
 function audioSeconds(url: string): Promise<number | null> {
@@ -301,13 +301,13 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
           <Fragment key={n}>
             <span
               className={cn(
-                "w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black",
+                "w-6 h-6 rounded-full flex items-center justify-center text-xs font-black",
                 step >= n ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground",
               )}
             >
               {n}
             </span>
-            <span className={cn("text-[10px] font-bold", step === n ? "text-foreground" : "text-faint")}>
+            <span className={cn("text-xs font-bold", step === n ? "text-foreground" : "text-faint")}>
               {n === 1 ? "Create message" : "Schedule"}
             </span>
             {n === 1 && <span className={cn("flex-1 h-px", step === 2 ? "bg-primary/25" : "bg-foreground/[0.07]")} />}
@@ -318,8 +318,8 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
       {step === 1 ? (
         <div className="flex flex-col gap-3.5">
           <div>
-            <div className="text-[17px] font-extrabold text-foreground">Create an announcement</div>
-            <div className="text-[10px] text-muted-foreground mt-1">
+            <div className="text-lg font-extrabold text-foreground">Create an announcement</div>
+            <div className="text-xs text-muted-foreground mt-1">
               Turn a short guest message into a venue-ready voice announcement.
             </div>
           </div>
@@ -350,8 +350,8 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
                 }}
                 className={cn(choice(source === option.id), "px-[11px] py-2.5")}
               >
-                <span className="block text-[10px] font-extrabold text-foreground">{option.label}</span>
-                <span className="block mt-[3px] text-[8px] text-muted-foreground">{option.detail}</span>
+                <span className="block text-xs font-extrabold text-foreground">{option.label}</span>
+                <span className="block mt-[3px] text-xs text-muted-foreground">{option.detail}</span>
               </button>
             ))}
           </div>
@@ -379,7 +379,7 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
                 <>
                   <label>
                     <span className={label}>Voice</span>
-                    <select value={voiceName} onChange={(e) => setVoiceName(e.target.value)} className={cn(field, "text-[11px]")}>
+                    <select value={voiceName} onChange={(e) => setVoiceName(e.target.value)} className={cn(field, "text-xs")}>
                       <option value="">Device default</option>
                       {voices.map((v) => (
                         <option key={v.name} value={v.name}>
@@ -406,7 +406,7 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
                         onChange={(e) => control.set(Number(e.target.value))}
                         className="w-full accent-primary"
                       />
-                      <span className="flex justify-between text-[8px] text-faint">
+                      <span className="flex justify-between text-xs text-faint">
                         <span>{control.low}</span>
                         <span>{control.high}</span>
                       </span>
@@ -414,7 +414,7 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
                   ))}
                 </>
               ) : (
-                <p className="text-[10px] text-destructive">
+                <p className="text-xs text-destructive">
                   This browser can&apos;t speak announcements. Use Chrome, Edge or Safari on the venue&apos;s
                   player, or record a voiceover instead.
                 </p>
@@ -437,7 +437,7 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
                       setRecorded(null);
                     }}
                     className={cn(
-                      "flex-1 p-2 rounded-[7px] border text-[10px] font-extrabold disabled:cursor-default",
+                      "flex-1 p-2 rounded-[7px] border text-xs font-extrabold disabled:cursor-default",
                       recordingLimit === seconds
                         ? "border-primary bg-primary/10 text-primary"
                         : "border-foreground/[0.07] bg-secondary text-muted-foreground",
@@ -458,7 +458,7 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
                   type="button"
                   onClick={recording ? stopRecording : startRecording}
                   className={cn(
-                    "min-w-[116px] px-[13px] py-2.5 rounded-lg text-[10px] font-extrabold",
+                    "min-w-[116px] px-[13px] py-2.5 rounded-lg text-xs font-extrabold",
                     recording ? "bg-destructive text-white" : "bg-primary text-primary-foreground",
                   )}
                 >
@@ -466,7 +466,7 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
                 </button>
                 <span
                   className={cn(
-                    "text-[11px] font-extrabold tabular-nums",
+                    "text-xs font-extrabold tabular-nums",
                     recording ? "text-destructive" : "text-muted-foreground",
                   )}
                 >
@@ -477,10 +477,10 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
                 )}
               </div>
               {audioError ? (
-                <p role="alert" className="text-[9px] text-destructive mt-2.5">{audioError}</p>
+                <p role="alert" className="text-xs text-destructive mt-2.5">{audioError}</p>
               ) : (
                 !recorded && !recording && (
-                  <p className="text-[8px] text-faint mt-2.5">
+                  <p className="text-xs text-faint mt-2.5">
                     Recording stops automatically at the selected limit. You can stop earlier and review it before
                     continuing.
                   </p>
@@ -491,13 +491,13 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
 
           {source === "upload" && (
             <div className="p-3.5 rounded-[10px] bg-card border border-foreground/[0.06]">
-              <div className="text-[11px] font-extrabold text-foreground">Upload a short voiceover</div>
-              <div className="text-[8.5px] text-muted-foreground leading-normal mt-1">
+              <div className="text-xs font-extrabold text-foreground">Upload a short voiceover</div>
+              <div className="text-xs text-muted-foreground leading-normal mt-1">
                 MP3, WAV, M4A, or WebM · up to {MAX_AUDIO_SECONDS} seconds · maximum 10 MB
               </div>
               <label
                 className={cn(
-                  "flex items-center justify-center min-h-[72px] mt-3 rounded-lg border border-dashed cursor-pointer text-[10px] font-bold",
+                  "flex items-center justify-center min-h-[72px] mt-3 rounded-lg border border-dashed cursor-pointer text-xs font-bold",
                   uploaded || existingAudio
                     ? "border-primary bg-primary/10 text-primary"
                     : "border-primary/25 bg-secondary text-muted-foreground",
@@ -517,17 +517,17 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
               {(uploaded || existingAudio) && (
                 <div className="mt-3 p-2.5 rounded-lg bg-secondary">
                   <div className="flex items-center justify-between gap-2.5 mb-2">
-                    <span className="text-[9.5px] font-bold text-foreground truncate">
+                    <span className="text-xs font-bold text-foreground truncate">
                       {uploaded?.name ?? existingAudio?.audioName ?? "Voiceover"}
                     </span>
-                    <span className="text-[9px] font-extrabold text-primary shrink-0">
+                    <span className="text-xs font-extrabold text-primary shrink-0">
                       {uploaded?.seconds ?? existingAudio?.audioSeconds} sec
                     </span>
                   </div>
                   <audio controls src={uploaded?.url ?? existingAudio?.audioUrl ?? undefined} className="w-full h-8" />
                 </div>
               )}
-              {audioError && <p role="alert" className="text-[9px] text-destructive mt-2.5">{audioError}</p>}
+              {audioError && <p role="alert" className="text-xs text-destructive mt-2.5">{audioError}</p>}
             </div>
           )}
 
@@ -537,7 +537,7 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
               <select
                 value={volumeBoost}
                 onChange={(e) => setVolumeBoost(Number(e.target.value))}
-                className={cn(field, "text-[11px]")}
+                className={cn(field, "text-xs")}
               >
                 {VOLUME_BOOSTS.map((db) => (
                   <option key={db} value={db}>
@@ -552,7 +552,7 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
                 onClick={preview}
                 disabled={!message.trim()}
                 className={cn(
-                  "px-[13px] py-[9px] rounded-lg border border-primary/25 text-[10px] font-bold transition-colors disabled:opacity-45",
+                  "px-[13px] py-[9px] rounded-lg border border-primary/25 text-xs font-bold transition-colors disabled:opacity-45",
                   previewing ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -561,7 +561,7 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
             )}
           </div>
 
-          {error && <p role="alert" className="text-[10px] text-destructive">{error}</p>}
+          {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
 
           <div className="flex justify-between items-center mt-1">
             <button type="button" onClick={() => save("draft")} disabled={!ready || saving} className={secondary}>
@@ -583,8 +583,8 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
       ) : (
         <div className="flex flex-col gap-4">
           <div>
-            <div className="text-[17px] font-extrabold text-foreground">Schedule your announcement</div>
-            <div className="text-[10px] text-muted-foreground mt-1">Choose when “{title.trim()}” should play.</div>
+            <div className="text-lg font-extrabold text-foreground">Schedule your announcement</div>
+            <div className="text-xs text-muted-foreground mt-1">Choose when “{title.trim()}” should play.</div>
           </div>
 
           <div>
@@ -599,7 +599,7 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
                     aria-pressed={active}
                     onClick={() => setDays((d) => (active ? d.filter((x) => x !== day) : [...d, day]))}
                     className={cn(
-                      "flex-1 py-2 rounded-[7px] border text-[9px] font-extrabold",
+                      "flex-1 py-2 rounded-[7px] border text-xs font-extrabold",
                       active ? "border-primary bg-primary/10 text-primary" : "border-foreground/[0.07] bg-card text-faint",
                     )}
                   >
@@ -626,8 +626,8 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
                   onClick={() => setOccurrence(option.value)}
                   className={cn(choice(occurrence === option.value), "px-[11px] py-2.5")}
                 >
-                  <span className="block text-[10px] font-extrabold text-foreground">{option.label}</span>
-                  <span className="block mt-[3px] text-[8px] text-muted-foreground">{option.detail}</span>
+                  <span className="block text-xs font-extrabold text-foreground">{option.label}</span>
+                  <span className="block mt-[3px] text-xs text-muted-foreground">{option.detail}</span>
                 </button>
               ))}
             </div>
@@ -653,7 +653,7 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
                 <select
                   value={everyMinutes}
                   onChange={(e) => setEveryMinutes(Number(e.target.value))}
-                  className={cn(field, "text-[10px]")}
+                  className={cn(field, "text-xs")}
                 >
                   {EVERY_MINUTES.map((m) => (
                     <option key={m} value={m}>
@@ -673,27 +673,27 @@ export function AnnouncementComposer({ editing, onClose, onSaved }: Announcement
           >
             <span
               className={cn(
-                "w-4 h-4 rounded border flex items-center justify-center text-[10px] font-black text-primary-foreground shrink-0",
+                "w-4 h-4 rounded border flex items-center justify-center text-xs font-black text-primary-foreground shrink-0",
                 interruptMusic ? "border-primary bg-primary" : "border-faint",
               )}
             >
               {interruptMusic ? "✓" : ""}
             </span>
             <span>
-              <span className="block text-[10px] font-bold text-foreground">Interrupt music playback</span>
-              <span className="block text-[8px] text-muted-foreground mt-0.5">
+              <span className="block text-xs font-bold text-foreground">Interrupt music playback</span>
+              <span className="block text-xs text-muted-foreground mt-0.5">
                 Otherwise the announcement waits until the current song ends.
               </span>
             </span>
           </button>
 
-          <p className="text-[9px] text-faint leading-relaxed">
+          <p className="text-xs text-faint leading-relaxed">
             Announcements play through Lobby Lounge on the device that&apos;s playing your music, while the app is
             open and music is on.
           </p>
 
-          {!windowValid && <p className="text-[10px] text-destructive">The end time must be after the start time.</p>}
-          {error && <p role="alert" className="text-[10px] text-destructive">{error}</p>}
+          {!windowValid && <p className="text-xs text-destructive">The end time must be after the start time.</p>}
+          {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
 
           <div className="flex justify-between items-center pt-1">
             <button type="button" onClick={() => setStep(1)} disabled={saving} className={secondary}>

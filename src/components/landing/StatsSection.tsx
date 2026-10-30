@@ -28,7 +28,7 @@ export const StatsSection = () => (
           <p className="max-w-xl text-xl font-medium leading-snug">
             of businesses say the right music positively impacts what their customers buy.
           </p>
-          <p className="mt-2 text-[13px] text-ll-text-2">
+          <p className="mt-2 text-sm text-ll-text-2">
             MRC Data × Soundtrack Your Brand · B2B study · 2021
           </p>
         </div>

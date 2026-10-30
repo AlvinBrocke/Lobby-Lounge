@@ -16,7 +16,7 @@ export default function PlaylistError({ error, reset }: { error: Error; reset: (
       </p>
       {/* Surface the real cause while developing; production builds hide it. */}
       {process.env.NODE_ENV === "development" && (
-        <pre className="text-[11px] text-destructive bg-destructive/10 rounded-lg px-3 py-2 mb-6 max-w-xl whitespace-pre-wrap text-left">
+        <pre className="text-xs text-destructive bg-destructive/10 rounded-lg px-3 py-2 mb-6 max-w-xl whitespace-pre-wrap text-left">
           {error.message}
         </pre>
       )}
