@@ -205,7 +205,7 @@ export default function SchedulePage() {
       description="Set a playlist for every hour of the week — it repeats automatically."
       action={
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 text-[11px] text-muted-foreground">
+          <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
             {current ? (
               <>
                 <span className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />
@@ -222,7 +222,7 @@ export default function SchedulePage() {
           <button
             onClick={openNewBlock}
             disabled={loading}
-            className="flex items-center gap-1 px-[15px] py-[9px] bg-primary text-primary-foreground rounded-lg text-[11px] font-extrabold shadow-[0_6px_22px_hsl(var(--primary)/0.18)] hover:opacity-90 transition-opacity disabled:opacity-40"
+            className="flex items-center gap-1 px-[15px] py-[9px] bg-primary text-primary-foreground rounded-lg text-xs font-extrabold shadow-[0_6px_22px_hsl(var(--primary)/0.18)] hover:opacity-90 transition-opacity disabled:opacity-40"
           >
             <Plus className="w-3 h-3" strokeWidth={3} />
             Add playlist
@@ -246,7 +246,7 @@ export default function SchedulePage() {
                   <div
                     key={day}
                     className={cn(
-                      "py-[7px] rounded-[7px] text-center text-[11px] font-bold",
+                      "py-[7px] rounded-[7px] text-center text-xs font-bold",
                       day === today ? "bg-primary/10 text-primary" : "text-muted-foreground",
                     )}
                   >
@@ -264,7 +264,7 @@ export default function SchedulePage() {
                   className="grid grid-cols-[56px_1fr]"
                   style={{ height: ROW_HEIGHT }}
                 >
-                  <div className="text-[10px] text-faint pr-2.5 font-semibold flex items-start justify-end -mt-1.5 uppercase">
+                  <div className="text-xs text-faint pr-2.5 font-semibold flex items-start justify-end -mt-1.5 uppercase">
                     {hour > 0 && formatHour(hour)}
                   </div>
                   <div className="grid grid-cols-7 gap-[7px] border-t border-foreground/[0.04]">
@@ -340,10 +340,10 @@ export default function SchedulePage() {
                                 background: `linear-gradient(155deg, ${colour}, ${colour}B8)`,
                               }}
                             >
-                              <span className={cn("block truncate text-[11px] font-extrabold leading-tight tracking-tight", !compact && "pr-8")}>
+                              <span className={cn("block truncate text-xs font-extrabold leading-tight tracking-tight", !compact && "pr-8")}>
                                 {blockLabel(block)}
                               </span>
-                              <span className="block mt-1 text-[9px] text-white/70 truncate">
+                              <span className="block mt-1 text-xs text-white/70 truncate">
                                 {formatRange(block.startHour, block.duration)}
                                 {!compact && block.title && playlist ? ` · ${playlist.name}` : ""}
                               </span>
@@ -356,7 +356,7 @@ export default function SchedulePage() {
                                 />
                               )}
                               {isNow && (
-                                <span className="absolute right-[7px] bottom-[7px] px-[5px] py-0.5 rounded-full bg-background text-primary text-[7px] font-extrabold uppercase tracking-[0.08em]">
+                                <span className="absolute right-[7px] bottom-[7px] px-[5px] py-0.5 rounded-full bg-background text-primary text-xs font-extrabold uppercase tracking-[0.08em]">
                                   Live
                                 </span>
                               )}

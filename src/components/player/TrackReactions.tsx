@@ -40,7 +40,7 @@ export function TrackReactions({ track }: { track: Track }) {
   }
 
   const button =
-    "flex flex-col items-center gap-1 px-3 py-1.5 touch:py-2.5 rounded-lg text-[10px] touch:text-xs font-semibold transition-colors disabled:opacity-40";
+    "flex flex-col items-center gap-1 px-3 py-1.5 touch:py-2.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-40";
   const icon = "w-[18px] h-[18px] touch:w-6 touch:h-6";
 
   return (

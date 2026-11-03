@@ -61,7 +61,7 @@ function TrackRow({
     >
       <span
         className={cn(
-          "text-[11px] font-mono text-center",
+          "text-xs font-mono text-center",
           isCurrent ? "text-primary" : "text-faint",
         )}
       >
@@ -79,17 +79,17 @@ function TrackRow({
           <span className={cn("block text-xs touch:text-sm font-semibold truncate", isCurrent ? "text-primary" : "text-foreground")}>
             {track.name}
           </span>
-          <span className="block lg:hidden text-[11px] touch:text-xs text-muted-foreground truncate">
+          <span className="block lg:hidden text-xs text-muted-foreground truncate">
             {track.artist ?? "Unknown Artist"}
           </span>
         </span>
       </div>
 
-      <span className="hidden lg:block text-[11px] touch:text-xs text-muted-foreground truncate">
+      <span className="hidden lg:block text-xs text-muted-foreground truncate">
         {track.artist ?? "Unknown Artist"}
       </span>
 
-      <span className="text-[11px] font-mono text-faint">{formatDuration(track.duration)}</span>
+      <span className="text-xs font-mono text-faint">{formatDuration(track.duration)}</span>
 
       <div className="flex items-center gap-1">
         {onQueue && (
@@ -239,10 +239,10 @@ export default function PlaylistDetailPage() {
             <h1 className={cn("text-base font-bold tracking-tight truncate", isActive ? "text-primary" : "text-foreground")}>
               {playlist.name}
             </h1>
-            <p className="text-[11px] text-muted-foreground truncate">{meta}</p>
+            <p className="text-xs text-muted-foreground truncate">{meta}</p>
           </div>
           {isActive && (
-            <span className="text-[9px] font-bold bg-primary text-primary-foreground rounded px-[7px] py-0.5 ml-1 shrink-0">
+            <span className="text-xs font-bold bg-primary text-primary-foreground rounded px-[7px] py-0.5 ml-1 shrink-0">
               ● {isPlaying ? "PLAYING NOW" : "PAUSED"}
             </span>
           )}
@@ -290,7 +290,7 @@ export default function PlaylistDetailPage() {
               <span
                 key={i}
                 className={cn(
-                  "text-[10px] font-semibold uppercase tracking-[0.1em] text-faint",
+                  "text-xs font-semibold uppercase tracking-[0.1em] text-faint",
                   h === "#" && "text-center",
                   h === "Artist" && "hidden lg:block",
                 )}

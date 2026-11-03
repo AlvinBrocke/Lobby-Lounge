@@ -62,11 +62,11 @@ export function AnnouncementPlayer() {
       className="flex items-center gap-3 px-5 py-2.5 shrink-0 border-b border-warning-500/30 bg-gradient-to-r from-warning-500/[0.14] to-warning-500/[0.06]"
     >
       <span className="w-[7px] h-[7px] rounded-full bg-warning-500 shadow-[0_0_6px_theme(colors.warning.500)] shrink-0 animate-pulse" />
-      <p className="flex-1 min-w-0 truncate text-[11px]">
+      <p className="flex-1 min-w-0 truncate text-xs">
         <span className="font-bold text-warning-700 dark:text-warning-500 mr-2">Announcement Live</span>
         <span className="text-muted-foreground">{cue.message ?? cue.title}</span>
       </p>
-      <span className="hidden sm:block text-[10px] text-faint mr-1 shrink-0">
+      <span className="hidden sm:block text-xs text-faint mr-1 shrink-0">
         {advanceAfter ? "Playing between tracks" : "Music paused"}
       </span>
       <button

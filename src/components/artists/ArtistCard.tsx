@@ -23,7 +23,7 @@ export function ArtistCard({ artist }: { artist: ArtistSummary }) {
         <span className="block text-xs font-bold text-foreground truncate group-hover:text-primary transition-colors">
           {artist.name}
         </span>
-        <span className="block text-[10px] text-faint mt-0.5">
+        <span className="block text-xs text-faint mt-0.5">
           {artist.trackCount} {artist.trackCount === 1 ? "track" : "tracks"}
         </span>
       </span>

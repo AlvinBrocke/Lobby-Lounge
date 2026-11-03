@@ -22,7 +22,7 @@ export const BrandSection = () => (
         <h2 className="ll-h2 mt-3">
           Music from non-commercial streaming services doesn&apos;t only attract fines but also hurts your brand&apos;s image...
         </h2>
-        <ul className="mt-8 border-b border-ll-line text-[17px] leading-relaxed text-ll-text-2">
+        <ul className="mt-8 border-b border-ll-line text-lg leading-relaxed text-ll-text-2">
           <li className="border-t border-ll-line py-5">Employees playing private music might hurt your brand.</li>
           <li className="border-t border-ll-line py-5">
             LLCs separate personal affairs from business affairs, and the same goes for personal and commercial playlists. Press play on track lists that reflect your business.

@@ -67,7 +67,7 @@ export const Footer = () => (
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-4 pt-6 text-[13px] text-ll-text-2">
+      <div className="flex flex-wrap items-center justify-between gap-4 pt-6 text-sm text-ll-text-2">
         <span>© 2026 Lobby &amp; Lounge. All rights reserved.</span>
         <span className="flex flex-wrap gap-x-5 gap-y-2">
           {legalLinks.map(({ label, href }) => (

@@ -80,14 +80,14 @@ export function BillingPanel() {
           <div>
             {state ? (
               <span
-                className={`inline-block text-[9px] font-extrabold px-2 py-1 rounded-full uppercase tracking-wide mb-2.5 ${BADGES[state.access.status].className}`}
+                className={`inline-block text-xs font-extrabold px-2 py-1 rounded-full uppercase tracking-wide mb-2.5 ${BADGES[state.access.status].className}`}
               >
                 {BADGES[state.access.status].label}
               </span>
             ) : (
               <Skeleton className="h-5 w-20 rounded-full mb-2.5" />
             )}
-            <h2 className="text-[17px] font-extrabold text-foreground">{PLAN_NAME}</h2>
+            <h2 className="text-lg font-extrabold text-foreground">{PLAN_NAME}</h2>
             {state ? (
               <p className="text-xs text-muted-foreground mt-1 mb-5">{statusLine}</p>
             ) : (

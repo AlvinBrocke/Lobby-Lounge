@@ -32,7 +32,7 @@ export function ActivityPanel() {
               <li key={row._id} className="flex items-center gap-3 py-2.5">
                 <span
                   aria-hidden
-                  className="w-7 h-7 shrink-0 rounded-full bg-primary/10 text-primary text-[10px] font-extrabold flex items-center justify-center"
+                  className="w-7 h-7 shrink-0 rounded-full bg-primary/10 text-primary text-xs font-extrabold flex items-center justify-center"
                 >
                   {initialsOf(row.actorName)}
                 </span>
@@ -43,7 +43,7 @@ export function ActivityPanel() {
                 </div>
                 <time
                   dateTime={new Date(row._creationTime).toISOString()}
-                  className="text-[10px] text-faint shrink-0"
+                  className="text-xs text-faint shrink-0"
                 >
                   {timeAgo(row._creationTime, now)}
                 </time>

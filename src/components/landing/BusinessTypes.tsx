@@ -55,7 +55,7 @@ export const BusinessTypes = () => (
           >
             <Icon className="h-5 w-5 text-ll-teal-ink" strokeWidth={1.75} aria-hidden />
             <h3 className="ll-h3 mt-4">{title}</h3>
-            <p className="mt-2 text-[15px] leading-relaxed text-ll-text-2">{desc}</p>
+            <p className="mt-2 text-base leading-relaxed text-ll-text-2">{desc}</p>
           </li>
         ))}
       </ul>

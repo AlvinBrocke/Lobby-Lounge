@@ -27,11 +27,11 @@ export function PlaylistTray({
   return (
     <aside className="hidden lg:flex flex-col bg-secondary border border-white/[0.07] rounded-[14px] p-3 max-h-[calc(100vh-264px)] min-h-[426px]">
       <h2 className="text-xs font-extrabold text-foreground">Available playlists</h2>
-      <p className="text-[10px] text-faint mt-0.5 mb-3">Drag one onto any hour.</p>
+      <p className="text-xs text-faint mt-0.5 mb-3">Drag one onto any hour.</p>
       <div className="flex-1 overflow-y-auto scrollbar-hide flex flex-col gap-3">
         {groups.map((g) => (
           <div key={g.label}>
-            <div className="text-[9px] font-extrabold uppercase tracking-[0.12em] text-faint mb-1.5">{g.label}</div>
+            <div className="text-xs font-extrabold uppercase tracking-[0.12em] text-faint mb-1.5">{g.label}</div>
             <div className="flex flex-col gap-1">
               {g.items.map((p) => (
                 <div
@@ -47,7 +47,7 @@ export function PlaylistTray({
                   className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-grab active:cursor-grabbing hover:bg-primary/5 transition-colors"
                 >
                   <PlaylistCover src={p.coverImage} alt="" className="w-7 h-7 rounded shrink-0" iconClassName="w-3 h-3" />
-                  <span className="text-[11px] font-semibold text-foreground truncate">{p.name}</span>
+                  <span className="text-xs font-semibold text-foreground truncate">{p.name}</span>
                 </div>
               ))}
             </div>

@@ -40,20 +40,20 @@ export const PricingSection = () => (
       >
         <div className="flex items-center justify-between gap-4">
           <h3 className="text-base font-semibold">{plan.name}</h3>
-          <span className="rounded-md bg-[#E3F2F1] px-2.5 py-1 text-[13px] font-medium text-ll-teal-ink">
+          <span className="rounded-md bg-[#E3F2F1] px-2.5 py-1 text-sm font-medium text-ll-teal-ink">
             {plan.tag}
           </span>
         </div>
 
         <p className="mt-6 flex items-baseline gap-1.5">
           <span className="text-5xl font-semibold tracking-[-0.03em] tabular-nums">{plan.price}</span>
-          <span className="text-[15px] text-ll-text-2">{plan.period}</span>
+          <span className="text-base text-ll-text-2">{plan.period}</span>
         </p>
-        <p className="mt-3 text-[15px] text-ll-text-2">{plan.desc}</p>
+        <p className="mt-3 text-base text-ll-text-2">{plan.desc}</p>
 
         <ul className="mt-7 grid gap-3 border-t border-ll-line pt-7">
           {plan.features.map((f) => (
-            <li key={f} className="flex gap-3 text-[15px] leading-snug">
+            <li key={f} className="flex gap-3 text-base leading-snug">
               <Check className="mt-0.5 h-4 w-4 shrink-0 text-ll-teal-ink" strokeWidth={2.25} aria-hidden /> {f}
             </li>
           ))}

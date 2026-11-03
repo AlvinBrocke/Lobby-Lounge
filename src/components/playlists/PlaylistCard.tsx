@@ -70,7 +70,7 @@ export function PlaylistCard({
           />
           <span className="absolute inset-0 bg-gradient-to-b from-transparent from-45% to-background/80" />
           {active && (
-            <span className="absolute top-[9px] left-[9px] flex items-center gap-[5px] px-[7px] py-1 rounded-full bg-primary text-primary-foreground text-[8px] font-extrabold tracking-[0.05em]">
+            <span className="absolute top-[9px] left-[9px] flex items-center gap-[5px] px-[7px] py-1 rounded-full bg-primary text-primary-foreground text-xs font-extrabold tracking-[0.05em]">
               <EqBars playing={playing} heights={[6, 9, 7, 8, 5]} className="[&>span]:bg-primary-foreground" />
               {playing ? "PLAYING" : "PAUSED"}
             </span>
@@ -81,14 +81,14 @@ export function PlaylistCard({
             <span className={cn("min-w-0 truncate text-xs font-bold", active ? "text-primary" : "text-foreground")}>
               {playlist.name}
             </span>
-            <span className={cn("shrink-0 text-[9px] font-bold", ENERGY_TONE[playlist.energy])}>
+            <span className={cn("shrink-0 text-xs font-bold", ENERGY_TONE[playlist.energy])}>
               {ENERGY_LABELS[playlist.energy]}
             </span>
           </span>
-          <span className="block text-[10px] text-muted-foreground mt-1 truncate">
+          <span className="block text-xs text-muted-foreground mt-1 truncate">
             {playlist.category ?? "Your playlist"}
           </span>
-          <span className="block text-[9px] text-faint mt-2.5">{meta}</span>
+          <span className="block text-xs text-faint mt-2.5">{meta}</span>
         </span>
       </Link>
 

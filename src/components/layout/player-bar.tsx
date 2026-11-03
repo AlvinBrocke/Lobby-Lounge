@@ -209,7 +209,7 @@ function Notice({
         <div className="text-xs touch:text-sm font-bold text-foreground truncate">{title}</div>
         <div
           className={cn(
-            "text-[11px] touch:text-[13px] truncate group-hover:underline",
+            "text-xs touch:text-sm truncate group-hover:underline",
             tone === "alert" ? "text-destructive" : "text-primary",
           )}
         >
@@ -504,14 +504,14 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
             </button>
             <Artwork track={currentTrack} className="w-[200px] h-[200px] touch:w-[min(300px,40dvh)] touch:h-[min(300px,40dvh)] rounded-xl shadow-[0_8px_36px_rgba(0,0,0,0.65)]" />
             <div className="text-center w-full">
-              <div className="text-[17px] touch:text-2xl font-bold tracking-tight text-foreground truncate">
+              <div className="text-lg touch:text-2xl font-bold tracking-tight text-foreground truncate">
                 {currentTrack.name}
               </div>
               {currentTrack.artist && (
                 <div className="text-xs touch:text-base text-muted-foreground mt-1">{currentTrack.artist}</div>
               )}
               {currentTrack.category && (
-                <div className="text-[11px] touch:text-sm text-faint">{currentTrack.category}</div>
+                <div className="text-xs touch:text-sm text-faint">{currentTrack.category}</div>
               )}
             </div>
             <TrackReactions track={currentTrack} />
@@ -519,7 +519,7 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
               <div className="flex">
                 <Progress progress={progress} onSeek={seek} big />
               </div>
-              <div className="flex justify-between mt-1 text-[10px] touch:text-sm font-mono text-faint">
+              <div className="flex justify-between mt-1 text-xs touch:text-sm font-mono text-faint">
                 <span>{clock(elapsed)}</span>
                 <span>{clock(duration)}</span>
               </div>
@@ -553,14 +553,14 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
                 )}
               </div>
               <div className="min-w-0">
-                <div className="text-xs touch:text-[15px] font-bold text-foreground truncate">
+                <div className="text-xs touch:text-base font-bold text-foreground truncate">
                   {currentTrack?.name ?? "Nothing playing"}
                 </div>
-                <div className="text-[11px] touch:text-[13px] text-muted-foreground truncate">
+                <div className="text-xs touch:text-sm text-muted-foreground truncate">
                   {currentTrack ? (currentTrack.artist ?? "Lobby & Lounge") : "Choose a playlist to start"}
                 </div>
                 {currentTrack?.category && (
-                  <div className="text-[10px] touch:text-xs text-faint truncate mt-px">{currentTrack.category}</div>
+                  <div className="text-xs text-faint truncate mt-px">{currentTrack.category}</div>
                 )}
               </div>
             </button>
@@ -570,11 +570,11 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
           <div className="flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5">
             <Transport {...transport} />
             <div className="flex items-center gap-2 w-full max-w-[260px] touch:max-w-[340px]">
-              <span className="text-[10px] touch:text-xs font-mono text-faint shrink-0 tabular-nums">
+              <span className="text-xs font-mono text-faint shrink-0 tabular-nums">
                 {clock(elapsed)}
               </span>
               <Progress progress={progress} onSeek={seek} />
-              <span className="text-[10px] touch:text-xs font-mono text-faint shrink-0 tabular-nums">
+              <span className="text-xs font-mono text-faint shrink-0 tabular-nums">
                 {clock(duration)}
               </span>
             </div>
@@ -615,7 +615,7 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
                   // Vertical strip with a mouse; on touch a wider horizontal slider
                   // is far easier to drag. Anchored right so it stays on screen.
                   <div className="absolute bottom-[calc(100%+10px)] left-1/2 -translate-x-1/2 w-9 px-2.5 py-3.5 flex flex-col items-center gap-2 touch:left-auto touch:right-0 touch:translate-x-0 touch:w-auto touch:flex-row-reverse touch:px-4 touch:py-3 touch:gap-3 rounded-[10px] bg-secondary border border-foreground/10 shadow-[0_-8px_28px_rgba(0,0,0,0.55)] z-50">
-                    <span className="text-[9px] touch:text-xs touch:w-6 touch:text-right font-bold font-mono text-primary/60">{volume}</span>
+                    <span className="text-xs touch:w-6 touch:text-right font-bold font-mono text-primary/60">{volume}</span>
                     <input
                       type="range"
                       min={0}
@@ -631,7 +631,7 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
                   // iPad/iPhone: the browser can't change the volume, only the buttons can.
                   <div
                     role="note"
-                    className="absolute bottom-[calc(100%+10px)] right-0 w-56 px-4 py-3 rounded-[10px] bg-secondary border border-foreground/10 shadow-[0_-8px_28px_rgba(0,0,0,0.55)] z-50 text-[13px] leading-snug text-muted-foreground"
+                    className="absolute bottom-[calc(100%+10px)] right-0 w-56 px-4 py-3 rounded-[10px] bg-secondary border border-foreground/10 shadow-[0_-8px_28px_rgba(0,0,0,0.55)] z-50 text-sm leading-snug text-muted-foreground"
                   >
                     <span className="font-semibold text-foreground">Use the tablet&apos;s volume buttons.</span>{" "}
                     iPad doesn&apos;t let web apps change the volume.

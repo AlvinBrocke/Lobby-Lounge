@@ -33,14 +33,14 @@ function PlaylistList({ playlists }: { playlists: PlaylistSummary[] }) {
         >
           <PlaylistCover src={p.coverImage} alt="" className="w-[52px] h-[52px] rounded-md shrink-0" iconClassName="w-5 h-5" />
           <div className="flex-1 min-w-0">
-            <div className="text-[13px] font-bold text-foreground truncate">{p.name}</div>
-            <div className="text-[11px] text-faint truncate mt-0.5">
+            <div className="text-sm font-bold text-foreground truncate">{p.name}</div>
+            <div className="text-xs text-faint truncate mt-0.5">
               {[p.category, `${p.trackCount} tracks`, p.totalDuration ? formatTotalDuration(p.totalDuration) : null]
                 .filter(Boolean)
                 .join(" · ")}
             </div>
           </div>
-          <span className="text-[10px] font-semibold text-muted-foreground bg-foreground/10 rounded px-2 py-[3px] shrink-0">
+          <span className="text-xs font-semibold text-muted-foreground bg-foreground/10 rounded px-2 py-[3px] shrink-0">
             {ENERGY_LABELS[p.energy]}
           </span>
         </Link>
@@ -62,8 +62,8 @@ function TrackList({ tracks, empty, undoLabel }: { tracks: ReactionRow[]; empty:
         >
           <PlaylistCover src={t.coverImage} alt="" className="w-[44px] h-[44px] rounded-md shrink-0" iconClassName="w-4 h-4" />
           <div className="flex-1 min-w-0">
-            <div className="text-[13px] font-bold text-foreground truncate">{t.name}</div>
-            <div className="text-[11px] text-faint truncate mt-0.5">
+            <div className="text-sm font-bold text-foreground truncate">{t.name}</div>
+            <div className="text-xs text-faint truncate mt-0.5">
               {[t.artist, t.duration ? formatDuration(t.duration) : null].filter(Boolean).join(" · ")}
             </div>
           </div>
@@ -164,7 +164,7 @@ export default function LibraryPage() {
                 >
                   <PlaylistCover src={a.coverImage} alt="" className="w-full aspect-square rounded-md" iconClassName="w-6 h-6" />
                   <span className="block mt-2 text-xs font-bold text-foreground truncate">{a.album}</span>
-                  <span className="block text-[10px] text-faint truncate mt-0.5">
+                  <span className="block text-xs text-faint truncate mt-0.5">
                     {a.artist} · {plural(a.trackCount, "track")}
                   </span>
                 </Link>
@@ -196,7 +196,7 @@ export default function LibraryPage() {
                   <span className="absolute inset-0 bg-gradient-to-br from-primary/30 to-background/85" />
                   <span className="relative block px-4 py-3.5">
                     <span className="block text-sm font-extrabold text-foreground">{g.name}</span>
-                    <span className="block text-[10px] text-white/60 mt-0.5">{plural(g.count, "playlist")}</span>
+                    <span className="block text-xs text-white/60 mt-0.5">{plural(g.count, "playlist")}</span>
                   </span>
                 </button>
               ))}
@@ -209,7 +209,7 @@ export default function LibraryPage() {
   // ── Home grid ──────────────────────────────────────────────────────────────
   return (
     <div>
-      <h1 className="text-[22px] font-bold tracking-tight text-foreground mb-6">Your Library</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-foreground mb-6">Your Library</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {SECTIONS.map((s) => {
           const Icon = s.icon;
@@ -229,7 +229,7 @@ export default function LibraryPage() {
               </span>
               <span className="min-w-0">
                 <span className="block text-sm font-bold text-foreground">{s.label}</span>
-                <span className="block text-[11px] text-faint mt-1">{loading ? "…" : s.count}</span>
+                <span className="block text-xs text-faint mt-1">{loading ? "…" : s.count}</span>
               </span>
               <ChevronRight className="w-3.5 h-3.5 text-faint ml-auto shrink-0" />
             </button>

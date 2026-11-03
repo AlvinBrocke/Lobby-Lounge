@@ -71,8 +71,8 @@ export default function AnnouncementsPage() {
       <div className="flex items-start justify-between gap-4 mb-[18px]">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <h1 className="text-[20px] font-bold tracking-tight text-foreground">Your Campaigns</h1>
-            <span className="px-[7px] py-[3px] rounded-full bg-primary/10 border border-primary/20 text-primary text-[8px] font-extrabold tracking-[0.12em]">
+            <h1 className="text-xl font-bold tracking-tight text-foreground">Your Campaigns</h1>
+            <span className="px-[7px] py-[3px] rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-extrabold tracking-[0.12em]">
               BETA
             </span>
           </div>
@@ -101,10 +101,10 @@ export default function AnnouncementsPage() {
             )}
           >
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-faint">{label}</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-faint">{label}</span>
               <Icon className={cn("w-3.5 h-3.5", colour)} />
             </div>
-            <div className={cn("text-[22px] font-extrabold tracking-tight", colour)}>
+            <div className={cn("text-2xl font-extrabold tracking-tight", colour)}>
               {announcements === undefined ? "–" : counts[id]}
             </div>
           </button>
@@ -141,10 +141,10 @@ export default function AnnouncementsPage() {
 
                 <button onClick={toggle} className="flex-1 min-w-0 text-left">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className="text-[13px] font-bold text-foreground">{a.title}</span>
+                    <span className="text-sm font-bold text-foreground">{a.title}</span>
                     <span
                       className={cn(
-                        "text-[9px] font-bold px-[7px] py-0.5 rounded-full uppercase tracking-[0.07em]",
+                        "text-xs font-bold px-[7px] py-0.5 rounded-full uppercase tracking-[0.07em]",
                         accent.bg,
                         accent.text,
                       )}
@@ -152,13 +152,13 @@ export default function AnnouncementsPage() {
                       {a.paused ? "Paused" : status}
                     </span>
                     {next && (
-                      <span className="text-[9px] text-muted-foreground">
+                      <span className="text-xs text-muted-foreground">
                         Next: <span className="text-primary font-semibold">{next}</span>
                       </span>
                     )}
                   </div>
-                  <p className="text-[11.5px] text-muted-foreground mb-2 leading-normal truncate">{summary}</p>
-                  <span className="text-[9.5px] text-faint bg-muted-foreground/[0.08] rounded px-[7px] py-0.5">
+                  <p className="text-xs text-muted-foreground mb-2 leading-normal truncate">{summary}</p>
+                  <span className="text-xs text-faint bg-muted-foreground/[0.08] rounded px-[7px] py-0.5">
                     {formatTiming(a)}
                   </span>
                 </button>
@@ -198,7 +198,7 @@ export default function AnnouncementsPage() {
                 <div className="px-4 pb-4 border-t border-foreground/5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3.5">
                     <div className="sm:col-span-2 bg-card rounded-lg px-3.5 py-3">
-                      <div className="text-[9px] font-bold text-faint uppercase tracking-[0.1em] mb-1.5">
+                      <div className="text-xs font-bold text-faint uppercase tracking-[0.1em] mb-1.5">
                         Message Preview
                       </div>
                       {a.source === "ai" ? (
@@ -210,16 +210,16 @@ export default function AnnouncementsPage() {
                       )}
                     </div>
                     <div className="bg-card rounded-lg px-3.5 py-3">
-                      <div className="text-[9px] font-bold text-faint uppercase tracking-[0.1em] mb-2">Schedule</div>
+                      <div className="text-xs font-bold text-faint uppercase tracking-[0.1em] mb-2">Schedule</div>
                       <div className="text-xs font-semibold text-foreground mb-[3px]">{formatTiming(a)}</div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">
                         {a.interruptMusic ? "Interrupts the music" : "Waits for the current song to end"}
                       </div>
                     </div>
                     <div className="bg-card rounded-lg px-3.5 py-3 flex items-center gap-2">
                       <button
                         onClick={() => setComposer({ editing: a })}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border border-foreground/10 text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border border-foreground/10 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
                       >
                         <PencilLine className="w-3.5 h-3.5" />
                         {a.status === "draft" ? "Edit & schedule" : "Edit"}

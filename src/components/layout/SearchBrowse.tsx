@@ -11,9 +11,9 @@ const tagsFor = (category: string | undefined) => CATEGORY_TAGS[category ?? ""] 
 // Every genre tag the curated catalogue is filled from, so each chip finds something.
 const GENRES = Array.from(new Set(Object.values(CATEGORY_TAGS).flat())).sort();
 
-const heading = "text-[9px] font-bold uppercase tracking-[0.08em] text-faint mb-2";
+const heading = "text-xs font-bold uppercase tracking-[0.08em] text-faint mb-2";
 const chip =
-  "px-2.5 py-1 rounded-full border border-primary/20 bg-card text-[11px] text-foreground capitalize hover:border-primary hover:text-primary transition-colors";
+  "px-2.5 py-1 rounded-full border border-primary/20 bg-card text-xs text-foreground capitalize hover:border-primary hover:text-primary transition-colors";
 
 /**
  * The pop-up under the search bar when it's focused and empty: mood chips,
@@ -62,8 +62,8 @@ export function SearchBrowse({ id, onPick, onNavigate }: { id: string; onPick: (
                 >
                   <PlaylistCover src={p.coverImage} alt="" className="w-8 h-8 rounded-md shrink-0" iconClassName="w-3.5 h-3.5" />
                   <span className="min-w-0">
-                    <span className="block text-[11px] font-bold text-foreground truncate">{p.name}</span>
-                    <span className="block text-[10px] text-faint truncate">{p.category}</span>
+                    <span className="block text-xs font-bold text-foreground truncate">{p.name}</span>
+                    <span className="block text-xs text-faint truncate">{p.category}</span>
                   </span>
                 </Link>
               ))}

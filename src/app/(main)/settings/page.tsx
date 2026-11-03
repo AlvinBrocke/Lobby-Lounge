@@ -27,7 +27,7 @@ export default function SettingsPage() {
     // Negative margins pull the header band edge-to-edge inside the page padding.
     <div className="-mx-5 -mt-[18px] md:-mx-7 md:-mt-6">
       <div className="px-5 md:px-7 pt-5 bg-shell border-b border-primary/[0.08]">
-        <h1 className="text-[22px] font-extrabold tracking-tight text-foreground mb-[18px]">Settings</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight text-foreground mb-[18px]">Settings</h1>
         <div role="tablist" className="flex gap-0.5 overflow-x-auto scrollbar-hide">
           {tabs.map((t) => (
             <button
@@ -36,7 +36,7 @@ export default function SettingsPage() {
               aria-selected={tab === t.key}
               onClick={() => router.replace(t.key === "venue" ? "/settings" : `/settings?tab=${t.key}`, { scroll: false })}
               className={cn(
-                "relative px-[13px] pt-[9px] pb-[11px] whitespace-nowrap text-[11px] transition-colors",
+                "relative px-[13px] pt-[9px] pb-[11px] whitespace-nowrap text-xs transition-colors",
                 tab === t.key ? "text-foreground font-bold" : "text-muted-foreground hover:text-foreground",
               )}
             >

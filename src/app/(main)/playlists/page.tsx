@@ -134,7 +134,7 @@ export default function PlaylistsPage() {
   const newButton = (
     <button
       onClick={() => setShowModal(true)}
-      className="flex items-center gap-1 h-[29px] px-3 rounded-full bg-primary text-primary-foreground text-[11px] font-bold hover:opacity-90 transition-opacity"
+      className="flex items-center gap-1 h-[29px] px-3 rounded-full bg-primary text-primary-foreground text-xs font-bold hover:opacity-90 transition-opacity"
     >
       <Plus className="w-3 h-3" strokeWidth={3} />
       New
@@ -153,7 +153,7 @@ export default function PlaylistsPage() {
               onClick={() => setFilter(c)}
               aria-pressed={active}
               className={cn(
-                "px-[13px] py-[5px] rounded-full text-[11px] font-semibold border transition-colors",
+                "px-[13px] py-[5px] rounded-full text-xs font-semibold border transition-colors",
                 active
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-secondary text-muted-foreground border-primary/20 hover:border-primary hover:text-foreground",
@@ -205,8 +205,8 @@ export default function PlaylistsPage() {
               <ListMusic className="w-5 h-5 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-bold text-foreground">No playlists yet</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
+              <p className="text-sm font-bold text-foreground">No playlists yet</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Build your own mix from the catalogue.
               </p>
             </div>
@@ -217,8 +217,8 @@ export default function PlaylistsPage() {
 
       {nothingFound && (
         <div className="py-10 text-center rounded-[11px] bg-secondary">
-          <p className="text-[13px] font-bold text-foreground">No playlists found</p>
-          <p className="text-[11px] text-muted-foreground mt-1">Try a genre, mood, or playlist name.</p>
+          <p className="text-sm font-bold text-foreground">No playlists found</p>
+          <p className="text-xs text-muted-foreground mt-1">Try a genre, mood, or playlist name.</p>
         </div>
       )}
 

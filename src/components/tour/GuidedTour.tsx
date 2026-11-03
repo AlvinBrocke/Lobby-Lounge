@@ -182,7 +182,7 @@ export function GuidedTour() {
         style={{ width: `min(${CARD_WIDTH}px, calc(100vw - 32px))`, ...cardPosition(rect) }}
       >
         <div className="flex items-center justify-between gap-3">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
             Step {Math.min(index, steps.length - 1) + 1} of {steps.length}
           </p>
           <button
