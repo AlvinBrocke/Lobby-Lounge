@@ -126,6 +126,12 @@ export function DevicesButton({ audioRef, disabled }: { audioRef: RefObject<HTML
                   </span>
                 </button>
               )}
+              {!support.speaker && (
+                // Bluetooth speakers aren't Cast/AirPlay receivers, so they never appear in that picker.
+                <p className="px-3 py-2 text-xs text-muted-foreground">
+                  Bluetooth speaker? Connect it in your device&apos;s settings. Music plays through whatever output it uses.
+                </p>
+              )}
               {support.speaker && (
                 <button role="menuitem" onClick={chooseSpeaker} className={item}>
                   <Speaker className="w-4 h-4 text-primary shrink-0" />
