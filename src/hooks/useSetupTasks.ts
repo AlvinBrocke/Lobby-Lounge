@@ -21,6 +21,7 @@ export function useSetupTasks(): {
   const { organization } = useOrganization();
   const isCurator = useAuth().orgRole === "org:member";
   const pos = useQuery(api.square.status, isAuthenticated ? {} : "skip");
+  const weather = useQuery(api.weather.status, isAuthenticated ? {} : "skip");
 
   const tasks = setupTasks({
     plan: profile?.plan,
@@ -33,6 +34,8 @@ export function useSetupTasks(): {
     isCurator,
     posConnected: pos?.connection?.status === "connected" && !!pos.connection.locationId,
     posOptOut: profile?.posOptOut,
+    weatherAvailable: !!weather?.configured,
+    weatherLocation: !!weather?.location,
   });
   return {
     tasks,

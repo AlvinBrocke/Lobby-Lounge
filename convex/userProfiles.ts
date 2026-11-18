@@ -100,7 +100,10 @@ export const get = query({
       .unique();
     if (!profile) return null;
     const logoUrl = profile.logoStorageId ? await ctx.storage.getUrl(profile.logoStorageId) : null;
-    return { ...profile, logoUrl };
+    // The venue's weather coordinates never go to the browser (weather.status gives the place name only).
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { venueLat, venueLon, ...rest } = profile;
+    return { ...rest, logoUrl };
   },
 });
 

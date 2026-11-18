@@ -19,4 +19,7 @@ crons.daily("refresh square tokens", { hourUTC: 5, minuteUTC: 0 }, internal.squa
 // Order times older than 60 days, and unused "Connect with Square" states.
 crons.daily("purge old pos data", { hourUTC: 5, minuteUTC: 30 }, internal.square.purgeOld, {});
 
+// Local weather for venues playing with AutoLobby's "Follow the weather" on.
+crons.interval("refresh weather", { minutes: 30 }, internal.weather.refreshAll, {});
+
 export default crons;

@@ -88,6 +88,14 @@ describe("stepHold", () => {
     expect(s.effective).toBe("peak");
   });
 
+  it("holds any key, such as the room and weather together", () => {
+    let s = stepHold<string>(null, "steady|mild", t0);
+    s = stepHold(s, "steady|cosy", t0 + 60_000);
+    expect(s.effective).toBe("steady|mild");
+    s = stepHold(s, "steady|cosy", t0 + 60_000 + HOLD_MS);
+    expect(s.effective).toBe("steady|cosy");
+  });
+
   it("forgets a blip that returns to the current level", () => {
     let s = stepHold(null, "steady", t0);
     s = stepHold(s, "busy", t0 + 60_000);
@@ -121,5 +129,10 @@ describe("changeSummary", () => {
   it("reads naturally in the activity log", () => {
     expect(changeSummary("busy")).toBe("AutoLobby: Busy");
     expect(changeSummary("peak", "Friday Peak")).toBe('AutoLobby: Peak, switched to "Friday Peak"');
+  });
+
+  it("includes the weather, with or without a POS level", () => {
+    expect(changeSummary("quiet", "Rainy Day", "Rain, 8°C")).toBe('AutoLobby: Quiet · Rain, 8°C, switched to "Rainy Day"');
+    expect(changeSummary(null, undefined, "Clear, 22°C")).toBe("AutoLobby: Clear, 22°C");
   });
 });

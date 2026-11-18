@@ -7,6 +7,7 @@ import { ConvexError } from "convex/values";
 import { api } from "@convex/_generated/api";
 import { Plug } from "lucide-react";
 import { AutoLobbyCard } from "@/components/settings/AutoLobbyCard";
+import { WeatherCard } from "@/components/settings/WeatherCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNow } from "@/hooks/useNow";
 import { SQUARE_RETURN_MESSAGES, squareHealthLine } from "@/lib/pos";
@@ -26,11 +27,13 @@ function message(e: unknown, fallback: string) {
 /**
  * Settings → Integrations (admins only): connect the venue's Square account,
  * pick the location that drives its one zone, and see whether orders are
- * arriving. Server side: convex/square.ts.
+ * arriving (convex/square.ts); set the venue's location for weather
+ * (WeatherCard); and AutoLobby, which follows either or both.
  */
 export function IntegrationsPanel() {
   const { isAuthenticated } = useConvexAuth();
   const status = useQuery(api.square.status, isAuthenticated ? {} : "skip");
+  const weather = useQuery(api.weather.status, isAuthenticated ? {} : "skip");
   const returned = SQUARE_RETURN_MESSAGES[useSearchParams().get("square") ?? ""];
   const startConnect = useAction(api.square.startConnect);
   const disconnect = useAction(api.square.disconnect);
@@ -159,7 +162,14 @@ export function IntegrationsPanel() {
         </CardContent>
       </Card>
 
-      {status?.configured && <AutoLobbyCard posReady={!!healthy && !!conn?.locationId} />}
+      <WeatherCard />
+
+      {(status?.configured || weather?.configured) && (
+        <AutoLobbyCard
+          posReady={!!healthy && !!conn?.locationId}
+          weatherReady={!!weather?.configured && !!weather.location}
+        />
+      )}
     </div>
   );
 }

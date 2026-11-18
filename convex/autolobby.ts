@@ -44,7 +44,8 @@ export const settings = query({
     const saved = (await profileOf(ctx, clerkUserId))?.autoLobby;
     const s = { ...DEFAULT_SETTINGS, ...saved };
     const peak = s.peakPlaylistId ? await ctx.db.get(s.peakPlaylistId) : null;
-    return { ...s, peakPlaylistName: peak?.name ?? null };
+    const rainy = s.rainyPlaylistId ? await ctx.db.get(s.rainyPlaylistId) : null;
+    return { ...s, peakPlaylistName: peak?.name ?? null, rainyPlaylistName: rainy?.name ?? null };
   },
 });
 
@@ -59,8 +60,9 @@ export const saveSettings = mutation({
     if (!Number.isFinite(busyOrders) || busyOrders < 1 || busyOrders > MAX_BUSY_ORDERS) {
       throw new ConvexError(`The busy order count must be between 1 and ${MAX_BUSY_ORDERS}.`);
     }
-    if (args.peakPlaylistId) {
-      const playlist = await ctx.db.get(args.peakPlaylistId);
+    for (const id of [args.peakPlaylistId, args.rainyPlaylistId]) {
+      if (!id) continue;
+      const playlist = await ctx.db.get(id);
       if (!playlist || !(playlist.curated || playlist.clerkUserId === clerkUserId)) {
         throw new ConvexError("Pick one of your playlists or a Lobby & Lounge playlist.");
       }
@@ -101,17 +103,19 @@ export const meter = query({
 });
 
 /**
- * Activity log line when the music follows a new level. Every playing device
- * reports its change, so the same line within the hold time is logged once.
+ * Activity log line when the music follows a new level or weather. Every
+ * playing device reports its change, so the same line within the hold time
+ * is logged once.
  */
 export const logChange = mutation({
   args: {
-    level: v.union(...LEVELS.map((l) => v.literal(l))),
+    level: v.optional(v.union(...LEVELS.map((l) => v.literal(l)))),
+    weather: v.optional(v.string()), // e.g. "Rain, 8°C" (weatherLabel)
     playlistName: v.optional(v.string()),
   },
-  handler: async (ctx, { level, playlistName }) => {
+  handler: async (ctx, { level, weather, playlistName }) => {
     const clerkUserId = await requireUser(ctx);
-    const summary = changeSummary(level, playlistName?.slice(0, 80));
+    const summary = changeSummary(level ?? null, playlistName?.slice(0, 80), weather?.slice(0, 40));
     const recent = await ctx.db
       .query("activity")
       .withIndex("by_clerk_user", (q) => q.eq("clerkUserId", clerkUserId))

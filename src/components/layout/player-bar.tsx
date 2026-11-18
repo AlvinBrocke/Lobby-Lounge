@@ -561,9 +561,12 @@ export function PlayerBar({ schedule, autoLobby }: { schedule: ScheduleStatus; a
                 <div className="text-xs touch:text-sm text-muted-foreground truncate">
                   {currentTrack ? (currentTrack.artist ?? "Lobby & Lounge") : "Choose a playlist to start"}
                 </div>
-                {autoLobby?.level && currentTrack ? (
+                {(autoLobby?.level || autoLobby?.weather) && currentTrack ? (
                   <div className="text-xs text-primary truncate mt-px">
-                    AutoLobby · {autoLobby.paused ? "paused" : LEVEL_LABELS[autoLobby.level]}
+                    AutoLobby ·{" "}
+                    {autoLobby.paused
+                      ? "paused"
+                      : [autoLobby.level && LEVEL_LABELS[autoLobby.level], autoLobby.weather].filter(Boolean).join(" · ")}
                   </div>
                 ) : (
                   currentTrack?.category && <div className="text-xs text-faint truncate mt-px">{currentTrack.category}</div>

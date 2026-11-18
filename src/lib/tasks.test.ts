@@ -57,4 +57,25 @@ describe("setupTasks", () => {
   it("hides the POS task from curators", () => {
     expect(setupTasks({ ...base, isCurator: true }).map((x) => x.key)).not.toContain("pos");
   });
+
+  it("adds an optional Weather integration task when weather is set up", () => {
+    const t = setupTasks({ ...base, weatherAvailable: true });
+    expect(t.map((x) => x.key)).toEqual(["subscribe", "venue", "music", "team", "schedule", "pos", "weather"]);
+    expect(requiredTasks(t).map((x) => x.key)).not.toContain("weather");
+    expect(find({ ...base, weatherAvailable: true }, "weather")).toMatchObject({
+      optional: true,
+      title: "Weather integration",
+      href: "/settings?tab=integrations",
+      done: false,
+    });
+  });
+
+  it("marks the weather task done once the venue has a location", () => {
+    expect(find({ ...base, weatherAvailable: true, weatherLocation: true }, "weather").done).toBe(true);
+  });
+
+  it("hides the weather task from curators, and where weather isn't set up", () => {
+    expect(setupTasks({ ...base, weatherAvailable: true, isCurator: true }).map((x) => x.key)).not.toContain("weather");
+    expect(setupTasks(base).map((x) => x.key)).not.toContain("weather");
+  });
 });
