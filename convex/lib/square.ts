@@ -186,6 +186,22 @@ export interface SquareLocation {
   status?: string; // 'ACTIVE' | 'INACTIVE'
   timezone?: string;
   address?: { address_line_1?: string; locality?: string };
+  /** Not every location has these filled in. */
+  coordinates?: { latitude?: number; longitude?: number };
+}
+
+/**
+ * A location's coordinates rounded to 2 decimal places (about 1 km), which is
+ * plenty for local weather and doesn't pinpoint the building. Null when
+ * Square has none, or they're out of range.
+ */
+export function roundedCoordinates(location: SquareLocation): { latitude: number; longitude: number } | null {
+  const lat = location.coordinates?.latitude;
+  const lon = location.coordinates?.longitude;
+  if (typeof lat !== "number" || typeof lon !== "number" || !Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  if (Math.abs(lat) > 90 || Math.abs(lon) > 180 || (lat === 0 && lon === 0)) return null;
+  const round = (x: number) => Math.round(x * 100) / 100;
+  return { latitude: round(lat), longitude: round(lon) };
 }
 
 /* ── Webhook events ───────────────────────────────────────────────────────── */

@@ -23,6 +23,7 @@ import {
   encryptToken,
   parseSquareEvent,
   randomState,
+  roundedCoordinates,
   squareEnvironment,
   squareRequest,
   verifySquareSignature,
@@ -107,6 +108,8 @@ export const status = query({
         status: conn.status,
         locationId: conn.locationId ?? null,
         locationName: conn.locationName ?? null,
+        // Whether Square gave coordinates for it (used for local weather). The values stay server-side.
+        hasCoordinates: conn.latitude !== undefined && conn.longitude !== undefined,
         connectedAt: conn.connectedAt,
         lastOrderAt: conn.lastOrderAt ?? null,
         needsAttention: conn.status === "revoked" || conn.refreshFailedAt !== undefined,
@@ -157,6 +160,7 @@ export const selectLocation = action({
       clerkUserId,
       locationId,
       locationName: location.name || "Unnamed location",
+      ...roundedCoordinates(location),
     });
   },
 });
@@ -296,7 +300,13 @@ export const saveConnection = internalMutation({
       const sameMerchant = existing.merchantId === args.merchantId;
       await ctx.db.patch(existing._id, {
         ...fields,
-        ...(!sameMerchant && { locationId: undefined, locationName: undefined, lastOrderAt: undefined }),
+        ...(!sameMerchant && {
+          locationId: undefined,
+          locationName: undefined,
+          latitude: undefined,
+          longitude: undefined,
+          lastOrderAt: undefined,
+        }),
       });
     } else {
       await ctx.db.insert("squareConnections", fields);
@@ -331,13 +341,26 @@ export const markRefreshFailed = internalMutation({
 
 /** Called from `selectLocation` (an action), so the caller's identity is still there for the activity log. */
 export const saveLocation = internalMutation({
-  args: { clerkUserId: v.string(), locationId: v.string(), locationName: v.string() },
-  handler: async (ctx, { clerkUserId, locationId, locationName }) => {
+  args: {
+    clerkUserId: v.string(),
+    locationId: v.string(),
+    locationName: v.string(),
+    latitude: v.optional(v.number()),
+    longitude: v.optional(v.number()),
+  },
+  handler: async (ctx, { clerkUserId, locationId, locationName, latitude, longitude }) => {
     const conn = await connectionOf(ctx, clerkUserId);
     if (!conn) throw new ConvexError("Connect Square first.");
     // Orders from another location say nothing about this zone.
     const changed = conn.locationId !== locationId;
-    await ctx.db.patch(conn._id, { locationId, locationName, ...(changed && { lastOrderAt: undefined }) });
+    // Always overwrite the coordinates, so a location without any clears old ones.
+    await ctx.db.patch(conn._id, {
+      locationId,
+      locationName,
+      latitude,
+      longitude,
+      ...(changed && { lastOrderAt: undefined }),
+    });
     await logActivity(ctx, clerkUserId, `Set the Square location to "${locationName}"`);
   },
 });
@@ -485,6 +508,7 @@ export const oauthCallback = httpAction(async (ctx, request) => {
           clerkUserId: who.clerkUserId,
           locationId: active[0].id,
           locationName: active[0].name || "Unnamed location",
+          ...roundedCoordinates(active[0]),
         });
       }
     } catch (err) {
@@ -499,10 +523,16 @@ export const oauthCallback = httpAction(async (ctx, request) => {
 
 /** `saveLocation` for the OAuth callback, which has no signed-in caller to log. */
 export const autoSelectLocation = internalMutation({
-  args: { clerkUserId: v.string(), locationId: v.string(), locationName: v.string() },
-  handler: async (ctx, { clerkUserId, locationId, locationName }) => {
+  args: {
+    clerkUserId: v.string(),
+    locationId: v.string(),
+    locationName: v.string(),
+    latitude: v.optional(v.number()),
+    longitude: v.optional(v.number()),
+  },
+  handler: async (ctx, { clerkUserId, locationId, locationName, latitude, longitude }) => {
     const conn = await connectionOf(ctx, clerkUserId);
-    if (conn) await ctx.db.patch(conn._id, { locationId, locationName });
+    if (conn) await ctx.db.patch(conn._id, { locationId, locationName, latitude, longitude });
   },
 });
 
