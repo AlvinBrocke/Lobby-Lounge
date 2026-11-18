@@ -6,6 +6,7 @@ describe("visibleTabs", () => {
     const keys = visibleTabs(true).map((t) => t.key);
     expect(keys).not.toContain("billing");
     expect(keys).not.toContain("staff");
+    expect(keys).not.toContain("integrations");
   });
 
   it("lists each tab once", () => {

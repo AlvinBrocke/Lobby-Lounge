@@ -1,14 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useMutation } from "convex/react";
+import { api } from "@convex/_generated/api";
 import { Check } from "lucide-react";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { useSetupTasks } from "@/hooks/useSetupTasks";
 import { cn } from "@/lib/utils";
 
 export default function TasksPage() {
-  const { tasks, remaining, loading } = useSetupTasks();
-  const done = tasks.length - remaining;
+  const { tasks, required, remaining, loading } = useSetupTasks();
+  // Optional tasks (Custom POS integrations) don't count towards progress.
+  const done = required - remaining;
+  const setPosOptOut = useMutation(api.userProfiles.setPosOptOut);
 
   return (
     <PageWrapper
@@ -19,13 +23,13 @@ export default function TasksPage() {
           <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
             <span>Setup progress</span>
             <span className={cn("font-bold", remaining === 0 ? "text-primary" : "text-foreground")}>
-              {loading ? "…" : `${done} of ${tasks.length}`}
+              {loading ? "…" : `${done} of ${required}`}
             </span>
           </div>
           <div className="h-1.5 rounded bg-card overflow-hidden">
             <div
               className="h-full bg-primary transition-[width] duration-200"
-              style={{ width: loading ? 0 : `${(done / tasks.length) * 100}%` }}
+              style={{ width: loading ? 0 : `${required ? (done / required) * 100 : 0}%` }}
             />
           </div>
         </div>
@@ -84,6 +88,15 @@ export default function TasksPage() {
             >
               {task.button}
             </Link>
+            {task.key === "pos" && !task.done && (
+              <button
+                type="button"
+                onClick={() => setPosOptOut({ optOut: true })}
+                className="self-start mt-2 text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
+              >
+                Not using a POS
+              </button>
+            )}
           </div>
         ))}
       </div>
