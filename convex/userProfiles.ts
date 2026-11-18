@@ -2,7 +2,7 @@ import { ConvexError, v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
 import { logActivity } from "./lib/activity";
-import { requireUser } from "./lib/auth";
+import { requireUser, requireVenueAdmin } from "./lib/auth";
 import { TRIAL_DAYS } from "./lib/billing";
 import { BRAND_COLORS, MAX_LOGO_BYTES } from "./lib/brand";
 import { FADE_OPTIONS, soundSettings } from "./lib/sound";
@@ -158,6 +158,20 @@ export const saveBrand = mutation({
       ...(args.logo !== undefined && { logoStorageId: args.logo ?? undefined }),
     });
     await logActivity(ctx, clerkUserId, "Updated the venue brand");
+  },
+});
+
+/** Tasks → "Custom POS integrations" → "Not using a POS" (or undo it). Admins only, like the task. */
+export const setPosOptOut = mutation({
+  args: { optOut: v.boolean() },
+  handler: async (ctx, { optOut }) => {
+    const clerkUserId = await requireVenueAdmin(ctx, "Only venue admins can change POS settings.");
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_clerk_user", (q) => q.eq("clerkUserId", clerkUserId))
+      .unique();
+    if (!profile) throw new ConvexError("Finish onboarding first.");
+    await ctx.db.patch(profile._id, { posOptOut: optOut || undefined });
   },
 });
 

@@ -1,13 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { setupTasks, type SetupInput } from "./tasks";
+import { requiredTasks, setupTasks, type SetupInput } from "./tasks";
 
 const base: SetupInput = { scheduleBlockCount: 0, isCurator: false };
 const find = (input: SetupInput, key: string) => setupTasks(input).find((t) => t.key === key)!;
 
 describe("setupTasks", () => {
-  it("returns five tasks, none done, for a fresh account", () => {
+  it("returns six tasks, none done, for a fresh account", () => {
     const t = setupTasks(base);
-    expect(t.map((x) => x.key)).toEqual(["subscribe", "venue", "music", "team", "schedule"]);
+    expect(t.map((x) => x.key)).toEqual(["subscribe", "venue", "music", "team", "schedule", "pos"]);
     expect(t.every((x) => !x.done)).toBe(true);
   });
 
@@ -37,5 +37,24 @@ describe("setupTasks", () => {
 
   it("marks schedule done once a block exists", () => {
     expect(find({ ...base, scheduleBlockCount: 1 }, "schedule").done).toBe(true);
+  });
+
+  it("keeps the POS task optional, so it never blocks setup progress", () => {
+    const t = setupTasks(base);
+    expect(requiredTasks(t).map((x) => x.key)).not.toContain("pos");
+    expect(find(base, "pos")).toMatchObject({ optional: true, title: "Custom POS integrations" });
+  });
+
+  it("marks the POS task done once a POS is connected", () => {
+    expect(find({ ...base, posConnected: true }, "pos").done).toBe(true);
+  });
+
+  it("hides the POS task after 'Not using a POS', unless one gets connected", () => {
+    expect(setupTasks({ ...base, posOptOut: true }).map((x) => x.key)).not.toContain("pos");
+    expect(find({ ...base, posOptOut: true, posConnected: true }, "pos").done).toBe(true);
+  });
+
+  it("hides the POS task from curators", () => {
+    expect(setupTasks({ ...base, isCurator: true }).map((x) => x.key)).not.toContain("pos");
   });
 });

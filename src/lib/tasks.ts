@@ -3,7 +3,7 @@
  * venue already has, so nothing is stored and a task can't be ticked early.
  */
 
-export type SetupTaskKey = "subscribe" | "venue" | "music" | "team" | "schedule";
+export type SetupTaskKey = "subscribe" | "venue" | "music" | "team" | "schedule" | "pos";
 
 export interface SetupInput {
   plan?: string;
@@ -15,6 +15,10 @@ export interface SetupInput {
   membersCount?: number;
   scheduleBlockCount: number;
   isCurator: boolean;
+  /** A POS is connected and has a location picked (convex/square.ts → status). */
+  posConnected?: boolean;
+  /** The venue chose "Not using a POS" (`userProfiles.posOptOut`). */
+  posOptOut?: boolean;
 }
 
 export interface SetupTask {
@@ -25,6 +29,13 @@ export interface SetupTask {
   button: string;
   href: string;
   done: boolean;
+  /** Optional tasks never count towards setup progress or the sidebar badge. */
+  optional?: boolean;
+}
+
+/** Tasks that count towards setup progress: everything but the optional ones. */
+export function requiredTasks(tasks: SetupTask[]): SetupTask[] {
+  return tasks.filter((t) => !t.optional);
 }
 
 export function setupTasks(input: SetupInput): SetupTask[] {
@@ -76,8 +87,20 @@ export function setupTasks(input: SetupInput): SetupTask[] {
       href: "/schedule",
       done: input.scheduleBlockCount > 0,
     },
+    {
+      key: "pos",
+      adminOnly: true,
+      optional: true,
+      eyebrow: "Optional",
+      title: "Custom POS integrations",
+      description: "Connect your POS so AutoLobby follows your peak/slow hours.",
+      button: "Connect POS",
+      href: "/settings?tab=integrations",
+      done: Boolean(input.posConnected),
+    },
   ];
   return tasks
     .filter((t) => !(input.isCurator && t.adminOnly))
+    .filter((t) => !(t.key === "pos" && input.posOptOut && !input.posConnected))
     .map(({ adminOnly: _adminOnly, ...task }) => task);
 }

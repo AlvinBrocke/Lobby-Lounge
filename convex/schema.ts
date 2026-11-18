@@ -36,6 +36,8 @@ export default defineSchema({
     // Settings → Preferences. Tempo matches track `energy`.
     tempo: v.optional(v.union(v.literal("low"), v.literal("mid"), v.literal("high"))),
     sound: v.optional(soundSettings),
+    // Tasks → "Custom POS integrations" → "Not using a POS". Hides that task.
+    posOptOut: v.optional(v.boolean()),
   })
     .index("by_clerk_user", ["clerkUserId"])
     .index("by_stripe_customer", ["stripeCustomerId"]),
@@ -124,6 +126,53 @@ export default defineSchema({
     everyMinutes: v.optional(v.number()),
     interruptMusic: v.boolean(),
   }).index("by_clerk_user", ["clerkUserId"]),
+
+  // A venue's Square connection (Settings → Integrations). One row per venue,
+  // keyed by the owner's id. Tokens are AES-GCM encrypted with SQUARE_TOKEN_KEY
+  // (convex/lib/square.ts) and never leave Convex. See convex/square.ts.
+  squareConnections: defineTable({
+    clerkUserId: v.string(),
+    merchantId: v.string(),
+    accessTokenEnc: v.string(),
+    refreshTokenEnc: v.optional(v.string()),
+    accessTokenExpiresAt: v.number(), // epoch ms
+    // 'connected', or 'revoked' when the venue removed access from Square's side.
+    status: v.union(v.literal("connected"), v.literal("revoked")),
+    // The one Square location that drives the venue's one zone.
+    locationId: v.optional(v.string()),
+    locationName: v.optional(v.string()),
+    connectedAt: v.number(),
+    lastOrderAt: v.optional(v.number()), // epoch ms; the Settings health line
+    refreshFailedAt: v.optional(v.number()),
+  })
+    .index("by_clerk_user", ["clerkUserId"])
+    .index("by_merchant", ["merchantId"])
+    .index("by_expiry", ["accessTokenExpiresAt"]),
+
+  // One-time `state` values for the Square OAuth round trip. A row is deleted
+  // when used; stale ones are swept daily.
+  squareOAuthStates: defineTable({
+    state: v.string(),
+    clerkUserId: v.string(), // venue owner
+    actorId: v.string(), // who clicked Connect, for the activity log
+    actorName: v.string(),
+    expiresAt: v.number(),
+  })
+    .index("by_state", ["state"])
+    .index("by_expiry", ["expiresAt"]),
+
+  // When orders happened at a venue's connected POS location, for AutoLobby's
+  // busyness meter. Deliberately nothing else: no items, amounts, customers or
+  // staff. Rows older than ORDER_RETENTION_MS (60 days) are deleted daily.
+  posOrders: defineTable({
+    clerkUserId: v.string(),
+    source: v.literal("square"),
+    orderId: v.string(),
+    at: v.number(), // the order's creation time, epoch ms
+  })
+    .index("by_clerk_user_and_at", ["clerkUserId", "at"])
+    .index("by_order", ["source", "orderId"])
+    .index("by_at", ["at"]),
 
   // Settings → Activity log. Append-only, written by `logActivity` in
   // convex/lib/activity.ts after a venue's mutation succeeds.

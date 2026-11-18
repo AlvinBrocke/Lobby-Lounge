@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { ActivityPanel } from "@/components/settings/ActivityPanel";
 import { BillingPanel } from "@/components/settings/BillingPanel";
+import { IntegrationsPanel } from "@/components/settings/IntegrationsPanel";
 import { StaffPanel } from "@/components/settings/StaffPanel";
 import { PreferencesPanel } from "@/components/settings/PreferencesPanel";
 import { VenuePanel } from "@/components/settings/VenuePanel";
@@ -54,6 +55,7 @@ export default function SettingsPage() {
         {tab === "staff" && <StaffPanel />}
         {tab === "preferences" && <PreferencesPanel />}
         {tab === "billing" && <BillingPanel />}
+        {tab === "integrations" && <IntegrationsPanel />}
         {tab === "activity" && <ActivityPanel />}
       </div>
     </div>

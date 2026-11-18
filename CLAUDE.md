@@ -140,6 +140,33 @@ Audio URLs are only ever returned by `playlists.getTracks` and `artists.get`, bo
 
 `JAMENDO_CLIENT_ID`, `CLERK_JWT_ISSUER_DOMAIN` and the `STRIPE_*` / `SITE_URL` vars above are **not** Next.js env vars — they're read Convex-side (`convex/jamendo.ts` and `convex/auth.config.ts`), so they must be set via the Convex CLI (`npx convex env set JAMENDO_CLIENT_ID <value>`, add `--prod` for production), not in `.env.local`.
 
+### POS integrations (Square)
+
+Settings → Integrations (owner and `org:admin` only, via `requireVenueAdmin`) connects a venue's Square account with OAuth so AutoLobby can follow its peak/slow hours. Everything runs in Convex (`convex/square.ts`, routed by `convex/http.ts`); like Stripe, there is no SDK: `convex/lib/square.ts` calls the REST API with `fetch` (pinned to `Square-Version: 2026-11-18`) and uses Web Crypto for webhook signatures and token encryption. Scopes are `MERCHANT_PROFILE_READ` and `ORDERS_READ` only: no payments, tips, items, customers or staff. Adding a scope means every venue must reconnect.
+
+Convex env vars (`npx convex env set NAME value`, add `--prod` for production — Sandbox app on dev, Production app on prod):
+
+```
+SQUARE_ENVIRONMENT             # "sandbox" (default) or "production"
+SQUARE_APPLICATION_ID          # Developer Dashboard → your app → Credentials (Sandbox or Production tab)
+SQUARE_APPLICATION_SECRET      # Developer Dashboard → your app → OAuth → Application secret
+SQUARE_TOKEN_KEY               # 32 random bytes, base64: `openssl rand -base64 32`. Encrypts venues' Square tokens at rest. Never change it once venues have connected (they'd all have to reconnect).
+SQUARE_WEBHOOK_SIGNATURE_KEY   # Developer Dashboard → Webhooks → your subscription → Signature key
+SQUARE_WEBHOOK_URL             # optional: the exact notification URL, if it isn't <CONVEX_SITE_URL>/square/webhook
+SITE_URL                       # already set for Stripe; where Square sends people back
+```
+
+Square Developer Dashboard, for the Sandbox and Production app settings separately:
+
+1. OAuth → Redirect URL: `<NEXT_PUBLIC_CONVEX_SITE_URL>/square/oauth/callback`.
+2. Webhooks → Subscriptions → Add: URL `<NEXT_PUBLIC_CONVEX_SITE_URL>/square/webhook`, API version `2026-11-18`, events `order.created`, `order.updated`, `oauth.authorization.revoked`. Copy its signature key into `SQUARE_WEBHOOK_SIGNATURE_KEY`. The URL must match character for character: it is part of every signature.
+
+Square can't reach `127.0.0.1`, so test webhooks against a cloud dev deployment (or a tunnel such as `ngrok http 3213` with `SQUARE_WEBHOOK_URL` set to the tunnel URL). In Sandbox, open the default test account's Square Dashboard once from the Developer Dashboard before connecting, then create orders there (or with the Orders API) to see them arrive.
+
+**Flow.** "Connect with Square" (`square.startConnect`) stores a one-time `state` (10 minutes) and opens Square's sign-in. `square.oauthCallback` uses up the state, swaps the code for tokens, stores them AES-GCM encrypted (`squareConnections`), auto-picks the location when the account has only one, and redirects to `/settings?tab=integrations&square=connected|denied|expired|error`. With several locations the venue picks one (`square.selectLocation`, checked against Square). The webhook verifies `x-square-hmacsha256-signature`, then `recordOrder` stores only the order id and creation time (`posOrders`) for venues whose chosen location matches, once per order. `oauth.authorization.revoked` marks the connection `revoked` so Settings offers Reconnect. "Disconnect" revokes with Square and deletes the tokens and the venue's order times. Daily crons renew access tokens within 7 days of expiry (they last 30) and delete order times older than 60 days. Tokens are never returned to the browser; `square.status` returns only what the Settings card shows.
+
+The Tasks page has an optional "Custom POS integrations" task (`src/lib/tasks.ts`, admins only). Optional tasks never count towards setup progress or the sidebar badge; "Not using a POS" (`userProfiles.setPosOptOut`) hides it.
+
 There are no channels: the catalogue is **curated playlists** — `playlists` rows with `curated: true` and no `clerkUserId`, grouped into `section: "daytime" | "evening"` on the Playlists page. Users can read them but never modify them (`assertOwner` rejects ownerless docs). Schedule blocks point at a playlist via `playlistId`.
 
 The landing page claims "1,000+ tracks". A fresh deployment has none, so run `npx convex run playlists:seedCurated` then `npx convex run jamendo:syncAllCurated '{"limit":150}'` (add `--prod` for production) to bring the catalogue above 1,000. The weekly cron tops it up from there.
@@ -163,7 +190,8 @@ convex/lib/auth.ts  — requireUser / assertOwner (layer 3)
 convex/jamendo.ts   — internal action that syncs real streamable tracks/audio from the Jamendo API into the curated playlists (`npx convex run jamendo:syncAllCurated`)
 convex/lib/curated.ts — the curated playlist catalogue used by `playlists:seedCurated`
 convex/billing.ts   — Stripe Checkout, customer portal and webhook (`/stripe/webhook` via convex/http.ts)
-convex/crons.ts     — weekly cron that re-runs `jamendo:syncAllCurated` (backs the "Curated weekly" claim on the landing page)
+convex/square.ts    — Square OAuth connect, location pick, and order webhook (`/square/webhook`, `/square/oauth/callback` via convex/http.ts)
+convex/crons.ts     — weekly cron that re-runs `jamendo:syncAllCurated` (backs the "Curated weekly" claim on the landing page), plus daily Square token renewal and POS data cleanup
 ```
 
 Route groups use parentheses `(auth)` / `(main)` — these do not appear in URLs.

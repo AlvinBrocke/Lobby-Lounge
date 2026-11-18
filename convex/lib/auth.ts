@@ -27,10 +27,18 @@ export async function requireUser(ctx: { auth: Auth }): Promise<string> {
  * template (CLAUDE.md → Venue staff); without it, only the owner gets in.
  */
 export async function requireBillingAdmin(ctx: { auth: Auth }): Promise<string> {
+  return requireVenueAdmin(ctx, "Only venue admins can manage billing.");
+}
+
+/**
+ * `requireUser`, but only for the venue owner or an `org:admin`. Curators
+ * (`org:member`) get `message`. Used for billing and POS integrations.
+ */
+export async function requireVenueAdmin(ctx: { auth: Auth }, message: string): Promise<string> {
   const ownerId = await requireUser(ctx);
   const identity = (await ctx.auth.getUserIdentity())!;
   if (ownerId !== identity.subject && identity.org_role !== "org:admin") {
-    throw new ConvexError("Only venue admins can manage billing.");
+    throw new ConvexError(message);
   }
   return ownerId;
 }
