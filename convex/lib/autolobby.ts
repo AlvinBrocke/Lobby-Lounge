@@ -37,6 +37,10 @@ export const autoLobbySettings = v.object({
    * its own history to compare with.
    */
   busyOrders: v.number(),
+  /** Let the local weather steer the music too (convex/lib/weather.ts). Absent = off. */
+  followWeather: v.optional(v.boolean()),
+  /** Takes over in Cosy weather (rain, snow, cold) while the room isn't busy, when set. */
+  rainyPlaylistId: v.optional(v.id("playlists")),
 });
 export type AutoLobbySettings = Infer<typeof autoLobbySettings>;
 
@@ -123,16 +127,20 @@ export function baselineRate(counts: number[]): number | null {
 
 /* ── Smoothing ────────────────────────────────────────────────────────────── */
 
-export interface HoldState {
-  /** The level the music follows. */
-  effective: Level;
-  /** What the meter says now, and since when. */
-  candidate: Level;
+export interface HoldState<T extends string = Level> {
+  /** What the music follows. */
+  effective: T;
+  /** What the readings say now, and since when. */
+  candidate: T;
   since: number;
 }
 
-/** A new reading only takes effect once it has held for HOLD_MS, so one big table doesn't flip the room. */
-export function stepHold(state: HoldState | null, observed: Level, now: number): HoldState {
+/**
+ * A new reading only takes effect once it has held for HOLD_MS, so one big
+ * table (or one passing shower) doesn't flip the room. Works on levels or on
+ * any other key, such as a weather `targetKey`.
+ */
+export function stepHold<T extends string = Level>(state: HoldState<T> | null, observed: NoInfer<T>, now: number): HoldState<T> {
   if (!state) return { effective: observed, candidate: observed, since: now };
   if (observed === state.effective) return { effective: state.effective, candidate: observed, since: now };
   if (observed !== state.candidate) return { effective: state.effective, candidate: observed, since: now };
@@ -165,8 +173,9 @@ export function pickNextIndex(queue: { energy?: string }[], level: Level, lookah
   return 0;
 }
 
-/** Activity-log line for a level change. */
-export function changeSummary(level: Level, playlistName?: string): string {
-  const base = `AutoLobby: ${LEVEL_LABELS[level]}`;
+/** Activity-log line for a change, e.g. 'AutoLobby: Quiet · Rain, 8°C, switched to "Rainy Day"'. */
+export function changeSummary(level: Level | null, playlistName?: string, weather?: string): string {
+  const what = [level && LEVEL_LABELS[level], weather].filter(Boolean).join(" · ");
+  const base = `AutoLobby: ${what || "updated"}`;
   return playlistName ? `${base}, switched to "${playlistName}"` : base;
 }

@@ -3,7 +3,7 @@
  * venue already has, so nothing is stored and a task can't be ticked early.
  */
 
-export type SetupTaskKey = "subscribe" | "venue" | "music" | "team" | "schedule" | "pos";
+export type SetupTaskKey = "subscribe" | "venue" | "music" | "team" | "schedule" | "pos" | "weather";
 
 export interface SetupInput {
   plan?: string;
@@ -19,6 +19,10 @@ export interface SetupInput {
   posConnected?: boolean;
   /** The venue chose "Not using a POS" (`userProfiles.posOptOut`). */
   posOptOut?: boolean;
+  /** Weather is set up on this deployment (convex/weather.ts → status.configured). */
+  weatherAvailable?: boolean;
+  /** The venue has a location for weather: its own, or its Square location's. */
+  weatherLocation?: boolean;
 }
 
 export interface SetupTask {
@@ -98,9 +102,21 @@ export function setupTasks(input: SetupInput): SetupTask[] {
       href: "/settings?tab=integrations",
       done: Boolean(input.posConnected),
     },
+    {
+      key: "weather",
+      adminOnly: true,
+      optional: true,
+      eyebrow: "Optional",
+      title: "Weather integration",
+      description: "Add your venue's location so AutoLobby can follow the local weather.",
+      button: "Add location",
+      href: "/settings?tab=integrations",
+      done: Boolean(input.weatherLocation),
+    },
   ];
   return tasks
     .filter((t) => !(input.isCurator && t.adminOnly))
     .filter((t) => !(t.key === "pos" && input.posOptOut && !input.posConnected))
+    .filter((t) => !(t.key === "weather" && !input.weatherAvailable))
     .map(({ adminOnly: _adminOnly, ...task }) => task);
 }

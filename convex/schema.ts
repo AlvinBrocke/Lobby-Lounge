@@ -41,6 +41,13 @@ export default defineSchema({
     posOptOut: v.optional(v.boolean()),
     // Settings → Integrations → AutoLobby. Absent until first saved (off).
     autoLobby: v.optional(autoLobbySettings),
+    // The venue's approximate position for local weather (Settings → Venue
+    // details → Location), rounded to ~1 km. Overrides the Square location's
+    // coordinates when set. See convex/weather.ts.
+    venueLat: v.optional(v.number()),
+    venueLon: v.optional(v.number()),
+    venueLocationLabel: v.optional(v.string()), // e.g. "Brooklyn, US", shown in Settings
+    venueLocationSource: v.optional(v.union(v.literal("address"), v.literal("device"))),
   })
     .index("by_clerk_user", ["clerkUserId"])
     .index("by_stripe_customer", ["stripeCustomerId"]),
@@ -180,6 +187,33 @@ export default defineSchema({
     .index("by_clerk_user_and_at", ["clerkUserId", "at"])
     .index("by_order", ["source", "orderId"])
     .index("by_at", ["at"]),
+
+  // The latest OpenWeather reading per ~1 km square (`locationKey`), shared by
+  // every venue in it. Refreshed every 30 minutes while a venue there plays.
+  weatherReadings: defineTable({
+    key: v.string(), // "51.51,-0.13"
+    condition: v.string(), // OpenWeather's weather[0].main, e.g. "Rain"
+    description: v.string(),
+    tempC: v.number(),
+    sunrise: v.optional(v.number()),
+    sunset: v.optional(v.number()),
+    fetchedAt: v.number(),
+  }).index("by_key", ["key"]),
+
+  // When a venue's player last reported playing. Weather is only fetched for
+  // venues that played within the last hour. One row per venue.
+  playerHeartbeats: defineTable({
+    clerkUserId: v.string(),
+    at: v.number(),
+  })
+    .index("by_clerk_user", ["clerkUserId"])
+    .index("by_at", ["at"]),
+
+  // OpenWeather calls per calendar month (UTC), to warn before the free plan's limit.
+  weatherUsage: defineTable({
+    month: v.string(), // "2026-11"
+    calls: v.number(),
+  }).index("by_month", ["month"]),
 
   // Settings → Activity log. Append-only, written by `logActivity` in
   // convex/lib/activity.ts after a venue's mutation succeeds.
