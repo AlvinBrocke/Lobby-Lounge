@@ -57,7 +57,7 @@ export function useScheduleAutoplay(): ScheduleStatus {
           // The active block may have changed again while we were fetching.
           if (lastKey.current !== forKey) return;
           setLoadError(null);
-          usePlayerStore.getState().playQueue(toPlayerQueue(tracks), id);
+          usePlayerStore.getState().playQueue(toPlayerQueue(tracks), id, undefined, true);
         })
         .catch((err) => {
           // Usually an expired session. Without this the switch just never

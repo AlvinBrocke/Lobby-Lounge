@@ -1,5 +1,5 @@
 import type { Doc } from "@convex/_generated/dataModel";
-import type { Energy } from "@convex/lib/energy";
+import { energyForCategory, type Energy } from "@convex/lib/energy";
 import type { Track } from "@/types";
 
 /** Convex track → the shape the global player store expects. */
@@ -12,6 +12,7 @@ export function toPlayerTrack(track: Doc<"tracks">): Track {
     image: track.coverImage ?? "",
     audioUrl: track.audioUrl,
     category: track.category,
+    energy: track.energy ?? energyForCategory(track.category),
   };
 }
 

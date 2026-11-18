@@ -24,6 +24,8 @@ import { TrackReactions, useSyncBlockedTracks } from "@/components/player/TrackR
 import { DevicesButton } from "@/components/player/DevicesButton";
 import { UpNext } from "@/components/player/UpNext";
 import type { ScheduleStatus } from "@/hooks/useScheduleAutoplay";
+import type { AutoLobbyStatus } from "@/hooks/useAutoLobby";
+import { LEVEL_LABELS } from "@convex/lib/autolobby";
 import type { Track } from "@/types";
 
 /** Broken tracks skipped in a row before giving up and saying so. */
@@ -230,7 +232,7 @@ function Notice({
   );
 }
 
-export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
+export function PlayerBar({ schedule, autoLobby }: { schedule: ScheduleStatus; autoLobby?: AutoLobbyStatus }) {
   const { isPlaying, currentTrack, volume, togglePlay, setIsPlaying, setVolume, nextTrack } =
     usePlayerStore();
   // Music holds while an announcement plays, without flipping isPlaying, so
@@ -559,8 +561,12 @@ export function PlayerBar({ schedule }: { schedule: ScheduleStatus }) {
                 <div className="text-xs touch:text-sm text-muted-foreground truncate">
                   {currentTrack ? (currentTrack.artist ?? "Lobby & Lounge") : "Choose a playlist to start"}
                 </div>
-                {currentTrack?.category && (
-                  <div className="text-xs text-faint truncate mt-px">{currentTrack.category}</div>
+                {autoLobby?.level && currentTrack ? (
+                  <div className="text-xs text-primary truncate mt-px">
+                    AutoLobby · {autoLobby.paused ? "paused" : LEVEL_LABELS[autoLobby.level]}
+                  </div>
+                ) : (
+                  currentTrack?.category && <div className="text-xs text-faint truncate mt-px">{currentTrack.category}</div>
                 )}
               </div>
             </button>

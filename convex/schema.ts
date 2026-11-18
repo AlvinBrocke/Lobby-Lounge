@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { autoLobbySettings } from "./lib/autolobby";
 import { soundSettings } from "./lib/sound";
 
 export default defineSchema({
@@ -38,6 +39,8 @@ export default defineSchema({
     sound: v.optional(soundSettings),
     // Tasks → "Custom POS integrations" → "Not using a POS". Hides that task.
     posOptOut: v.optional(v.boolean()),
+    // Settings → Integrations → AutoLobby. Absent until first saved (off).
+    autoLobby: v.optional(autoLobbySettings),
   })
     .index("by_clerk_user", ["clerkUserId"])
     .index("by_stripe_customer", ["stripeCustomerId"]),

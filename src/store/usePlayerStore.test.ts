@@ -17,6 +17,9 @@ beforeEach(() => {
     playlistTracks: [],
     blockedIds: [],
     repeat: true,
+    manualAt: null,
+    autoLobby: null,
+    pendingSwitch: null,
   });
 });
 
@@ -229,5 +232,61 @@ describe("repeat", () => {
     usePlayerStore.setState({ currentTrack: track3, queue: [], playlistTracks: [track1, track2, track3], isPlaying: true });
     usePlayerStore.getState().nextTrack();
     expect(usePlayerStore.getState().isPlaying).toBe(true);
+  });
+});
+
+describe("AutoLobby in the store", () => {
+  const slow: Track = { id: "s", name: "Slow", image: "", energy: "low" };
+  const mid: Track = { id: "m", name: "Mid", image: "", energy: "mid" };
+  const fast: Track = { id: "f", name: "Fast", image: "", energy: "high" };
+
+  it("plays the queue in order when AutoLobby is off", () => {
+    usePlayerStore.setState({ currentTrack: track1, queue: [slow, mid, fast] });
+    usePlayerStore.getState().nextTrack();
+    expect(usePlayerStore.getState().currentTrack?.id).toBe("s");
+  });
+
+  it("leans towards high energy when busy, keeping the rest in order", () => {
+    usePlayerStore.setState({ currentTrack: track1, queue: [slow, mid, fast], autoLobby: { level: "busy", lookahead: 8 } });
+    usePlayerStore.getState().nextTrack();
+    const { currentTrack, queue } = usePlayerStore.getState();
+    expect(currentTrack?.id).toBe("f");
+    expect(queue.map((t) => t.id)).toEqual(["s", "m"]);
+  });
+
+  it("leans towards low energy when quiet", () => {
+    usePlayerStore.setState({ currentTrack: track1, queue: [fast, mid, slow], autoLobby: { level: "quiet", lookahead: 8 } });
+    usePlayerStore.getState().nextTrack();
+    expect(usePlayerStore.getState().currentTrack?.id).toBe("s");
+  });
+
+  it("only looks as far ahead as the strength allows", () => {
+    usePlayerStore.setState({ currentTrack: track1, queue: [slow, mid, fast], autoLobby: { level: "peak", lookahead: 2 } });
+    usePlayerStore.getState().nextTrack();
+    expect(usePlayerStore.getState().currentTrack?.id).toBe("s");
+  });
+
+  it("switches to a lined-up playlist only when the current track ends", () => {
+    usePlayerStore.setState({ currentTrack: track1, queue: [track2], isPlaying: true, activePlaylistId: "sched" });
+    usePlayerStore.getState().queueSwitch([fast], "peak");
+    expect(usePlayerStore.getState().currentTrack?.id).toBe("1");
+    usePlayerStore.getState().nextTrack();
+    const s = usePlayerStore.getState();
+    expect(s.currentTrack?.id).toBe("f");
+    expect(s.activePlaylistId).toBe("peak");
+    expect(s.pendingSwitch).toBeNull();
+  });
+
+  it("treats a hand-picked playlist as manual and drops any lined-up switch", () => {
+    usePlayerStore.getState().queueSwitch([fast], "peak");
+    usePlayerStore.getState().playQueue([track1, track2], "mine");
+    const s = usePlayerStore.getState();
+    expect(s.manualAt).not.toBeNull();
+    expect(s.pendingSwitch).toBeNull();
+  });
+
+  it("doesn't count the schedule's own switches as manual", () => {
+    usePlayerStore.getState().playQueue([track1, track2], "sched", undefined, true);
+    expect(usePlayerStore.getState().manualAt).toBeNull();
   });
 });
