@@ -152,7 +152,8 @@ export function IntegrationsPanel() {
           <p className="text-xs text-faint leading-relaxed">
             Lobby &amp; Lounge can see your Square locations and when orders are placed. It never sees payments,
             tips, items, customers or staff, and it can&apos;t change anything in Square. Order times are kept for 60
-            days. Your plan includes one zone, which follows one Square location.
+            days. We also save your chosen location&apos;s approximate position (to about 1 km) for local weather. Your
+            plan includes one zone, which follows one Square location.
           </p>
         </CardContent>
       </Card>

@@ -215,7 +215,11 @@ describe("square OAuth callback", () => {
           merchant_id: "M1",
         });
       }
-      return Response.json({ locations: [{ id: "L1", name: "Main Street", status: "ACTIVE" }] });
+      return Response.json({
+        locations: [
+          { id: "L1", name: "Main Street", status: "ACTIVE", coordinates: { latitude: 40.712776, longitude: -74.005974 } },
+        ],
+      });
     });
     vi.stubGlobal("fetch", fetchMock);
 
@@ -225,7 +229,14 @@ describe("square OAuth callback", () => {
       "https://www.lobbyloungemusic.com/settings?tab=integrations&square=connected",
     );
     const conn = await connection(t);
-    expect(conn).toMatchObject({ merchantId: "M1", status: "connected", locationId: "L1", locationName: "Main Street" });
+    expect(conn).toMatchObject({
+      merchantId: "M1",
+      status: "connected",
+      locationId: "L1",
+      locationName: "Main Street",
+      latitude: 40.71,
+      longitude: -74.01,
+    });
     expect(conn?.accessTokenEnc).not.toContain("EAAA");
     expect(conn?.refreshTokenEnc).not.toContain("EQAA");
     const [tokenUrl, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
@@ -292,6 +303,11 @@ describe("square.selectLocation", () => {
     await expect(owner.action(api.square.selectLocation, { locationId: "L_FAKE" })).rejects.toThrow(/isn't in your Square/);
     await owner.action(api.square.selectLocation, { locationId: "L2" });
     expect(await connection(t)).toMatchObject({ locationId: "L2", locationName: "Harbour" });
+    // Harbour has no coordinates in Square, so none are stored.
+    expect((await connection(t))?.latitude).toBeUndefined();
+    const s = await owner.query(api.square.status, {});
+    expect(s.connection?.hasCoordinates).toBe(false);
+    expect(JSON.stringify(s)).not.toMatch(/latitude|longitude/);
   });
 });
 

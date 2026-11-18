@@ -6,6 +6,7 @@ import {
   encryptToken,
   parseSquareEvent,
   randomState,
+  roundedCoordinates,
   squareEnvironment,
   verifySquareSignature,
 } from "./square";
@@ -142,5 +143,21 @@ describe("parseSquareEvent", () => {
     expect(parseSquareEvent({ merchant_id: "M1", type: "payment.created", event_id: "e" }).kind).toBe("ignored");
     expect(parseSquareEvent({ merchant_id: "M1", type: "order.created", event_id: "e", data: {} }).kind).toBe("ignored");
     expect(parseSquareEvent({ type: "order.created", event_id: "e" }).kind).toBe("ignored");
+  });
+});
+
+describe("roundedCoordinates", () => {
+  it("rounds to about 1 km", () => {
+    expect(roundedCoordinates({ id: "L", coordinates: { latitude: 40.712776, longitude: -74.005974 } })).toEqual({
+      latitude: 40.71,
+      longitude: -74.01,
+    });
+  });
+
+  it("is null when Square has none or they're nonsense", () => {
+    expect(roundedCoordinates({ id: "L" })).toBeNull();
+    expect(roundedCoordinates({ id: "L", coordinates: { latitude: 40.7 } })).toBeNull();
+    expect(roundedCoordinates({ id: "L", coordinates: { latitude: 0, longitude: 0 } })).toBeNull();
+    expect(roundedCoordinates({ id: "L", coordinates: { latitude: 120, longitude: 10 } })).toBeNull();
   });
 });

@@ -141,6 +141,10 @@ export default defineSchema({
     // The one Square location that drives the venue's one zone.
     locationId: v.optional(v.string()),
     locationName: v.optional(v.string()),
+    // The location's coordinates from Square, rounded to ~1 km (for local
+    // weather). Absent when Square has none for it.
+    latitude: v.optional(v.number()),
+    longitude: v.optional(v.number()),
     connectedAt: v.number(),
     lastOrderAt: v.optional(v.number()), // epoch ms; the Settings health line
     refreshFailedAt: v.optional(v.number()),
