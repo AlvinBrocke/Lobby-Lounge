@@ -6,6 +6,7 @@ import { useAction, useConvexAuth, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import { api } from "@convex/_generated/api";
 import { Plug } from "lucide-react";
+import { AutoLobbyCard } from "@/components/settings/AutoLobbyCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNow } from "@/hooks/useNow";
 import { SQUARE_RETURN_MESSAGES, squareHealthLine } from "@/lib/pos";
@@ -156,6 +157,8 @@ export function IntegrationsPanel() {
           </p>
         </CardContent>
       </Card>
+
+      {status?.configured && <AutoLobbyCard posReady={!!healthy && !!conn?.locationId} />}
     </div>
   );
 }

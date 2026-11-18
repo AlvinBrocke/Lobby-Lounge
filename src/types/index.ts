@@ -7,6 +7,8 @@ export interface Track {
   duration?: number;
   audioUrl?: string; // Optional for now as some mocks might not have it
   category?: string;
+  /** 'low' | 'mid' | 'high'; AutoLobby leans on it. */
+  energy?: string;
 }
 
 export interface User {
@@ -51,7 +53,19 @@ export interface PlayerState {
    * Plays a playlist: shuffled, or from `startIndex` onward in order. With a
    * `playlistId` it loops (while `repeat` is on), reshuffling when the queue empties.
    */
-  playQueue: (tracks: Track[], playlistId?: string, startIndex?: number) => void;
+  playQueue: (tracks: Track[], playlistId?: string, startIndex?: number, auto?: boolean) => void;
+  /**
+   * When staff last picked music by hand (`setCurrentTrack`, or `playQueue`
+   * without `auto`). AutoLobby stands back for a while after it. Epoch ms.
+   */
+  manualAt: number | null;
+  /** AutoLobby's current lean: which energy `nextTrack` prefers, and how far ahead it looks. Null when off or paused. */
+  autoLobby: { level: "quiet" | "steady" | "busy" | "peak"; lookahead: number } | null;
+  setAutoLobby: (autoLobby: PlayerState["autoLobby"]) => void;
+  /** A playlist to switch to when the current track ends (AutoLobby's peak playlist and back). */
+  pendingSwitch: { tracks: Track[]; playlistId: string } | null;
+  queueSwitch: (tracks: Track[], playlistId: string) => void;
+  cancelSwitch: () => void;
   setVolume: (volume: number) => void;
   addToQueue: (track: Track) => void;
   /** Moves the queued track at `from` to position `to` (drag-and-drop in "Up Next"). */

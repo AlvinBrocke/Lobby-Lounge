@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { pickNextIndex } from "@convex/lib/autolobby";
 import type { PlayerState, Track } from "@/types";
 
 /** Fisher–Yates: every order equally likely, each track exactly once. */
@@ -29,14 +30,24 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
   playlistTracks: [],
   blockedIds: [],
   repeat: true,
+  manualAt: null,
+  autoLobby: null,
+  pendingSwitch: null,
 
   setBlockedIds: (blockedIds) => set({ blockedIds }),
   toggleRepeat: () => set((state) => ({ repeat: !state.repeat })),
   setIsPlaying: (isPlaying) => set({ isPlaying }),
   // A single hand-picked track isn't "playing a playlist" any more.
   setCurrentTrack: (track) =>
-    set({ currentTrack: track, isPlaying: true, activePlaylistId: null, playlistTracks: [] }),
-  playQueue: (tracks, playlistId, startIndex) => {
+    set({
+      currentTrack: track,
+      isPlaying: true,
+      activePlaylistId: null,
+      playlistTracks: [],
+      manualAt: Date.now(),
+      pendingSwitch: null,
+    }),
+  playQueue: (tracks, playlistId, startIndex, auto) => {
     // A picked track plays first, then the list continues in order from it;
     // otherwise the whole playlist is shuffled. Blocked tracks are left out,
     // except one the venue picked by hand.
@@ -51,8 +62,13 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
       isPlaying: true,
       activePlaylistId: playlistId ?? null,
       playlistTracks: playlistId ? tracks : [],
+      // A hand-picked playlist wins over AutoLobby for a while, and over any switch it had lined up.
+      ...(!auto && { manualAt: Date.now(), pendingSwitch: null }),
     });
   },
+  setAutoLobby: (autoLobby) => set({ autoLobby }),
+  queueSwitch: (tracks, playlistId) => set({ pendingSwitch: { tracks, playlistId } }),
+  cancelSwitch: () => set({ pendingSwitch: null }),
   setVolume: (volume) => set({ volume }),
   addToQueue: (track) => set((state) => ({ queue: [...state.queue, track] })),
   reorderQueue: (from, to) =>
@@ -69,15 +85,33 @@ const usePlayerStore = create<PlayerState>((set, get) => ({
   nextTrack: () =>
     set((state) => {
       const blocked = new Set(state.blockedIds);
+      // AutoLobby lined up another playlist: it starts now, between tracks.
+      const pending = state.pendingSwitch;
+      if (pending) {
+        const [first, ...rest] = reshuffle(pending.tracks, state.currentTrack).filter((t) => !blocked.has(t.id));
+        if (first) {
+          return {
+            currentTrack: { ...first },
+            queue: rest,
+            isPlaying: true,
+            activePlaylistId: pending.playlistId,
+            playlistTracks: pending.tracks,
+            pendingSwitch: null,
+          };
+        }
+      }
       // With repeat on, a playlist loops: when the queue runs dry, start a new shuffled pass.
       const queue = (
         state.queue.length > 0 || !state.repeat ? state.queue : reshuffle(state.playlistTracks, state.currentTrack)
       ).filter((t) => !blocked.has(t.id));
       // Repeat off and the playlist is done: stop on the last track rather than hiding the bar.
       if (queue.length === 0) return state.repeat ? { isPlaying: false, currentTrack: null } : { isPlaying: false };
-      const [next, ...rest] = queue;
+      // AutoLobby leans towards tracks whose energy suits the room; otherwise the queue's order.
+      const i = state.autoLobby ? pickNextIndex(queue, state.autoLobby.level, state.autoLobby.lookahead) : 0;
+      const next = queue[i];
+      const rest = [...queue.slice(0, i), ...queue.slice(i + 1)];
       // A copy, so a one-track playlist still counts as a new track and replays.
-      return { currentTrack: { ...next }, queue: rest, isPlaying: true };
+      return { currentTrack: { ...next }, queue: rest, isPlaying: true, pendingSwitch: null };
     }),
 
   previousTrack: () => {
